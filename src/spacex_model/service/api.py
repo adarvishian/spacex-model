@@ -10,8 +10,10 @@ from typing import Any
 
 from fastapi import Depends, FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 
-from spacex_model.config.settings import get_settings
+from spacex_model.config.settings import get_repo_root, get_settings
 from spacex_model.engine.pipeline import run_pipeline
 from spacex_model.inputs.assumptions import assumptions_from_ingest
 from spacex_model.inputs.demand_curves import demand_curves_from_ingest
@@ -47,7 +49,7 @@ app.add_middleware(
 
 
 def _repo_root() -> Path:
-    return Path(__file__).resolve().parents[3]
+    return get_repo_root()
 
 
 def _git_sha() -> str | None:
@@ -272,6 +274,25 @@ def get_mc_job(job_id: str) -> dict[str, Any]:
     if job.result:
         response["result"] = job.result
     return response
+
+
+def _mount_ui() -> None:
+    """Serve Vite build output from public/ when present (local prod + Vercel)."""
+    public = get_repo_root() / "public"
+    index = public / "index.html"
+    assets = public / "assets"
+    if not index.is_file():
+        return
+
+    @app.get("/", include_in_schema=False)
+    def serve_ui_index() -> FileResponse:
+        return FileResponse(index)
+
+    if assets.is_dir():
+        app.mount("/assets", StaticFiles(directory=assets), name="ui-assets")
+
+
+_mount_ui()
 
 
 def create_app() -> FastAPI:

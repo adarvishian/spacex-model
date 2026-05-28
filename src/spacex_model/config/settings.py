@@ -28,6 +28,10 @@ _DEFAULT_WORKBOOK = (
 )
 
 
+def get_repo_root() -> Path:
+    return _REPO_ROOT
+
+
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix="SPACEX_MODEL_", env_file=".env", extra="ignore")
 
