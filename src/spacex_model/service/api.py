@@ -121,6 +121,11 @@ def _validate_overrides(
     return warnings
 
 
+@app.get("/")
+def root() -> dict[str, str]:
+    return {"service": "Mach33 SpaceX Valuation Model", "health": "/health"}
+
+
 @app.get("/health")
 def health() -> dict[str, Any]:
     settings = get_settings()

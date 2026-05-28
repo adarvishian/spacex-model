@@ -68,4 +68,4 @@ markers = [
 ]
 
 [tool.vercel]
-entrypoint = "src.spacex_model.service.api:app"
+entrypoint = "index:app"

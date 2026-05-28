@@ -2,11 +2,24 @@
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-_REPO_ROOT = Path(__file__).resolve().parents[3]
+
+def _find_repo_root() -> Path:
+    """Resolve project root in dev, editable installs, and Vercel serverless."""
+    if override := os.environ.get("SPACEX_MODEL_REPO_ROOT"):
+        return Path(override).resolve()
+    here = Path(__file__).resolve()
+    for candidate in (here, *here.parents):
+        if (candidate / "pyproject.toml").is_file() and (candidate / "scenarios").is_dir():
+            return candidate
+    return here.parents[3]
+
+
+_REPO_ROOT = _find_repo_root()
 _DEFAULT_WORKBOOK = (
     _REPO_ROOT
     / "Pre Existing Model Package"
