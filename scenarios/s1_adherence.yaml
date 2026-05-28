@@ -1,0 +1,63 @@
+# S-1 adherence scenario — mirrors apply_s1_adherence_overrides() (audit §7.2 P0 + §7.3 P1)
+name: s1_adherence
+description: >-
+  SpaceX Form S-1 (filed 2026-05-20) disclosed values on top of V2.16 ingest.
+  Applied automatically in run_pipeline(); this file documents overrides for scenarios API.
+baseline_workbook: "Pre Existing Model Package/01_Current_State/SpaceX Model V2.16.xlsx"
+overrides:
+  "Starting cash position EoY 2024 ($mm)": 11385
+  "Pre-IPO bridge year of drawdown": 2026
+  "Broadband ARPU ($/sub/mo, year-row)":
+    2025: 81
+    2026: 70
+    2027: 65
+    2028: 65
+    2029: 70
+    2030: 75
+  "EchoStar mid-band CapEx ($mm) — year-row":
+    2025: 0
+    2026: 0
+    2027: 19600
+  "F9 customer launches per year":
+    2025: 43
+    2026: 40
+    2027: 38
+    2028: 35
+  "F9 booster accounting depreciation cap (flights)": 25
+  "Satellite useful life — V2 Mini DTC (years)": 3
+  "Satellite useful life — V3 DTC (years)": 3
+  "Starship pre-commercialization R&D ($mm/yr) — year-row":
+    2025: 3004
+    2026: 2000
+    2027: 1000
+    2028: 500
+  "Starship customer launches per year":
+    2026: 3
+    2027: 8
+  "Starship customer launch price ($mm/launch) — year-row":
+    2026: 75
+    2027: 80
+  "Launch Services revenue share of external CL rev — year-row":
+    2025: 0.63
+  "Starshield S-1 Government Connectivity scope factor": 0.694
+  "Share-based compensation ($mm/yr) — year-row":
+    2025: 1947
+  "Restructuring charges ($mm/yr) — year-row":
+    2025: 487
+  "Impairment charges ($mm/yr) — year-row":
+    2025: 38
+  "S-1 AI segment revenue ($mm) — year-row":
+    2025: 3201
+    2026: 3200
+  "Anthropic compute services revenue ($mm) — year-row":
+    2026: 9000
+    2027: 15000
+    2028: 15000
+    2029: 5000
+  "Terrestrial AI data-center CapEx ($mm) — year-row":
+    2025: 12727
+    2026: 30000
+    2027: 20000
+    2028: 12000
+    2029: 8000
+    2030: 5000

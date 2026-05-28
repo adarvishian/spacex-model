@@ -1,0 +1,125 @@
+sheet,row,column_a_label,excel_cell_range,module_path,function,docstring_section
+AI Stack,,AI Stack cash demand ($mm),AI Stack!— (Phase C / v1.x),calc.ai_stack.demand,compute_demand,§12 AI Stack (v1 stub)
+AI Stack,,Total Revenue ($mm),AI Stack!— (v1.x),calc.ai_stack.module,compute_revenue,§12 AI Stack (v1 stub)
+AI Stack,,Total COGS ($mm),AI Stack!— (v1.x),calc.ai_stack.module,compute_cogs,§7.3 internal compute transfer
+AI Stack,,Gross Profit ($mm),AI Stack!— (v1.x),calc.ai_stack.module,compute_gross_profit,§3 module framing
+AI Stack,,AI Stack Module CapEx ($mm),AI Stack!— (v1.x),calc.ai_stack.module,compute_capex,§12 AI Stack stub
+AI Stack,,Module FCF ($mm),AI Stack!— (v1.x),calc.ai_stack.module,compute_fcf,§3 module FCF
+AI Stack,,CENTRAL ALLOCATOR OUTPUTS,AI Stack!— (v1.x),calc.ai_stack.module,compute_allocator_out,§12 AI Stack stub OUT
+AI Stack,,AI Stack proposed allocation ($mm),AI Stack!— (v1.x),calc.ai_stack.output,compute_output,§12 AI Stack stub
+Allocator,,ALLOCATOR BRAIN,Allocator!— (Phase D orchestrator),calc.allocator.brain,compute_allocator,§6 + §20.2 (Sprint 11f Option A)
+Assumptions,,Starting cash position EoY 2024 ($mm),Assumptions!B (Starting cash position EoY 2024),calc.allocator.cash_pool,starting_cash_mm,§6.1 + §15.2 R109
+Assumptions,,Pre-IPO debt facility ($mm),Assumptions!B (Pre-IPO debt facility),calc.allocator.cash_pool,compute_bridge_drawdown,§2.13 + §15.2 R109
+Assumptions,,IPO injection amount ($mm),Assumptions!B (IPO injection amount),calc.allocator.cash_pool,compute_ipo_drawdown,§6.1 + §15.2 R109
+Allocator,,Cash BoY ($mm),Allocator!D8:AC8,calc.allocator.cash_pool,compute_cash_boy,§6.1 + §2.13 (pre-IPO debt facility)
+Allocator,,Starlink V2 BB cash demand ($mm),Allocator!D48:AC48 (V2 BB cash demand row),calc.allocator.demand_builders,compute_exogenous_demands,§6.5 / §20.3 (Sprint 11f Option A)
+Allocator,,Available cash for IRR queue ($mm),Allocator!D29:AC29,calc.allocator.deployment,cap_cash_allocations_to_available,§6.2 queue gate
+Allocator,,Starlink V2 BB cash allocation ($mm),Allocator!D88:AC88 (V2 BB cash allocation),calc.allocator.deployment,apply_first_year_override,§2.16 (first-year override convention)
+Allocator,,Customer Launch Blended IRR,Allocator!D153:AC153,calc.allocator.irr_display,roll_up_module_irrs,§6 central IRR display
+Allocator,,V2 phase-out gate,Allocator!— (Phase D),calc.allocator.physical_gates,apply_v2_phase_out_gate,§20.2 (V2 phase-out gate)
+Allocator,,V3 startup gate,Allocator!— (Phase D),calc.allocator.physical_gates,apply_v3_startup_gate,§20.2 (V3 startup gate)
+Starlink,,F9 supply gate (V2 launches),Starlink!— (Phase D),calc.allocator.physical_gates,apply_f9_supply_gate,§20.2 (F9 supply gate)
+Allocator,,Year-N non-module claims ($mm),Allocator!D18:AC18,calc.allocator.queue_gate,compute_non_module_claims,§6.2 (queue gate)
+Allocator,,Available cash for IRR queue ($mm),Allocator!D29:AC29,calc.allocator.queue_gate,available_cash_for_irr_queue,§6.2 (queue gate)
+Allocator,,Proposed cash allocation ($mm),Allocator!D50:AC50 (per sub-block proposed allocation),calc.allocator.sigmoid_cash,compute_sigmoid_cash_allocations,§6.3 / §20.2 (cash sigmoid queue)
+Allocator,,Proposed kg allocation (kg-to-LEO),Allocator!D116:AC116 (per sub-block kg proposed allocation),calc.allocator.sigmoid_kg,compute_sigmoid_kg_allocations,§6.4 / §20.2 (kg sigmoid queue; V2 not in kg queue)
+Allocator,,Vehicle build claim ($mm),Allocator!D150:AC150,calc.allocator.vehicle_build,compute_vehicle_build_claim,§6.6 (forward-aggregate kg demand)
+CapEx,,Module CapEx ($mm),CapEx!D11:D15,calc.capex,compute_module_capex,§13.1 module CapEx aggregation
+CapEx,,Total Module CapEx ($mm),CapEx!D17,calc.capex,compute_total_module_capex,§13.1
+CapEx,,Total Corporate CapEx ($mm),CapEx!D20:D23,calc.capex,compute_corporate_capex,§13.2 corporate CapEx
+CapEx,,Total Corporate D&A ($mm),CapEx!D37,calc.capex,compute_corporate_da,§13.2 corporate D&A schedule
+CapEx,,EchoStar mid-band CapEx ($mm) — year-row,CapEx!D36,calc.capex,compute_spectrum_capex,§13.3 spectrum CapEx
+CapEx,,Annual spectrum amortization ($mm),CapEx!D38,calc.capex,compute_spectrum_amortization,§13.3 spectrum amortization
+CapEx,,Total Group CapEx ($mm),CapEx!D45,calc.capex,compute_capex,§13 CapEx tab
+CapEx,,CapEx check,CapEx!R101 proxy,calc.capex,capex_conservation_ok,§15.2 conservation block
+Customer Launch,,Customer Launch cash demand ($mm),Customer Launch!— (Phase C),calc.customer_launch.demand,compute_demand,§6.5 / §20.3 (Sprint 11f Option A)
+Customer Launch,,Total Revenue ($mm),Customer Launch!D83,calc.customer_launch.module,compute_revenue,§4 Customer Launch revenue
+Customer Launch,,Total COGS ($mm),Customer Launch!D93,calc.customer_launch.module,compute_cogs,§4 Customer Launch COGS
+Customer Launch,,Gross Profit ($mm),Customer Launch!D94,calc.customer_launch.module,compute_gross_profit,§3 module framing
+Customer Launch,,Module CapEx ($mm),Customer Launch!D99,calc.customer_launch.module,compute_capex,§4 Customer Launch CapEx
+Customer Launch,,Module FCF ($mm),Customer Launch!D101,calc.customer_launch.module,compute_fcf,§3 module FCF definition
+Customer Launch,,CENTRAL ALLOCATOR OUTPUTS,Customer Launch!D201:AC210,calc.customer_launch.module,compute_allocator_out,§4 Allocator OUT contract
+Customer Launch,,Customer Launch proposed allocation ($mm),Customer Launch!— (Phase C),calc.customer_launch.output,compute_output,§6.5 / §20.3 (Sprint 11f Option A)
+,,"Σ Module revenue (gross, pre-elim) ($mm)",Group P&L!D8,calc.group_pnl,compute_module_revenue_gross,§15.1 group revenue build
+,,GROUP REVENUE NET OF ELIMS ($mm),Group P&L!D10,calc.group_pnl,compute_group_revenue_net,§15.1
+,,"Σ Module COGS (gross, pre-elim) ($mm)",Group P&L!D13,calc.group_pnl,compute_module_cogs_gross,§15.1 group COGS build
+,,Group COGS (net of elims) ($mm),Group P&L!D15,calc.group_pnl,compute_group_cogs_net,§15.1
+,,Group Gross Profit ($mm),Group P&L!D18,calc.group_pnl,compute_group_gross_profit,§15.1
+,,Group EBITDA ($mm),Group P&L!D26,calc.group_pnl,compute_group_ebitda,§15.1
+,,Group D&A ($mm),Group P&L!D28,calc.group_pnl,compute_group_da,§15.1 / §13.4
+,,Group EBIT ($mm),Group P&L!D30,calc.group_pnl,compute_group_ebit,§15.1
+,,Taxes ($mm),Group P&L!D32,calc.group_pnl,compute_taxes,§15.1
+,,NOPAT ($mm),Group P&L!D34,calc.group_pnl,compute_nopat,§15.1
+,,Total D&A add-back ($mm),Group P&L!D39,calc.group_pnl,compute_total_da_addback,§15.1 FCF walk
+,,GROUP FCF ($mm),Group P&L!D50,calc.group_pnl,compute_group_fcf,§15.1 + Sprint 9 Lock a
+,,GROUP P&L -- consolidated Revenue / EBITDA ...,Group P&L!D10:D50,calc.group_pnl,compute_group_pnl,§15 Group P&L walk
+Starlink Capacity,,BB pool at-cost rate ($/Gbps/yr),Starlink Capacity!D11 / D40,calc.internal_flows.bandwidth,rate_per_unit,§7.2 (fully-allocated bandwidth transfer)
+Starlink,,Starlink internal bandwidth revenue ($mm),Starlink!D143,calc.internal_flows.bandwidth,internal_transfer_revenue,§7.2
+,,Bandwidth elimination check,Group P&L!R106,calc.internal_flows.bandwidth,conservation_residual,§15 conservation block
+ODC,,ODC at-cost compute rate ($/PFLOP-hr),ODC!— (Architecture §7.3),calc.internal_flows.compute,rate_per_unit,§7.3 (fully-allocated compute transfer)
+ODC,,Internal transfer revenue (at-cost compute) ($mm),ODC!— (internal transfer revenue),calc.internal_flows.compute,internal_transfer_revenue,§7.3
+,,Compute elimination check,Group P&L!R107,calc.internal_flows.compute,conservation_residual,§15 conservation block
+Launch Capacity,,At-cost launch services rate ($mm/launch),Launch Capacity!D71 / D40,calc.internal_flows.launch_services,at_cost_launch_services_rate,§7.1 (fully-allocated launch transfer)
+Customer Launch,,Customer Launch internal transfer revenue ($mm),Customer Launch!D70,calc.internal_flows.launch_services,internal_transfer_revenue,§7.1
+,,Launch services elimination check,Group P&L!R105,calc.internal_flows.launch_services,conservation_residual,§15 conservation block
+Launch Capacity,,Total Annual Capacity (kg-to-LEO),Launch Capacity!D34:AC34,calc.launch_capacity,compute_launch_capacity,§20.4 capacity supply
+Launch Capacity,,Total Annual Capacity (kg-to-LEO),Launch Capacity!D34:AC34,calc.launch_capacity,total_annual_capacity_kg,§20.4 capacity supply
+Lunar Mars,,Lunar Accumulated Book Value ($mm),Lunar Mars!— (Phase C),calc.lunar_mars.bv_engine,compute_bv_engine,§11 BV engine
+Allocator,,Mars carve-out ($mm),Allocator!— (Phase C),calc.lunar_mars.carveout,compute_mars_carveout,§11.1 / §6.2
+Lunar Mars,,Lunar Mars cash demand ($mm),Lunar Mars!— (Phase C),calc.lunar_mars.demand,compute_demand,§11 strategic carve-out
+Lunar Mars,,Lunar ships deployed,Lunar Mars!— (Phase C),calc.lunar_mars.deployment,compute_deployment,§11 deployment
+Lunar Mars,,Total Revenue ($mm),Lunar Mars!— (Phase C),calc.lunar_mars.module,compute_revenue,§11 Lunar Mars
+Lunar Mars,,Total COGS ($mm),Lunar Mars!— (Phase C),calc.lunar_mars.module,compute_cogs,§20.5 LM COGS
+Lunar Mars,,Gross Profit ($mm),Lunar Mars!— (Phase C),calc.lunar_mars.module,compute_gross_profit,§3 module framing
+Lunar Mars,,Module CapEx ($mm),Lunar Mars!— (Phase C),calc.lunar_mars.module,compute_capex,§11 carve-out deployment
+Lunar Mars,,Module FCF ($mm),Lunar Mars!— (Phase C),calc.lunar_mars.module,compute_fcf,§20.5 LM FCF
+Lunar Mars,,CENTRAL ALLOCATOR OUTPUTS,Lunar Mars!— (Phase C),calc.lunar_mars.module,compute_allocator_out,§11 Allocator OUT
+Lunar Mars,,Lunar Mars proposed allocation ($mm),Lunar Mars!— (Phase C),calc.lunar_mars.output,compute_output,§11 deployment
+ODC,,ODC cash demand ($mm),ODC!— (Phase C),calc.odc.demand,compute_demand,§20.8 / §6.5 (Sprint 11f Option A)
+ODC,,Per-sat combined revenue ($mm/yr),ODC!— (Phase C),calc.odc.module,per_sat_combined_revenue_mm,§9.2 dual revenue
+ODC,,Bandwidth services cost ($mm),ODC!— (Phase C),calc.odc.module,per_sat_bandwidth_cost_mm,§7.2 / §9.4
+ODC,,Per-sat net marginal revenue ($mm/yr),ODC!— (Phase C),calc.odc.module,per_sat_net_marginal_revenue_mm,§9.4 IRR engine input
+ODC,,ODC BB Gbps demand,ODC!— (Phase C),calc.odc.module,odc_bandwidth_claim,§7.2
+ODC,,Total Revenue ($mm),ODC!D— (Phase C),calc.odc.module,compute_revenue,§20.8 ODC revenue
+ODC,,Total COGS ($mm),ODC!— (Phase C),calc.odc.module,compute_cogs,§20.8 ODC COGS
+ODC,,Gross Profit ($mm),ODC!— (Phase C),calc.odc.module,compute_gross_profit,§3 module framing
+ODC,,Module CapEx ($mm),ODC!— (Phase C),calc.odc.module,compute_capex,§20.8 ODC CapEx
+ODC,,Module FCF ($mm),ODC!— (Phase C),calc.odc.module,compute_fcf,§3 module FCF
+ODC,,Blended IRR,ODC!— (Phase C),calc.odc.module,per_sat_blended_irr,§9.4
+ODC,,CENTRAL ALLOCATOR OUTPUTS,ODC!— (Phase C),calc.odc.module,compute_allocator_out,§20.8 Allocator OUT
+ODC,,ODC proposed allocation ($mm),ODC!— (Phase D),calc.odc.output,compute_output,§20.8 (cash-driven deployment)
+OpEx,,OpEx revenue bases,OpEx!— (revenue base wiring),calc.opex,build_revenue_bases,§12 OpEx tab
+OpEx,,"ODC R&D ($mm) — MAX($-profile, % × rev)",OpEx!D26 / D32,calc.opex,switching_rd,§12.1 (pre-revenue R&D switch)
+OpEx,,Starlink R&D ($mm),OpEx!D13,calc.opex,compute_starlink_rd,§12.1 R&D by module
+OpEx,,Customer Launch R&D ($mm),OpEx!D19,calc.opex,compute_customer_launch_rd,§12.1 R&D by module
+OpEx,,"ODC R&D ($mm) — MAX($-profile, % × rev)",OpEx!D26,calc.opex,compute_odc_rd,§12.1 (pre-revenue R&D switch)
+OpEx,,"AI Stack R&D ($mm) — MAX($-profile, % × rev)",OpEx!D32,calc.opex,compute_ai_stack_rd,§12.1 (pre-revenue R&D switch)
+OpEx,,Mars/Moon R&D ($mm/yr) — year-row,OpEx!D35,calc.opex,compute_moon_mars_rd,§12.1 R&D — Moon/Mars
+OpEx,,S&M ($mm),OpEx!D44,calc.opex,compute_sales_marketing,§12.2 SG&A by function
+OpEx,,G&A ($mm),OpEx!D47,calc.opex,compute_general_administrative,§12.2 SG&A by function
+OpEx,,Customer Service ($mm) — 2% × Starlink subscription rev,OpEx!D48,calc.opex,compute_customer_service,§12.2 SG&A by function
+OpEx,,Other corporate operating ($mm) — 1% × group rev,OpEx!D49,calc.opex,compute_other_corporate_operating,§12.2 SG&A by function
+OpEx,,Total OpEx ($mm),OpEx!D53,calc.opex,compute_opex,§12 OpEx tab
+Starlink,,Starlink cash demand ($mm),Starlink!— (Phase C),calc.starlink.demand,compute_demand,§8.1 / §20.2 (vehicle-level queue)
+Starlink,,V2 BB historical retirement,Starlink!D52:D53,calc.starlink.deorbit,historical_opening_balance_deorbit,§8.3
+Starlink,,V2 BB launch-cohort retirement,Starlink!D54:D57,calc.starlink.deorbit,launch_cohort_deorbit,§8.3
+Starlink,,Constellation D&A ($mm),Starlink!D153,calc.starlink.module,compute_constellation_da,§8 Starlink COGS
+Starlink Capacity,,BB Gbps available for external Starlink revenue,Starlink Capacity!—,calc.starlink.module,compute_starlink_capacity_result,§8.5
+Starlink,,Starshield revenue ($mm),Starlink!D110,calc.starlink.module,compute_starshield_revenue,§8 Starshield
+Starlink,,Terminal hardware revenue ($mm),Starlink!D135,calc.starlink.module,compute_hardware_revenue,§8.4
+Starlink,,Starlink internal bandwidth revenue ($mm),Starlink!D143,calc.starlink.module,compute_internal_bandwidth_revenue,§7.2
+Starlink,,Total Revenue ($mm),Starlink!D178,calc.starlink.module,compute_revenue,§8 Starlink revenue
+Starlink,,Launch services cost ($mm),Starlink!D156,calc.starlink.module,compute_launch_services_cost,§8 Starlink COGS / §7.1
+Starlink,,Total COGS ($mm),Starlink!D170,calc.starlink.module,compute_cogs,§8 Starlink COGS
+Starlink,,Gross Profit ($mm),Starlink!D181,calc.starlink.module,compute_gross_profit,§3 module framing
+Starlink,,Module CapEx ($mm),Starlink!D98,calc.starlink.module,compute_capex,§8 Starlink CapEx
+Starlink,,Module FCF ($mm),Starlink!D188,calc.starlink.module,compute_fcf,§3 module FCF
+Starlink,,CENTRAL ALLOCATOR OUTPUTS,Starlink!D201:AC210,calc.starlink.module,compute_allocator_out,§8 Allocator OUT contract
+Starlink,,Starlink proposed allocation ($mm),Starlink!— (Phase C),calc.starlink.output,compute_output,§8.1 / §20.2
+Demand Curves,,Annual TAM shift multiplier,Demand Curves!D141,calc.starlink.revenue_curve,tam_shift_vector,§8.4 / Sprint 10.5
+Starlink,,BB Revenue ($mm),Starlink!D120,calc.starlink.revenue_curve,compute_bb_revenue,§8.4
+Starlink,,DTC Revenue ($mm),Starlink!D131,calc.starlink.revenue_curve,compute_dtc_revenue,§8.4
+Starlink,,V2 BB launches per year,Starlink!D33:D63,calc.starlink.vehicle_pools,compute_vehicle_pools,§8.1 / §8.2 / §8.3
+Starlink Capacity,,BB pool at-cost rate ($/Gbps/yr),Starlink Capacity!D11:D50,calc.starlink_capacity,compute_starlink_capacity,§8.5 / §7.2
+Valuation,,Implied EV (10× rev cross-check),Valuation!— (Phase C stub),calc.valuation,compute_implied_ev_multiple,§14.3 SoTP multiples / PRD §5.5 calibration
+Valuation,,VALUATION -- DCF off Group FCF + Sum-of-parts ...,Valuation!— (Phase C stub),calc.valuation,compute_valuation,§14 Valuation tab (stub)

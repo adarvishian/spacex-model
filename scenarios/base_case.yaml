@@ -1,0 +1,5 @@
+# Base Case scenario — overrides applied on top of V2.16 Assumptions ingest
+name: base_case
+description: Default reconciliation baseline (V2.16 Assumptions, no overrides)
+baseline_workbook: "Pre Existing Model Package/01_Current_State/SpaceX Model V2.16.xlsx"
+overrides: {}

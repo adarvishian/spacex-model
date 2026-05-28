@@ -1,0 +1,51 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev,service]"
+
+      - name: Ruff
+        run: ruff check src tests
+
+      - name: Black
+        run: black --check src tests
+
+      - name: Mypy
+        run: mypy
+
+      - name: US English spell-check
+        run: |
+          if rg -i 'modelling|modelled|behaviour|optimisation|optimised|colour|organisation|programme|centre|labelled|catalogue|recognise|defence|licence' \
+            --glob '*.py' --glob '*.md' --glob '*.yaml' --glob '*.yml' --glob '*.json' \
+            src tests docs; then
+            echo "British spelling detected"
+            exit 1
+          fi
+
+      - name: Audit artifact drift check
+        run: spacex-audit --check
+
+      - name: Pytest (excludes slow hypothesis by default)
+        run: pytest -n auto -m "not slow" --tb=short -q
+
+      - name: Hypothesis invariant suite (PRD §10.9)
+        env:
+          HYPOTHESIS_MAX_EXAMPLES: "200"
+          HYPOTHESIS_DEADLINE_MS: "10000"
+        run: pytest tests/invariant/ -m slow --tb=short -q

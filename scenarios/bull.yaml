@@ -1,0 +1,11 @@
+# Bull Case — optimistic macro + lower Mars carve-out share
+name: bull
+description: >
+  Bull stress scenario — higher TAM inflation, lower Mars carve-out pct,
+  faster Starship manufacturing learning. Block A must hold; Block B not required.
+baseline_workbook: "Pre Existing Model Package/01_Current_State/SpaceX Model V2.16.xlsx"
+overrides:
+  "TAM inflation rate (annual)": 0.035
+  "Real GNI growth rate (% per year)": 0.03
+  "Mars carve-out % of prior-year Group FCF": 0.08
+  "Starship manufacturing WL learning rate (% reduction per doubling cum stacks)": 0.12

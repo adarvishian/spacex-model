@@ -1,0 +1,14 @@
+{
+  "group_revenue_2025": 14151.797779772496,
+  "group_ebitda_2025": 4491.940420487163,
+  "group_fcf_2025": -3058.212111148475,
+  "implied_ev_2025_b": 141.51797779772494,
+  "module_fcf_2025": {
+    "ai_stack": 0.0,
+    "customer_launch": 3199.2364500000003,
+    "lunar_mars": 0.0,
+    "odc": 0.0,
+    "starlink": 5022.7624831083285
+  },
+  "outputs_hash": "25fa8220f4d14854be6fcbecd3427204219cdd1f8a18759441413ef8f295d3bf"
+}

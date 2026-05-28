@@ -1,0 +1,68 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "spacex-model"
+version = "0.1.0"
+description = "Mach33 SpaceX Valuation Model — Python port"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "numpy>=1.26",
+    "openpyxl>=3.1",
+    "pydantic>=2.5",
+    "pydantic-settings>=2.1",
+    "pyyaml>=6.0",
+    "scipy>=1.11",
+    "joblib>=1.3",
+    "pyarrow>=14.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-xdist>=3.5",
+    "hypothesis>=6.100",
+    "ruff>=0.4",
+    "mypy>=1.8",
+    "black>=24.0",
+    "httpx>=0.27",
+]
+service = [
+    "fastapi>=0.110",
+    "uvicorn[standard]>=0.27",
+    "redis>=5.0",
+    "httpx>=0.27",
+]
+
+[project.scripts]
+spacex-model = "spacex_model.cli.run_model:main"
+spacex-mc = "spacex_model.cli.run_mc:main"
+spacex-api = "spacex_model.cli.run_api:main"
+spacex-audit = "spacex_model.cli.audit:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/spacex_model"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+packages = ["spacex_model"]
+mypy_path = "src"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+markers = [
+    "slow: long-running integration tests",
+    "expected_disposition_D4: F9 IRR expected outside Sprint Roadmap bounds (PRD D4)",
+    "expected_disposition_D6: ODC zero deployment expected (PRD D6)",
+]

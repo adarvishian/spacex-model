@@ -1,0 +1,9 @@
+# High Mars share stress — MC-range upper bound on Mars carve-out pct
+name: mars_share
+description: >
+  Mars share stress scenario — Mars carve-out pct at MC triangle max (35%).
+  Tests solver + conservation under aggressive strategic carve-out.
+baseline_workbook: "Pre Existing Model Package/01_Current_State/SpaceX Model V2.16.xlsx"
+overrides:
+  "Mars carve-out % of prior-year Group FCF": 0.35
+  "Mars carve-out floor ($mm/yr)": 1500
