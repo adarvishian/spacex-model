@@ -113,6 +113,43 @@ export function fetchLineage(
   );
 }
 
+export function fetchLineageHistory(key: string, limit = 20) {
+  return request<{ key: string; entries: import("./shared/types").ChangeHistoryEntry[]; total: number }>(
+    `/lineage/${encodeURIComponent(key)}/history?limit=${limit}`,
+  );
+}
+
+export function fetchLineageGraph(
+  key: string,
+  opts: {
+    runId: string;
+    depth?: number;
+    year?: number;
+    sheet?: string;
+    row?: number;
+    scenario?: string;
+  },
+) {
+  const params = new URLSearchParams({ run_id: opts.runId });
+  if (opts.depth != null) params.set("depth", String(opts.depth));
+  if (opts.year != null) params.set("year", String(opts.year));
+  if (opts.sheet) params.set("sheet", opts.sheet);
+  if (opts.row != null) params.set("row", String(opts.row));
+  if (opts.scenario) params.set("scenario", opts.scenario);
+  return request<import("./shared/types").LineageGraphPayload>(
+    `/lineage/${encodeURIComponent(key)}/graph?${params.toString()}`,
+  );
+}
+
+export function fetchRunAuditDashboard(runId: string, scenario?: string) {
+  const params = new URLSearchParams();
+  if (scenario) params.set("scenario", scenario);
+  const qs = params.toString();
+  return request<import("./shared/types").RunAuditPayload>(
+    `/runs/${encodeURIComponent(runId)}/audit-dashboard${qs ? `?${qs}` : ""}`,
+  );
+}
+
 export function fetchTornado(runId: string, topN = 10) {
   return request<{ run_id: string; tornado: TornadoBar[] }>(
     `/runs/${runId}/tornado?top_n=${topN}`,

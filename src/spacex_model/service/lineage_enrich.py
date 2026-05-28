@@ -237,13 +237,7 @@ def enrich_lineage(
             "downstream_keys": [d["key"] for d in downstream],
             "upstream": upstream,
             "downstream": downstream,
-            "sources": {
-                "methodology": {
-                    "spec_section": base.architecture_ref or "Architecture spec",
-                    "principle": base.principle or "—",
-                    "rule": base.principle or "—",
-                },
-            },
+            "sources": _build_sources(base, sheet_name, label, code_val, xlsx_val, cell_year),
         }
     )
     return payload
@@ -266,6 +260,42 @@ def _section_for_label(sheet_name: str, label: str, result: ModelResult) -> str:
         if lbl == label:
             return current
     return current
+
+
+def _build_sources(
+    base: LineageEntry,
+    sheet_name: str,
+    label: str,
+    code_val: float | None,
+    xlsx_val: float | None,
+    year: int,
+) -> dict[str, Any]:
+    sources: dict[str, Any] = {
+        "methodology": {
+            "spec_section": base.architecture_ref or "Architecture spec",
+            "principle": base.principle or "—",
+            "rule": base.principle or "—",
+            "module": f"{base.module_path}.{base.function}",
+        },
+    }
+    if sheet_name == "Assumptions" or base.key.startswith("grid.assumptions"):
+        sources["input_provenance"] = {
+            "source": "Assumptions sheet / S-1 ingest",
+            "reference": "inputs/s1_2025_anchors.py · Q4'25 anchors",
+            "url": "docs/DEV_LOG.md",
+        }
+    elif "Starlink" in sheet_name and year == 2025 and "Revenue" in label:
+        sources["input_provenance"] = {
+            "source": "Q4'25 anchor",
+            "reference": "2025 Anchors from Q4_25.md §2 (Starlink BB)",
+        }
+    if year == 2025 and code_val is not None and xlsx_val is not None:
+        sources["calibration_anchor"] = {
+            "target": xlsx_val,
+            "tolerance_pct": 0.05,
+            "basis": f"2025 xlsx cached · code lands {code_val:,.0f}",
+        }
+    return sources
 
 
 def _build_resolved_inputs(

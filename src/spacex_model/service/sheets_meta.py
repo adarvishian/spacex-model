@@ -32,7 +32,7 @@ SHEETS: tuple[SheetMeta, ...] = (
     SheetMeta("allocator", "Allocator", "Allocator", 171, 31, "allocation"),
     SheetMeta("launch_capacity", "Launch Capacity", "Launch Capacity", 80, 29, "allocation"),
     SheetMeta("customer_launch", "Customer Launch", "Customer Launch", 210, 31, "output"),
-    SheetMeta("starlink", "Starlink", "Starlink", 235, 29, "output", enabled=True),
+    SheetMeta("starlink", "Starlink", "Starlink", 235, 29, "output"),
     SheetMeta("starlink_capacity", "Starlink Capacity", "Starlink Capacity", 50, 29, "output"),
     SheetMeta("odc", "ODC", "ODC", 210, 29, "output"),
     SheetMeta("ai_stack", "AI Stack", "AI Stack", 210, 29, "output"),
@@ -42,7 +42,7 @@ SHEETS: tuple[SheetMeta, ...] = (
     SheetMeta("capex", "CapEx", "CapEx", 47, 29, "pnl"),
     SheetMeta("valuation", "Valuation", "Valuation", 6, 29, "valuation"),
     SheetMeta("demand_curves", "Demand Curves", "Demand Curves", 145, 36, "demand"),
-    SheetMeta("run_audit", "Run Audit", "Run Audit", 0, 0, "conservation", enabled=False),
+    SheetMeta("run_audit", "Run Audit", "Run Audit", 0, 0, "conservation"),
 )
 
 _BY_SLUG: dict[str, SheetMeta] = {s.slug: s for s in SHEETS}
@@ -67,7 +67,7 @@ def serialize_sheets_list() -> list[dict[str, Any]]:
             "col_count": s.col_cap,
             "lifecycle_stage": s.lifecycle_stage,
             "enabled": s.enabled,
+            "is_run_audit": s.slug == "run_audit",
         }
         for s in SHEETS
-        if s.slug != "run_audit"
     ]

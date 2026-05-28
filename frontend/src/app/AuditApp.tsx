@@ -1,11 +1,15 @@
 import { useQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { ChangeHistoryList } from "../audit/ChangeHistoryList";
+import { DependencyGraph } from "../audit/DependencyGraph";
 import { DerivationPanel } from "../audit/DerivationPanel";
 import { Grid } from "../audit/Grid";
 import { Minimap } from "../audit/Minimap";
+import { RunAuditTab } from "../audit/RunAuditTab";
 import { ScenarioSidebar } from "../audit/ScenarioSidebar";
 import { SheetTabs } from "../audit/SheetTabs";
+import { SourcesPanel } from "../audit/SourcesPanel";
 import {
   fetchHealth,
   fetchLineage,
@@ -16,18 +20,41 @@ import {
 } from "../api";
 import type { ActiveCell, GridPayload, LineageEntry } from "../shared/types";
 
-const ENABLED_SHEETS = new Set(["starlink"]);
+const RUN_AUDIT_SLUG = "run_audit";
+
+function sheetSlugFromName(sheet?: string): string {
+  if (!sheet) return "starlink";
+  const map: Record<string, string> = {
+    Assumptions: "assumptions",
+    Allocator: "allocator",
+    "Launch Capacity": "launch_capacity",
+    "Customer Launch": "customer_launch",
+    Starlink: "starlink",
+    "Starlink Capacity": "starlink_capacity",
+    ODC: "odc",
+    "AI Stack": "ai_stack",
+    "Lunar Mars": "lunar_mars",
+    "Group P&L": "group_pnl",
+    OpEx: "opex",
+    CapEx: "capex",
+    Valuation: "valuation",
+    "Demand Curves": "demand_curves",
+  };
+  return map[sheet] ?? sheet.toLowerCase().replace(/\s+/g, "_");
+}
 
 export default function AuditApp() {
   const { sheetSlug = "starlink" } = useParams<{ sheetSlug: string }>();
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
 
+  const isRunAudit = sheetSlug === RUN_AUDIT_SLUG;
+
   const [selectedScenario, setSelectedScenario] = useState("base_case");
   const [overrideLabel, setOverrideLabel] = useState("");
   const [overrideValue, setOverrideValue] = useState("");
   const [runId, setRunId] = useState<string | null>(null);
-  const [embeddedGrid, setEmbeddedGrid] = useState<GridPayload | null>(null);
+  const [embeddedGrids, setEmbeddedGrids] = useState<Record<string, GridPayload>>({});
   const [activeCell, setActiveCell] = useState<ActiveCell | null>(null);
   const [lineage, setLineage] = useState<LineageEntry | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -40,11 +67,12 @@ export default function AuditApp() {
   const gridQ = useQuery({
     queryKey: ["grid", runId, sheetSlug, selectedScenario],
     queryFn: () => fetchSheetGrid(runId!, sheetSlug, selectedScenario),
-    enabled: Boolean(runId) && ENABLED_SHEETS.has(sheetSlug) && !embeddedGrid,
+    enabled: Boolean(runId) && !isRunAudit && !embeddedGrids[sheetSlug],
   });
 
-  const gridData =
-    embeddedGrid && sheetSlug === embeddedGrid.sheet ? embeddedGrid : gridQ.data ?? null;
+  const gridData = isRunAudit
+    ? null
+    : embeddedGrids[sheetSlug] ?? gridQ.data ?? null;
 
   const handleRun = useCallback(async () => {
     setRunning(true);
@@ -60,7 +88,9 @@ export default function AuditApp() {
         use_cache: true,
       });
       setRunId(result.run_id);
-      setEmbeddedGrid(result.audit_grids?.starlink ?? null);
+      if (result.audit_grids) {
+        setEmbeddedGrids(result.audit_grids);
+      }
     } catch (e) {
       setError(String(e));
     } finally {
@@ -98,11 +128,24 @@ export default function AuditApp() {
     [runId, searchParams, setSearchParams, gridData?.source_sheet, selectedScenario],
   );
 
+  const navigateToCell = useCallback(
+    (opts: { sheetSlug: string; rowId?: string; year?: number; lineageKey?: string }) => {
+      const params = new URLSearchParams();
+      if (opts.rowId) params.set("row", opts.rowId);
+      if (opts.year != null) params.set("col", String(opts.year));
+      const qs = params.toString();
+      navigate(`/audit/${opts.sheetSlug}${qs ? `?${qs}` : ""}`);
+      setLineage(null);
+      setActiveCell(null);
+    },
+    [navigate],
+  );
+
   const urlRow = searchParams.get("row");
   const urlCol = searchParams.get("col");
 
   useEffect(() => {
-    if (!gridData || !urlRow || !urlCol) return;
+    if (!gridData || !urlRow || !urlCol || isRunAudit) return;
     const year = parseInt(urlCol, 10);
     const row = gridData.rows.find((r) => r.row_id === urlRow);
     if (!row || row.is_header) return;
@@ -118,15 +161,11 @@ export default function AuditApp() {
       unit: row.unit,
       cellKind: row.cell_kinds[yearIndex],
     };
-    if (
-      activeCell?.rowId === cell.rowId &&
-      activeCell?.year === cell.year &&
-      lineage
-    ) {
+    if (activeCell?.rowId === cell.rowId && activeCell?.year === cell.year && lineage) {
       return;
     }
     void openLineage(cell);
-  }, [gridData, urlRow, urlCol, openLineage, activeCell, lineage]);
+  }, [gridData, urlRow, urlCol, openLineage, activeCell, lineage, isRunAudit]);
 
   const activeSheetMeta = useMemo(
     () => sheetsQ.data?.find((s) => s.slug === sheetSlug),
@@ -134,11 +173,8 @@ export default function AuditApp() {
   );
 
   const onSheetChange = (slug: string) => {
-    if (!ENABLED_SHEETS.has(slug)) return;
     navigate(`/audit/${slug}${searchParams.toString() ? `?${searchParams.toString()}` : ""}`);
   };
-
-  const sheetDisabled = !ENABLED_SHEETS.has(sheetSlug);
 
   return (
     <div className="audit-app">
@@ -174,7 +210,6 @@ export default function AuditApp() {
           <SheetTabs
             sheets={sheetsQ.data ?? []}
             activeSlug={sheetSlug}
-            enabledSlugs={ENABLED_SHEETS}
             onSelect={onSheetChange}
           />
           <ScenarioSidebar
@@ -191,15 +226,14 @@ export default function AuditApp() {
         </aside>
 
         <div className="audit-center">
-          {sheetDisabled ? (
-            <div className="audit-placeholder">
-              <p>
-                <strong>{activeSheetMeta?.display_name ?? sheetSlug}</strong> ships in Phase 2.
-              </p>
-              <button type="button" onClick={() => navigate("/audit/starlink")}>
-                Open Starlink sheet
-              </button>
-            </div>
+          {isRunAudit ? (
+            <RunAuditTab
+              runId={runId}
+              scenario={selectedScenario}
+              onNavigateDivergence={({ sheetSlug: slug, rowId, year }) =>
+                navigateToCell({ sheetSlug: slug, rowId, year })
+              }
+            />
           ) : (
             <>
               <div className="audit-grid-panel">
@@ -225,26 +259,45 @@ export default function AuditApp() {
                     </span>
                   </div>
                 </div>
-                {gridQ.isLoading && !gridData && <p className="audit-loading">Loading grid…</p>}
+                {gridQ.isLoading && !gridData && (
+                  <p className="audit-loading">Loading grid…</p>
+                )}
                 {gridData && (
-                  <Grid
-                    payload={gridData}
-                    activeCell={activeCell}
-                    onCellSelect={openLineage}
-                  />
+                  <Grid payload={gridData} activeCell={activeCell} onCellSelect={openLineage} />
                 )}
               </div>
               <DerivationPanel entry={lineage} activeCell={activeCell} />
+              <DependencyGraph
+                lineageKey={activeCell?.lineageKey ?? null}
+                runId={runId}
+                year={activeCell?.year}
+                sheet={gridData?.source_sheet}
+                row={activeCell?.rowIndex}
+                scenario={selectedScenario}
+                onNavigateCell={({ sheetSlug: slug, rowId, year, lineageKey }) => {
+                  navigateToCell({ sheetSlug: slug, rowId, year, lineageKey });
+                }}
+              />
+              <div className="sources-history-row">
+                <SourcesPanel entry={lineage} />
+                <ChangeHistoryList lineageKey={activeCell?.lineageKey ?? null} />
+              </div>
             </>
           )}
         </div>
 
-        <Minimap
-          activeSheetSlug={sheetSlug}
-          lineage={lineage}
-          activeCell={activeCell}
-          onNavigateSheet={onSheetChange}
-        />
+        {!isRunAudit && (
+          <Minimap
+            activeSheetSlug={sheetSlug}
+            lineage={lineage}
+            activeCell={activeCell}
+            onNavigateSheet={onSheetChange}
+            onNavigateCell={(n) => {
+              const slug = sheetSlugFromName(n.label.split("!")[0]);
+              navigateToCell({ sheetSlug: slug, lineageKey: n.key });
+            }}
+          />
+        )}
       </div>
     </div>
   );

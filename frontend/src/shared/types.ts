@@ -4,6 +4,79 @@ export type Scenario = {
   path: string;
 };
 
+export type ChangeHistoryEntry = {
+  date: string;
+  commit_sha: string;
+  title: string;
+  change_kind: "formula" | "anchor" | "input" | "initial";
+  effect_on_cell?: { before: number | null; after: number | null; delta: number | null } | null;
+  dev_log_anchor?: string | null;
+  summary?: string;
+  function?: string | null;
+};
+
+export type LineageGraphNode = {
+  id: string;
+  type: string;
+  position: { x: number; y: number };
+  data: {
+    key: string;
+    label: string;
+    subtitle: string;
+    active?: boolean;
+    sheet?: string;
+    row?: string;
+    year?: number;
+  };
+};
+
+export type LineageGraphPayload = {
+  root_key: string;
+  depth: number;
+  nodes: LineageGraphNode[];
+  edges: Array<{ id: string; source: string; target: string; type?: string }>;
+};
+
+export type RunAuditPayload = {
+  run_id: string;
+  solver: { iterations: number; converged: boolean; max_residual: number };
+  conservation: {
+    all_ok: boolean;
+    r108_by_year: Array<{
+      year: number;
+      status: string;
+      ok: boolean;
+      max_residual_mm: number;
+    }>;
+  };
+  calibration_anchors: Array<{
+    name: string;
+    target: number;
+    tolerance_pct: number;
+    actual: number | null;
+    within_tolerance: boolean;
+    delta: number | null;
+  }>;
+  divergence_summary: {
+    matching_count: number;
+    diverging_count: number;
+    mapped_count: number;
+    total_compared: number;
+  };
+  divergences: Array<{
+    sheet: string;
+    sheet_slug: string;
+    row_id: string;
+    label: string;
+    year: number;
+    xlsx_value: number | null;
+    code_value: number | null;
+    delta: number | null;
+    triage: string;
+    triage_note: string;
+  }>;
+};
+
 export type SheetMeta = {
   slug: string;
   display_name: string;
@@ -12,6 +85,7 @@ export type SheetMeta = {
   col_count: number;
   lifecycle_stage: LifecycleStage;
   enabled: boolean;
+  is_run_audit?: boolean;
 };
 
 export type LifecycleStage =
@@ -87,7 +161,7 @@ export type LineageEntry = {
   downstream?: Array<{ key: string; label: string }>;
   sources?: {
     input_provenance?: { source: string; reference: string; url?: string };
-    methodology: { spec_section: string; principle: string; rule: string };
+    methodology: { spec_section: string; principle: string; rule: string; module?: string };
     calibration_anchor?: { target: number; tolerance_pct: number; basis: string };
   };
 };

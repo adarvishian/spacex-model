@@ -28,6 +28,9 @@ from spacex_model.service.mc_store import serverless_job_progress
 from spacex_model.service.grid import build_grid_payload
 from spacex_model.service.lineage import lookup_lineage
 from spacex_model.service.lineage_enrich import enrich_lineage
+from spacex_model.service.lineage_graph import build_lineage_graph
+from spacex_model.service.lineage_history import fetch_change_history, history_cache_key
+from spacex_model.service.run_audit_payload import build_run_audit_payload
 from spacex_model.service.models import DeterministicRunRequest, McSubmitRequest
 from spacex_model.service.run_store import get_run_store
 from spacex_model.service.serializers import (
@@ -242,7 +245,7 @@ def sheet_grid(
     scenario: str | None = Query(default=None, description="Scenario fallback for serverless"),
 ) -> dict[str, Any]:
     meta = get_sheet(sheet_slug)
-    if meta is None or not meta.enabled:
+    if meta is None or meta.slug == "run_audit":
         raise HTTPException(status_code=404, detail=f"Sheet not found: {sheet_slug}")
 
     cache = get_cache()
@@ -254,6 +257,64 @@ def sheet_grid(
     result = _resolve_model_result(run_id, scenario=scenario)
     payload = build_grid_payload(meta, result)
     cache.set(grid_cache_key, payload, ttl_sec=3600)
+    return payload
+
+
+@router.get("/lineage/{key}/history", dependencies=[Depends(require_api_key)])
+def lineage_history(key: str, limit: int = Query(default=20, ge=1, le=100)) -> dict[str, Any]:
+    cache = get_cache()
+    cache_key = history_cache_key(key)
+    cached = cache.get(cache_key)
+    if cached is not None:
+        return cached
+
+    base = lookup_lineage(key)
+    module_path = base.module_path if base else None
+    function = base.function if base else None
+    entries = fetch_change_history(key, module_path=module_path, function=function, limit=limit)
+    payload = {"key": key, "entries": entries, "total": len(entries)}
+    cache.set(cache_key, payload, ttl_sec=900)
+    return payload
+
+
+@router.get("/lineage/{key}/graph", dependencies=[Depends(require_api_key)])
+def lineage_graph(
+    key: str,
+    run_id: str = Query(..., description="Deterministic run id"),
+    depth: int = Query(default=2, ge=1, le=4),
+    year: int | None = Query(default=None, ge=2025, le=2050),
+    sheet: str | None = Query(default=None),
+    row: int | None = Query(default=None),
+    scenario: str | None = Query(default=None, description="Scenario fallback for serverless"),
+) -> dict[str, Any]:
+    try:
+        result = _resolve_model_result(run_id, scenario=scenario)
+        return build_lineage_graph(
+            key,
+            result,
+            depth=depth,
+            year=year,
+            sheet=sheet,
+            row=row,
+        )
+    except KeyError:
+        raise HTTPException(status_code=404, detail=f"Unknown lineage key: {key}") from None
+
+
+@router.get("/runs/{run_id}/audit-dashboard", dependencies=[Depends(require_api_key)])
+def run_audit_dashboard(
+    run_id: str,
+    scenario: str | None = Query(default=None, description="Scenario fallback for serverless"),
+) -> dict[str, Any]:
+    cache = get_cache()
+    cache_key = f"audit_dashboard:{run_id}"
+    cached = cache.get(cache_key)
+    if cached is not None:
+        return cached
+
+    result = _resolve_model_result(run_id, scenario=scenario)
+    payload = build_run_audit_payload(result)
+    cache.set(cache_key, payload, ttl_sec=3600)
     return payload
 
 

@@ -215,6 +215,39 @@ def test_starlink_grid_and_extended_lineage(client) -> None:
     assert "resolved_inputs" in ext
 
 
+@pytest.mark.skipif(not WORKBOOK.exists(), reason="V2.16 workbook not present")
+@pytest.mark.slow
+def test_phase2_endpoints(client) -> None:
+    run = client.post(
+        "/api/runs/deterministic",
+        json={"scenario": "base_case", "overrides": {}, "use_cache": True},
+    )
+    assert run.status_code == 200
+    run_id = run.json()["run_id"]
+
+    for slug in ("assumptions", "group_pnl", "allocator"):
+        grid = client.get(f"/api/sheets/{slug}/grid?run_id={run_id}")
+        assert grid.status_code == 200, slug
+        assert len(grid.json()["rows"]) > 0
+
+    history = client.get("/api/lineage/module.starlink.total_revenue/history")
+    assert history.status_code == 200
+    assert "entries" in history.json()
+
+    graph = client.get(
+        f"/api/lineage/module.starlink.total_revenue/graph?run_id={run_id}&depth=2&year=2030"
+    )
+    assert graph.status_code == 200
+    assert len(graph.json()["nodes"]) >= 1
+
+    dashboard = client.get(f"/api/runs/{run_id}/audit-dashboard")
+    assert dashboard.status_code == 200
+    body = dashboard.json()
+    assert "solver" in body
+    assert "conservation" in body
+    assert "divergences" in body
+
+
 def test_frontend_package_exists() -> None:
     pkg = REPO / "frontend" / "package.json"
     assert pkg.exists()

@@ -6,9 +6,16 @@ type Props = {
   lineage: LineageEntry | null;
   activeCell: ActiveCell | null;
   onNavigateSheet: (slug: string) => void;
+  onNavigateCell?: (node: { key: string; label: string }) => void;
 };
 
-export function Minimap({ activeSheetSlug, lineage, activeCell, onNavigateSheet }: Props) {
+export function Minimap({
+  activeSheetSlug,
+  lineage,
+  activeCell,
+  onNavigateSheet,
+  onNavigateCell,
+}: Props) {
   const lifecycle = lineage?.lifecycle_stage ?? "output";
   const sectionRef =
     lineage?.section_ref ??
@@ -77,9 +84,14 @@ export function Minimap({ activeSheetSlug, lineage, activeCell, onNavigateSheet 
         <h3>Upstream (1-hop)</h3>
         {upstream.length === 0 && <p className="muted">Select a cell to see upstream cells.</p>}
         {upstream.map((n) => (
-          <div key={n.key} className="neighbor-row">
+          <button
+            key={n.key}
+            type="button"
+            className="neighbor-row neighbor-btn"
+            onClick={() => onNavigateCell?.(n)}
+          >
             <span className="arrow">←</span> {n.label}
-          </div>
+          </button>
         ))}
       </div>
 
@@ -87,9 +99,14 @@ export function Minimap({ activeSheetSlug, lineage, activeCell, onNavigateSheet 
         <h3>Downstream (1-hop)</h3>
         {downstream.length === 0 && <p className="muted">Select a cell to see downstream cells.</p>}
         {downstream.map((n) => (
-          <div key={n.key} className="neighbor-row">
+          <button
+            key={n.key}
+            type="button"
+            className="neighbor-row neighbor-btn"
+            onClick={() => onNavigateCell?.(n)}
+          >
             <span className="arrow">→</span> {n.label}
-          </div>
+          </button>
         ))}
       </div>
     </aside>
