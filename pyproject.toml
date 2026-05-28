@@ -69,3 +69,6 @@ markers = [
 
 [tool.vercel]
 entrypoint = "index:app"
+
+[tool.vercel.scripts]
+build = "cd frontend && npm ci && npm run build"
