@@ -22,14 +22,14 @@ def client():
 
 
 def test_health(client) -> None:
-    res = client.get("/health")
+    res = client.get("/api/health")
     assert res.status_code == 200
     body = res.json()
     assert body["status"] == "ok"
 
 
 def test_list_scenarios(client) -> None:
-    res = client.get("/scenarios")
+    res = client.get("/api/scenarios")
     assert res.status_code == 200
     names = {s["name"] for s in res.json()}
     assert "base_case" in names
@@ -37,14 +37,14 @@ def test_list_scenarios(client) -> None:
 
 
 def test_lineage_index(client) -> None:
-    res = client.get("/lineage")
+    res = client.get("/api/lineage")
     assert res.status_code == 200
     keys = {e["key"] for e in res.json()}
     assert "group.group_fcf" in keys
 
 
 def test_lineage_detail(client) -> None:
-    res = client.get("/lineage/group.group_fcf")
+    res = client.get("/api/lineage/group.group_fcf")
     assert res.status_code == 200
     body = res.json()
     assert body["function"]
@@ -57,7 +57,7 @@ def test_deterministic_run_and_cache(client) -> None:
 
     get_cache().delete("test")  # warm cache module
     payload = {"scenario": "base_case", "overrides": {}, "use_cache": True}
-    res1 = client.post("/runs/deterministic", json=payload)
+    res1 = client.post("/api/runs/deterministic", json=payload)
     assert res1.status_code == 200
     body1 = res1.json()
     assert body1["run_id"]
@@ -66,7 +66,7 @@ def test_deterministic_run_and_cache(client) -> None:
     assert "group" in body1
     assert "modules" in body1
 
-    res2 = client.post("/runs/deterministic", json=payload)
+    res2 = client.post("/api/runs/deterministic", json=payload)
     assert res2.status_code == 200
     body2 = res2.json()
     assert body2.get("cached") is True
@@ -87,7 +87,7 @@ def test_in_memory_cache_roundtrip() -> None:
 @pytest.mark.slow
 def test_mc_job_submit(client) -> None:
     res = client.post(
-        "/runs/mc",
+        "/api/runs/mc",
         json={"trials": 4, "base_seed": 1, "n_jobs": 1, "include_tornado": False},
     )
     assert res.status_code == 200
@@ -97,7 +97,7 @@ def test_mc_job_submit(client) -> None:
 
     status = "queued"
     for _ in range(120):
-        poll = client.get(f"/runs/mc/{job_id}")
+        poll = client.get(f"/api/runs/mc/{job_id}")
         assert poll.status_code == 200
         status = poll.json()["status"]
         if status in ("completed", "failed"):

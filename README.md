@@ -43,7 +43,7 @@ pip install -e ".[service]"
 spacex-api --host 127.0.0.1 --port 8000
 ```
 
-Endpoints: `/health`, `/scenarios`, `/runs/deterministic`, `/runs/mc`, `/lineage/{key}`.
+Endpoints: `/api/health`, `/api/scenarios`, `/api/runs/deterministic`, `/api/runs/mc`, `/api/lineage/{key}`.
 
 Optional env: `SPACEX_MODEL_REDIS_URL` (result cache), `SPACEX_MODEL_API_KEY` (auth).
 

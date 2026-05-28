@@ -8,7 +8,7 @@ import subprocess
 from pathlib import Path
 from typing import Any
 
-from fastapi import Depends, FastAPI, HTTPException, Query
+from fastapi import APIRouter, Depends, FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
@@ -38,6 +38,8 @@ app = FastAPI(
     description="Deterministic scenario runs, Monte Carlo, and audit lineage API",
     version="0.1.0",
 )
+
+router = APIRouter(prefix="/api")
 
 app.add_middleware(
     CORSMiddleware,
@@ -132,7 +134,7 @@ def _ui_dir() -> Path | None:
     return None
 
 
-@app.get("/health")
+@router.get("/health")
 def health() -> dict[str, Any]:
     settings = get_settings()
     ui = _ui_dir()
@@ -146,7 +148,7 @@ def health() -> dict[str, Any]:
     }
 
 
-@app.get("/scenarios", dependencies=[Depends(require_api_key)])
+@router.get("/scenarios", dependencies=[Depends(require_api_key)])
 def list_scenarios() -> list[dict[str, str]]:
     settings = get_settings()
     out: list[dict[str, str]] = []
@@ -162,7 +164,7 @@ def list_scenarios() -> list[dict[str, str]]:
     return out
 
 
-@app.get("/assumptions/catalog", dependencies=[Depends(require_api_key)])
+@router.get("/assumptions/catalog", dependencies=[Depends(require_api_key)])
 def assumptions_catalog() -> list[dict[str, Any]]:
     settings = get_settings()
     if not settings.workbook_path.exists():
@@ -172,12 +174,12 @@ def assumptions_catalog() -> list[dict[str, Any]]:
     return serialize_assumption_catalog(assumptions)
 
 
-@app.get("/lineage", dependencies=[Depends(require_api_key)])
+@router.get("/lineage", dependencies=[Depends(require_api_key)])
 def lineage_index() -> list[dict[str, Any]]:
     return serialize_lineage_index()
 
 
-@app.get("/lineage/{key}", dependencies=[Depends(require_api_key)])
+@router.get("/lineage/{key}", dependencies=[Depends(require_api_key)])
 def lineage_detail(key: str) -> dict[str, Any]:
     entry = lookup_lineage(key)
     if entry is None:
@@ -185,7 +187,7 @@ def lineage_detail(key: str) -> dict[str, Any]:
     return entry.to_dict()
 
 
-@app.post("/runs/deterministic", dependencies=[Depends(require_api_key)])
+@router.post("/runs/deterministic", dependencies=[Depends(require_api_key)])
 def run_deterministic(body: DeterministicRunRequest) -> dict[str, Any]:
     settings = get_settings()
     if not settings.workbook_path.exists():
@@ -216,7 +218,7 @@ def run_deterministic(body: DeterministicRunRequest) -> dict[str, Any]:
     return payload
 
 
-@app.get("/runs/{run_id}", dependencies=[Depends(require_api_key)])
+@router.get("/runs/{run_id}", dependencies=[Depends(require_api_key)])
 def get_run(run_id: str) -> dict[str, Any]:
     settings = get_settings()
     audit_path = settings.outputs_dir / run_id / "audit.json"
@@ -226,7 +228,7 @@ def get_run(run_id: str) -> dict[str, Any]:
     return {"run_id": run_id, "audit": audit}
 
 
-@app.get("/runs/{run_id}/audit", dependencies=[Depends(require_api_key)])
+@router.get("/runs/{run_id}/audit", dependencies=[Depends(require_api_key)])
 def get_run_audit(run_id: str) -> dict[str, Any]:
     settings = get_settings()
     out_dir = settings.outputs_dir / run_id
@@ -241,7 +243,7 @@ def get_run_audit(run_id: str) -> dict[str, Any]:
     return {"run_id": run_id, "audit": audit, "solver_trace": solver}
 
 
-@app.get("/runs/{run_id}/tornado", dependencies=[Depends(require_api_key)])
+@router.get("/runs/{run_id}/tornado", dependencies=[Depends(require_api_key)])
 def get_run_tornado(
     run_id: str,
     top_n: int = Query(default=10, ge=1, le=50),
@@ -256,7 +258,7 @@ def get_run_tornado(
     return {"run_id": run_id, "tornado": serialize_tornado(bars)}
 
 
-@app.post("/runs/mc", dependencies=[Depends(require_api_key)])
+@router.post("/runs/mc", dependencies=[Depends(require_api_key)])
 def submit_mc(body: McSubmitRequest) -> dict[str, Any]:
     settings = get_settings()
     if not settings.workbook_path.exists():
@@ -273,7 +275,7 @@ def submit_mc(body: McSubmitRequest) -> dict[str, Any]:
     return {"job_id": job_id, "status": JobStatus.QUEUED.value}
 
 
-@app.get("/runs/mc/{job_id}", dependencies=[Depends(require_api_key)])
+@router.get("/runs/mc/{job_id}", dependencies=[Depends(require_api_key)])
 def get_mc_job(job_id: str) -> dict[str, Any]:
     job = get_job_manager().get(job_id)
     if job is None:
@@ -306,6 +308,8 @@ def _mount_ui() -> None:
 
 
 _mount_ui()
+
+app.include_router(router)
 
 
 def create_app() -> FastAPI:
