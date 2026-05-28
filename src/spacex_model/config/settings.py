@@ -16,6 +16,9 @@ def _find_repo_root() -> Path:
     for candidate in (here, *here.parents):
         if (candidate / "pyproject.toml").is_file() and (candidate / "scenarios").is_dir():
             return candidate
+    for candidate in (Path("/var/task"), Path.cwd()):
+        if (candidate / "scenarios").is_dir():
+            return candidate.resolve()
     return here.parents[3]
 
 

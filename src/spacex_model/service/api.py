@@ -123,13 +123,25 @@ def _validate_overrides(
     return warnings
 
 
+def _ui_dir() -> Path | None:
+    root = get_repo_root()
+    for relative in ("static/ui", "public"):
+        candidate = root / relative
+        if (candidate / "index.html").is_file():
+            return candidate
+    return None
+
+
 @app.get("/health")
 def health() -> dict[str, Any]:
     settings = get_settings()
+    ui = _ui_dir()
     return {
         "status": "ok",
         "workbook_exists": settings.workbook_path.exists(),
         "git_sha": _git_sha(),
+        "repo_root": str(get_repo_root()),
+        "ui_available": ui is not None,
     }
 
 
@@ -277,12 +289,12 @@ def get_mc_job(job_id: str) -> dict[str, Any]:
 
 
 def _mount_ui() -> None:
-    """Serve Vite build output from public/ when present (local prod + Vercel)."""
-    public = get_repo_root() / "public"
-    index = public / "index.html"
-    assets = public / "assets"
-    if not index.is_file():
+    """Serve Vite build output when present (tracked static/ui/ on Vercel)."""
+    ui = _ui_dir()
+    if ui is None:
         return
+    index = ui / "index.html"
+    assets = ui / "assets"
 
     @app.get("/", include_in_schema=False)
     def serve_ui_index() -> FileResponse:

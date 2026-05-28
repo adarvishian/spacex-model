@@ -71,4 +71,4 @@ markers = [
 entrypoint = "index:app"
 
 [tool.vercel.scripts]
-build = "cd frontend && npm ci && npm run build"
+build = "cd frontend && npm ci && npm run build && test -f ../static/ui/index.html"
