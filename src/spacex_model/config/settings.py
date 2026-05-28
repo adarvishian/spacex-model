@@ -31,6 +31,18 @@ _DEFAULT_WORKBOOK = (
 )
 
 
+def is_serverless() -> bool:
+    """True on Vercel Functions / AWS Lambda."""
+    return bool(os.environ.get("VERCEL") or os.environ.get("AWS_LAMBDA_FUNCTION_NAME"))
+
+
+def _default_outputs_dir() -> Path:
+    """Use /tmp on serverless — /var/task is read-only."""
+    if is_serverless():
+        return Path("/tmp/spacex_model/outputs")
+    return _REPO_ROOT / "outputs"
+
+
 def get_repo_root() -> Path:
     return _REPO_ROOT
 
@@ -39,7 +51,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix="SPACEX_MODEL_", env_file=".env", extra="ignore")
 
     workbook_path: Path = _DEFAULT_WORKBOOK
-    outputs_dir: Path = _REPO_ROOT / "outputs"
+    outputs_dir: Path = _default_outputs_dir()
     scenarios_dir: Path = _REPO_ROOT / "scenarios"
     redis_url: str | None = None
     cache_max_entries: int = 128

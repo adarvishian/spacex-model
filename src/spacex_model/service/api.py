@@ -13,7 +13,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
-from spacex_model.config.settings import get_repo_root, get_settings
+from spacex_model.config.settings import get_repo_root, get_settings, is_serverless
 from spacex_model.engine.pipeline import run_pipeline
 from spacex_model.inputs.assumptions import assumptions_from_ingest
 from spacex_model.inputs.demand_curves import demand_curves_from_ingest
@@ -142,6 +142,7 @@ def health() -> dict[str, Any]:
         "git_sha": _git_sha(),
         "repo_root": str(get_repo_root()),
         "ui_available": ui is not None,
+        "serverless": is_serverless(),
     }
 
 
@@ -263,7 +264,7 @@ def submit_mc(body: McSubmitRequest) -> dict[str, Any]:
     job_id = get_job_manager().submit_mc(
         trials=body.trials,
         base_seed=body.base_seed,
-        n_jobs=body.n_jobs,
+        n_jobs=1 if is_serverless() else body.n_jobs,
         scenario_name=body.scenario,
         include_tornado=body.include_tornado,
         tornado_top=body.tornado_top,
