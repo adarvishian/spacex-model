@@ -68,6 +68,26 @@ Override source of truth for disclosed inputs: `src/spacex_model/inputs/s1_overr
 
 ---
 
+## 2026-05-28 — Frontend Phase 3 (Client Mode)
+
+**Trigger:** `docs/FRONTEND_PRD.md` Phase 3 — curated client UI, custom builder, xlsx exports, share links.
+
+### Shipped
+
+| Area | Change |
+|------|--------|
+| API | `GET /api/client/scenarios`, `GET /api/client/inputs/whitelist`, share validate/decode, `POST /api/exports/scenario.xlsx`, `POST /api/exports/scenario_pack.xlsx`, `GET /api/client/methodology` |
+| Backend | `service/client_config.py`, `io/scenario_export.py`; `DeterministicRunRequest.client_overrides` maps vetted ids → canonical labels |
+| Frontend | `/client` shell: scenario cards, headline EV + sum-of-parts + FCF sparkline, module summary, custom builder, downloads, share link (`?s=` base64) |
+| Vercel | Unchanged SPA rewrites; exports run in serverless via existing `index:app` ASGI |
+
+### Notes
+
+- Methodology download is `.txt` until a tagged-release PDF asset is added under `static/`.
+- Cover-sheet xlsx hyperlinks use `public_base_url` from the export request (browser `origin` in Client Mode).
+
+---
+
 ## 2026-05-28 — S-1 adherence audit §7.2 P0 backlog
 
 **Trigger:** `SpaceX_Modeler_S1_Adherence_Audit_2026-05-28.docx` — "S-1 wins for disclosed values."

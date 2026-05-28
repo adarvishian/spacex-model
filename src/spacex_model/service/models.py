@@ -10,6 +10,7 @@ from pydantic import BaseModel, Field
 class DeterministicRunRequest(BaseModel):
     scenario: str = "base_case"
     overrides: dict[str, Any] = Field(default_factory=dict)
+    client_overrides: dict[str, float] = Field(default_factory=dict)
     use_cache: bool = True
 
 
@@ -32,3 +33,20 @@ class ScenarioInfo(BaseModel):
     name: str
     description: str
     path: str
+
+
+class ExportScenarioRequest(BaseModel):
+    run_id: str | None = None
+    scenario: str = "base_case"
+    overrides: dict[str, float] = Field(default_factory=dict)
+    public_base_url: str = ""
+
+
+class ExportScenarioPackRequest(BaseModel):
+    scenarios: list[str] = Field(default_factory=lambda: ["base_case", "bear", "bull"])
+    public_base_url: str = ""
+
+
+class ClientShareValidateRequest(BaseModel):
+    scenario: str = "base_case"
+    overrides: dict[str, float] = Field(default_factory=dict)

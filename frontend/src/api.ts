@@ -88,7 +88,8 @@ export function fetchSheetGrid(runId: string, sheetSlug: string, scenario?: stri
 
 export function runDeterministic(body: {
   scenario: string;
-  overrides: Record<string, number>;
+  overrides?: Record<string, number>;
+  client_overrides?: Record<string, number>;
   use_cache?: boolean;
 }) {
   return request<DeterministicRun>("/runs/deterministic", {
@@ -165,6 +166,69 @@ export function submitMc(body: {
     method: "POST",
     body: JSON.stringify({ scenario: "base_case", ...body }),
   });
+}
+
+export function fetchClientScenarios() {
+  return request<import("./shared/types").ClientScenarioCard[]>("/client/scenarios");
+}
+
+export function fetchClientInputWhitelist() {
+  return request<import("./shared/types").ClientInputSpec[]>("/client/inputs/whitelist");
+}
+
+export function validateClientShare(body: {
+  scenario: string;
+  overrides: Record<string, number>;
+}) {
+  return request<{
+    ok: boolean;
+    scenario: string;
+    share_token: string;
+    canonical_overrides: Record<string, unknown>;
+  }>("/client/validate-share", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+}
+
+export function decodeClientShare(token: string) {
+  return request<{
+    scenario: string;
+    overrides: Record<string, number>;
+    canonical_overrides: Record<string, unknown>;
+  }>(`/client/decode-share?s=${encodeURIComponent(token)}`);
+}
+
+export async function downloadScenarioXlsx(body: {
+  run_id?: string;
+  scenario: string;
+  overrides?: Record<string, number>;
+  public_base_url?: string;
+}) {
+  const res = await fetch(`${API_BASE}/exports/scenario.xlsx`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) throw new Error(await res.text() || `HTTP ${res.status}`);
+  return res.blob();
+}
+
+export async function downloadScenarioPackXlsx(publicBaseUrl?: string) {
+  const res = await fetch(`${API_BASE}/exports/scenario_pack.xlsx`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      scenarios: ["base_case", "bear", "bull"],
+      public_base_url: publicBaseUrl ?? "",
+    }),
+  });
+  if (!res.ok) throw new Error(await res.text() || `HTTP ${res.status}`);
+  return res.blob();
+}
+
+export function methodologyDownloadUrl() {
+  return `${API_BASE}/client/methodology`;
 }
 
 export function fetchMcJob(jobId: string) {

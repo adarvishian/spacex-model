@@ -185,6 +185,44 @@ export type DeterministicRun = {
   conservation?: { all_ok: boolean };
 };
 
+export type ClientScenarioCard = {
+  id: string;
+  name: string;
+  description: string;
+  key_inputs: string[];
+  group_ev_2025_b: number | null;
+};
+
+export type ClientInputSpec = {
+  id: string;
+  plain_label: string;
+  min: number;
+  max: number;
+  default: number;
+};
+
+export type ClientRunSummary = {
+  run_id: string;
+  scenario: string;
+  valuation: { group_ev_2025_b: number };
+  module_ev: Record<
+    string,
+    { display_name: string; ev_2025_b: number; lineage_key?: string }
+  >;
+  group: {
+    group_fcf: { years: number[]; values: number[] };
+  };
+  modules: Record<
+    string,
+    {
+      display_name: string;
+      total_revenue: { values: number[] };
+      blended_irr: { values: number[]; unit?: string };
+    }
+  >;
+  override_warnings: { label: string; value: string; message: string }[];
+};
+
 export type ActiveCell = {
   rowId: string;
   rowIndex: number;

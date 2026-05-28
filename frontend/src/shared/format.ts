@@ -1,3 +1,8 @@
+export function formatBillions(v: number | null | undefined): string {
+  if (v == null || Number.isNaN(v)) return "—";
+  return `$${v.toFixed(0)}B`;
+}
+
 export function formatMm(v: number | null | undefined): string {
   if (v == null || Number.isNaN(v)) return "—";
   const abs = Math.abs(v);

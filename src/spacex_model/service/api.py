@@ -10,7 +10,7 @@ from typing import Any
 
 from fastapi import APIRouter, Depends, FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, Response
 from fastapi.staticfiles import StaticFiles
 
 from spacex_model.config.settings import get_repo_root, get_settings, is_serverless
@@ -31,7 +31,27 @@ from spacex_model.service.lineage_enrich import enrich_lineage
 from spacex_model.service.lineage_graph import build_lineage_graph
 from spacex_model.service.lineage_history import fetch_change_history, history_cache_key
 from spacex_model.service.run_audit_payload import build_run_audit_payload
-from spacex_model.service.models import DeterministicRunRequest, McSubmitRequest
+from spacex_model.io.scenario_export import (
+    export_active_scenario_xlsx,
+    export_scenario_pack_xlsx as build_scenario_pack_xlsx,
+    run_for_export,
+)
+from spacex_model.service.client_config import (
+    CLIENT_SCENARIO_IDS,
+    client_overrides_to_canonical,
+    decode_share_state,
+    encode_share_state,
+    scenario_card_overrides_human,
+    serialize_input_whitelist,
+    validate_client_overrides,
+)
+from spacex_model.service.models import (
+    ClientShareValidateRequest,
+    DeterministicRunRequest,
+    ExportScenarioPackRequest,
+    ExportScenarioRequest,
+    McSubmitRequest,
+)
 from spacex_model.service.run_store import get_run_store
 from spacex_model.service.serializers import (
     serialize_assumption_catalog,
@@ -352,8 +372,15 @@ def run_deterministic(body: DeterministicRunRequest) -> dict[str, Any]:
     if not settings.workbook_path.exists():
         raise HTTPException(status_code=503, detail="Workbook not available")
 
+    merged_overrides: dict[str, Any] = dict(body.overrides)
+    if body.client_overrides:
+        errors = validate_client_overrides(body.client_overrides)
+        if errors:
+            raise HTTPException(status_code=400, detail={"errors": errors})
+        merged_overrides.update(client_overrides_to_canonical(body.client_overrides))
+
     cache = get_cache()
-    key = _cache_key(body.scenario, body.overrides)
+    key = _cache_key(body.scenario, merged_overrides)
     scenario_path = _scenario_path(body.scenario)
     if body.use_cache:
         cached = cache.get(key)
@@ -364,7 +391,7 @@ def run_deterministic(body: DeterministicRunRequest) -> dict[str, Any]:
                 try:
                     result = run_pipeline(
                         scenario_path=scenario_path,
-                        extra_overrides=body.overrides or None,
+                        extra_overrides=merged_overrides or None,
                         write_outputs=False,
                     )
                     get_run_store().put(rid, result)
@@ -376,11 +403,11 @@ def run_deterministic(body: DeterministicRunRequest) -> dict[str, Any]:
 
     ingest = ingest_workbook(settings.workbook_path)
     base_assumptions = assumptions_from_ingest(ingest)
-    override_warnings = _validate_overrides(base_assumptions, body.overrides)
+    override_warnings = _validate_overrides(base_assumptions, merged_overrides)
 
     result = run_pipeline(
         scenario_path=scenario_path,
-        extra_overrides=body.overrides or None,
+        extra_overrides=merged_overrides or None,
         write_outputs=not is_serverless(),
     )
 
@@ -476,6 +503,167 @@ def get_mc_job(job_id: str) -> dict[str, Any]:
     if job.result:
         response["result"] = job.result
     return response
+
+
+def _preview_ev_for_scenario(scenario: str, overrides: dict[str, Any] | None = None) -> float | None:
+    """Best-effort Group EV from cache without running pipeline."""
+    cache = get_cache()
+    key = _cache_key(scenario, overrides or {})
+    cached = cache.get(key)
+    if cached and "valuation" in cached:
+        ev = cached["valuation"].get("group_ev_2025_b")
+        return float(ev) if ev is not None else None
+    return None
+
+
+@router.get("/client/scenarios", dependencies=[Depends(require_api_key)])
+def client_scenarios() -> list[dict[str, Any]]:
+    """Curated Base / Bear / Bull cards for Client Mode."""
+    out: list[dict[str, Any]] = []
+    for name in CLIENT_SCENARIO_IDS:
+        path = _scenario_path(name)
+        spec = load_scenario(path)
+        preview = _preview_ev_for_scenario(name, spec.overrides)
+        out.append(
+            {
+                "id": name,
+                "name": name.replace("_", " ").title(),
+                "description": spec.description.strip() or f"{name} scenario",
+                "key_inputs": scenario_card_overrides_human(name, spec.overrides),
+                "group_ev_2025_b": preview,
+            }
+        )
+    return out
+
+
+@router.get("/client/inputs/whitelist", dependencies=[Depends(require_api_key)])
+def client_inputs_whitelist() -> list[dict[str, Any]]:
+    return serialize_input_whitelist()
+
+
+@router.post("/client/validate-share", dependencies=[Depends(require_api_key)])
+def client_validate_share(body: ClientShareValidateRequest) -> dict[str, Any]:
+    errors = validate_client_overrides(body.overrides)
+    if errors:
+        raise HTTPException(status_code=400, detail={"errors": errors})
+    canonical = client_overrides_to_canonical(body.overrides)
+    return {
+        "ok": True,
+        "scenario": body.scenario,
+        "canonical_overrides": canonical,
+        "share_token": encode_share_state(body.scenario, body.overrides),
+    }
+
+
+@router.get("/client/decode-share", dependencies=[Depends(require_api_key)])
+def client_decode_share(s: str = Query(..., min_length=1)) -> dict[str, Any]:
+    try:
+        payload = decode_share_state(s)
+    except (ValueError, KeyError, json.JSONDecodeError) as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    return {
+        "scenario": payload.scenario,
+        "overrides": payload.overrides,
+        "canonical_overrides": client_overrides_to_canonical(payload.overrides),
+    }
+
+
+@router.get("/client/methodology", dependencies=[Depends(require_api_key)])
+def client_methodology_download() -> Response:
+    """Methodology one-pager (text until tagged-release PDF asset ships)."""
+    text = (
+        "Mach33 SpaceX Valuation Model — Methodology Summary\n"
+        "====================================================\n\n"
+        "This model values SpaceX on a sum-of-parts basis across Customer Launch, "
+        "Starlink, ODC, AI Stack, and Lunar/Mars modules, with group-level P&L "
+        "conservation and a 2025–2050 horizon.\n\n"
+        "Scenarios (Base, Bear, Bull) apply vetted macro and carve-out assumptions. "
+        "Custom scenarios adjust a bounded subset of Monte Carlo inputs; outputs are "
+        "deterministic given those inputs.\n\n"
+        "For cell-level derivations and audit trails, use Audit Mode in the web app.\n"
+        "Authority: Architecture & Methodology spec and context.md constitutional locks.\n"
+    )
+    return Response(
+        content=text.encode("utf-8"),
+        media_type="text/plain; charset=utf-8",
+        headers={
+            "Content-Disposition": 'attachment; filename="mach33_methodology_one_pager.txt"'
+        },
+    )
+
+
+@router.post("/exports/scenario.xlsx", dependencies=[Depends(require_api_key)])
+def export_scenario_xlsx(body: ExportScenarioRequest) -> Response:
+    settings = get_settings()
+    if not settings.workbook_path.exists():
+        raise HTTPException(status_code=503, detail="Workbook not available")
+
+    canonical_ov: dict[str, Any] = {}
+    if body.overrides:
+        errors = validate_client_overrides(body.overrides)
+        if errors:
+            raise HTTPException(status_code=400, detail={"errors": errors})
+        canonical_ov = client_overrides_to_canonical(body.overrides)
+
+    if body.run_id:
+        try:
+            result = _resolve_model_result(
+                body.run_id,
+                scenario=body.scenario,
+                overrides=canonical_ov or None,
+            )
+        except Exception as exc:
+            raise HTTPException(status_code=404, detail=str(exc)) from exc
+    else:
+        path = _scenario_path(body.scenario)
+        spec = load_scenario(path)
+        merged = {**spec.overrides, **canonical_ov}
+        result = run_for_export(path, extra_overrides=merged or None)
+
+    spec = load_scenario(_scenario_path(body.scenario))
+    data = export_active_scenario_xlsx(
+        result,
+        scenario_name=body.scenario.replace("_", " ").title(),
+        description=spec.description.strip(),
+        base_url=body.public_base_url,
+    )
+    filename = f"spacex_{body.scenario}.xlsx"
+    return Response(
+        content=data,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
+@router.post("/exports/scenario_pack.xlsx", dependencies=[Depends(require_api_key)])
+def export_scenario_pack_xlsx(body: ExportScenarioPackRequest) -> Response:
+    settings = get_settings()
+    if not settings.workbook_path.exists():
+        raise HTTPException(status_code=503, detail="Workbook not available")
+
+    allowed = set(CLIENT_SCENARIO_IDS)
+    names = [n for n in body.scenarios if n in allowed]
+    if not names:
+        raise HTTPException(status_code=400, detail="No valid scenarios in pack request")
+
+    results: dict[str, ModelResult] = {}
+    descriptions: dict[str, str] = {}
+    for name in names:
+        path = _scenario_path(name)
+        spec = load_scenario(path)
+        descriptions[name] = spec.description.strip()
+        results[name] = run_for_export(path, extra_overrides=spec.overrides or None)
+
+    data = build_scenario_pack_xlsx(
+        results,
+        descriptions,
+        base_url=body.public_base_url,
+    )
+    return Response(
+        content=data,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": 'attachment; filename="spacex_scenario_pack.xlsx"'},
+    )
 
 
 def _mount_ui() -> None:

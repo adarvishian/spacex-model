@@ -248,6 +248,71 @@ def test_phase2_endpoints(client) -> None:
     assert "divergences" in body
 
 
+def test_client_scenarios_and_whitelist(client) -> None:
+    res = client.get("/api/client/scenarios")
+    assert res.status_code == 200
+    ids = {c["id"] for c in res.json()}
+    assert ids == {"base_case", "bear", "bull"}
+
+    wl = client.get("/api/client/inputs/whitelist")
+    assert wl.status_code == 200
+    assert len(wl.json()) == 6
+    assert all("plain_label" in x and "canonical_label" not in x for x in wl.json())
+
+
+def test_client_validate_share_rejects_out_of_range(client) -> None:
+    res = client.post(
+        "/api/client/validate-share",
+        json={"scenario": "base_case", "overrides": {"mars_pct": 0.25}},
+    )
+    assert res.status_code == 400
+
+
+def test_client_validate_share_ok(client) -> None:
+    res = client.post(
+        "/api/client/validate-share",
+        json={"scenario": "base_case", "overrides": {"mars_pct": 0.07}},
+    )
+    assert res.status_code == 200
+    assert res.json()["share_token"]
+
+
+@pytest.mark.skipif(not WORKBOOK.exists(), reason="V2.16 workbook not present")
+@pytest.mark.slow
+def test_client_deterministic_with_client_overrides(client) -> None:
+    res = client.post(
+        "/api/runs/deterministic",
+        json={
+            "scenario": "base_case",
+            "client_overrides": {"mars_pct": 0.07},
+            "use_cache": True,
+        },
+    )
+    assert res.status_code == 200
+    assert res.json()["valuation"]["group_ev_2025_b"] > 0
+
+
+@pytest.mark.skipif(not WORKBOOK.exists(), reason="V2.16 workbook not present")
+@pytest.mark.slow
+def test_export_scenario_xlsx(client) -> None:
+    run = client.post(
+        "/api/runs/deterministic",
+        json={"scenario": "base_case", "overrides": {}, "use_cache": True},
+    )
+    assert run.status_code == 200
+    run_id = run.json()["run_id"]
+    export = client.post(
+        "/api/exports/scenario.xlsx",
+        json={"run_id": run_id, "scenario": "base_case", "public_base_url": "https://example.com"},
+    )
+    assert export.status_code == 200
+    assert (
+        export.headers["content-type"]
+        == "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+    assert len(export.content) > 1000
+
+
 def test_frontend_package_exists() -> None:
     pkg = REPO / "frontend" / "package.json"
     assert pkg.exists()
