@@ -10,7 +10,12 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Any
 
-from spacex_model.config.settings import get_settings
+from spacex_model.config.settings import get_settings, is_serverless
+from spacex_model.service.mc_store import (
+    ServerlessMcSnapshot,
+    create_serverless_job,
+    get_serverless_job,
+)
 from spacex_model.engine.pipeline import run_base_case
 from spacex_model.mc.aggregator import aggregate_trials
 from spacex_model.mc.results import extract_trial_metrics, read_trials_parquet
@@ -54,6 +59,19 @@ class JobManager:
         tornado_top: int = 10,
         workbook_path: Path | None = None,
     ) -> str:
+        settings = get_settings()
+        path = workbook_path or settings.workbook_path
+
+        if is_serverless():
+            return create_serverless_job(
+                trials=trials,
+                base_seed=base_seed,
+                scenario_name=scenario_name,
+                include_tornado=include_tornado,
+                tornado_top=tornado_top,
+                workbook_path=path,
+            )
+
         job_id = str(uuid.uuid4())[:8]
         cfg = McRunConfig(
             trials=trials,
@@ -74,6 +92,9 @@ class JobManager:
         return job_id
 
     def get(self, job_id: str) -> McJob | None:
+        if is_serverless() or _jobs_root_exists(job_id):
+            snap = get_serverless_job(job_id, advance=is_serverless())
+            return _snapshot_to_mc_job(snap) if snap else None
         with self._lock:
             return self._jobs.get(job_id)
 
@@ -140,6 +161,23 @@ class JobManager:
                 job = self._jobs[job_id]
                 job.status = JobStatus.FAILED
                 job.error = str(exc)
+
+
+def _snapshot_to_mc_job(snap: ServerlessMcSnapshot) -> McJob:
+    return McJob(
+        job_id=snap.job_id,
+        status=JobStatus(snap.status),
+        config=snap.config,
+        error=snap.error,
+        result=snap.result,
+        output_dir=snap.output_dir,
+    )
+
+
+def _jobs_root_exists(job_id: str) -> bool:
+    from spacex_model.service.mc_store import _state_path
+
+    return _state_path(job_id).exists()
 
 
 _manager: JobManager | None = None

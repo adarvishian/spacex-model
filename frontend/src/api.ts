@@ -81,7 +81,11 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 export function fetchHealth() {
-  return request<{ status: string; git_sha: string | null }>("/health");
+  return request<{
+    status: string;
+    git_sha: string | null;
+    serverless?: boolean;
+  }>("/health");
 }
 
 export function fetchScenarios() {
@@ -127,6 +131,7 @@ export function fetchMcJob(jobId: string) {
   return request<{
     job_id: string;
     status: string;
+    progress?: { trials_done: number; trials: number };
     error?: string;
     result?: {
       aggregation: {

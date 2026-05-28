@@ -144,6 +144,41 @@ def test_tornado_skips_non_convergence(monkeypatch) -> None:
     assert bars == []
 
 
+@pytest.mark.skipif(not WORKBOOK.exists(), reason="V2.16 workbook not present")
+@pytest.mark.slow
+def test_serverless_mc_batched(client, monkeypatch, tmp_path) -> None:
+    """Serverless path runs trials across polls instead of one long invocation."""
+    monkeypatch.setenv("VERCEL", "1")
+    monkeypatch.setenv("SPACEX_MODEL_OUTPUTS_DIR", str(tmp_path / "outputs"))
+
+    from spacex_model.service import jobs as jobs_mod
+
+    jobs_mod._manager = None
+
+    res = client.post(
+        "/api/runs/mc",
+        json={"trials": 3, "base_seed": 1, "n_jobs": 1, "include_tornado": False},
+    )
+    assert res.status_code == 200
+    assert res.json().get("execution") == "batched"
+    job_id = res.json()["job_id"]
+
+    import time
+
+    status = "queued"
+    for _ in range(60):
+        poll = client.get(f"/api/runs/mc/{job_id}")
+        assert poll.status_code == 200
+        body = poll.json()
+        status = body["status"]
+        if status in ("completed", "failed"):
+            break
+        time.sleep(0.5)
+
+    assert status == "completed", poll.json()
+    assert poll.json()["progress"]["trials_done"] == 3
+
+
 def test_frontend_package_exists() -> None:
     pkg = REPO / "frontend" / "package.json"
     assert pkg.exists()

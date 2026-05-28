@@ -81,6 +81,31 @@ def _run_single_trial(
     return row
 
 
+def run_mc_trials(
+    trial_indices: list[int],
+    *,
+    base_assumptions: Assumptions,
+    demand_curves: DemandCurves,
+    ingest: IngestResult,
+    base_seed: int,
+    n_jobs: int = 1,
+) -> list[dict[str, Any]]:
+    """Run a subset of MC trial indices (used for serverless batching)."""
+    if not trial_indices:
+        return []
+    worker = delayed(_run_single_trial)
+    return Parallel(n_jobs=n_jobs)(
+        worker(
+            idx,
+            base_assumptions=base_assumptions,
+            demand_curves=demand_curves,
+            ingest=ingest,
+            base_seed=base_seed,
+        )
+        for idx in trial_indices
+    )
+
+
 def run_mc(
     *,
     workbook_path: Path | None = None,

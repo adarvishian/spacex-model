@@ -24,6 +24,7 @@ from spacex_model.mc.sensitivity import tornado_sensitivity
 from spacex_model.service.auth import require_api_key
 from spacex_model.service.cache import get_cache
 from spacex_model.service.jobs import JobStatus, get_job_manager
+from spacex_model.service.mc_store import serverless_job_progress
 from spacex_model.service.lineage import lookup_lineage
 from spacex_model.service.models import DeterministicRunRequest, McSubmitRequest
 from spacex_model.service.serializers import (
@@ -263,16 +264,26 @@ def submit_mc(body: McSubmitRequest) -> dict[str, Any]:
     settings = get_settings()
     if not settings.workbook_path.exists():
         raise HTTPException(status_code=503, detail="Workbook not available")
+    trials = body.trials
+    include_tornado = body.include_tornado
+    if is_serverless():
+        trials = min(trials, settings.mc_serverless_max_trials)
+        # Tornado runs dozens of full pipelines; defer to GET /runs/{id}/tornado on serverless.
+        include_tornado = False
     job_id = get_job_manager().submit_mc(
-        trials=body.trials,
+        trials=trials,
         base_seed=body.base_seed,
         n_jobs=1 if is_serverless() else body.n_jobs,
         scenario_name=body.scenario,
-        include_tornado=body.include_tornado,
+        include_tornado=include_tornado,
         tornado_top=body.tornado_top,
         workbook_path=settings.workbook_path,
     )
-    return {"job_id": job_id, "status": JobStatus.QUEUED.value}
+    out: dict[str, Any] = {"job_id": job_id, "status": JobStatus.QUEUED.value}
+    if is_serverless():
+        out["execution"] = "batched"
+        out["hint"] = "Poll GET /api/runs/mc/{job_id} until status is completed (each poll runs a batch)."
+    return out
 
 
 @router.get("/runs/mc/{job_id}", dependencies=[Depends(require_api_key)])
@@ -284,6 +295,9 @@ def get_mc_job(job_id: str) -> dict[str, Any]:
         "job_id": job.job_id,
         "status": job.status.value,
     }
+    progress = serverless_job_progress(job_id)
+    if progress is not None:
+        response["progress"] = progress
     if job.error:
         response["error"] = job.error
     if job.result:

@@ -43,10 +43,15 @@ export default function App() {
   const [tab, setTab] = useState<Tab>("deterministic");
   const [mcJobId, setMcJobId] = useState<string | null>(null);
   const [mcStatus, setMcStatus] = useState<string | null>(null);
+  const [mcProgress, setMcProgress] = useState<string | null>(null);
+  const [serverless, setServerless] = useState(false);
 
   useEffect(() => {
     fetchHealth()
-      .then((h) => setGitSha(h.git_sha))
+      .then((h) => {
+        setGitSha(h.git_sha);
+        setServerless(Boolean(h.serverless));
+      })
       .catch(() => undefined);
     fetchScenarios()
       .then(setScenarios)
@@ -91,23 +96,44 @@ export default function App() {
   const handleMc = async () => {
     setError(null);
     setMcStatus("submitting");
+    setMcProgress(null);
     try {
-      const { job_id } = await submitMc({ trials: 200, include_tornado: true, tornado_top: 10 });
+      const trials = serverless ? 40 : 200;
+      const { job_id } = await submitMc({
+        trials,
+        include_tornado: !serverless,
+        tornado_top: 10,
+      });
       setMcJobId(job_id);
       setMcStatus("queued");
       const poll = async () => {
         const job = await fetchMcJob(job_id);
         setMcStatus(job.status);
-        if (job.status === "completed" && job.result?.tornado) {
-          setTornado(job.result.tornado);
+        if (job.progress) {
+          setMcProgress(`${job.progress.trials_done} / ${job.progress.trials} trials`);
+        }
+        if (job.status === "completed") {
+          if (job.result?.tornado) {
+            setTornado(job.result.tornado);
+          } else if (run?.run_id) {
+            setTornadoLoading(true);
+            try {
+              const tornadoRes = await fetchTornado(run.run_id, 10);
+              setTornado(tornadoRes.tornado);
+            } catch {
+              /* optional on serverless */
+            } finally {
+              setTornadoLoading(false);
+            }
+          }
         }
         if (job.status === "queued" || job.status === "running") {
-          setTimeout(poll, 2000);
+          setTimeout(poll, serverless ? 1000 : 2000);
         } else if (job.status === "failed") {
           setError(job.error ?? "MC job failed");
         }
       };
-      setTimeout(poll, 1500);
+      setTimeout(poll, 500);
     } catch (e) {
       setError(String(e));
       setMcStatus(null);
@@ -145,14 +171,21 @@ export default function App() {
           <div className="panel">
             <h2>Monte Carlo</h2>
             <p style={{ fontSize: "0.85rem", color: "var(--muted)", margin: "0 0 0.75rem" }}>
-              Quick 200-trial study with tornado (dev preview).
+              {serverless
+                ? "40-trial study (batched on Vercel; poll until complete)."
+                : "Quick 200-trial study with tornado (local API)."}
             </p>
-            <button className="secondary-btn" onClick={handleMc} disabled={!!mcStatus && mcStatus === "running"}>
+            <button
+              className="secondary-btn"
+              onClick={handleMc}
+              disabled={mcStatus === "running" || mcStatus === "submitting"}
+            >
               Run MC preview
             </button>
             {mcJobId && (
               <p style={{ fontSize: "0.8rem", color: "var(--muted)", marginTop: "0.5rem" }}>
                 Job {mcJobId}: {mcStatus}
+                {mcProgress ? ` (${mcProgress})` : ""}
               </p>
             )}
           </div>
