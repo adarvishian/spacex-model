@@ -62,6 +62,11 @@
 
 .audit-grid-wrap .ag-cell.label-cell {
   font-weight: 500;
+  color: var(--text) !important;
+}
+
+.audit-grid-wrap .ag-cell.label-cell .ag-cell-value {
+  color: var(--text) !important;
 }
 
 .audit-grid-wrap .ag-cell.row-id-cell {
