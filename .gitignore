@@ -7,10 +7,11 @@ __pycache__/
 .hypothesis/
 dist/
 *.egg-info/
-outputs/
+outputs/          # run artifacts (CLI/API); golden fixtures live in tests/golden/
 .DS_Store
 .env
 node_modules/
 frontend/dist/
 *.tsbuildinfo
-*.mhtml
+*.mhtml           # S-1 filing (~200 MB); not read at runtime — see s1_overrides.py
+*.docx
