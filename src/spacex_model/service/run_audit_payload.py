@@ -8,7 +8,7 @@ from spacex_model.config.constants import FIRST_YEAR, LAST_YEAR
 from spacex_model.engine.label_lookup import lookup_by_label
 from spacex_model.engine.pipeline import ModelResult
 from spacex_model.io.divergence import build_divergence_report, finalize_triage
-from spacex_model.testing.block_b_anchors import load_block_b_anchors_v1
+from spacex_model.inputs.block_b_anchors import load_block_b_anchors_v1
 
 _ANCHOR_LOOKUP: dict[str, tuple[str, str]] = {
     "Group Revenue 2025": ("Group P&L", "Group Revenue ($mm)"),
