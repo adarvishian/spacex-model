@@ -14,7 +14,7 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from spacex_model.config.settings import get_repo_root, get_settings, is_serverless
-from spacex_model.engine.pipeline import run_pipeline
+from spacex_model.engine.pipeline import ModelResult, run_pipeline
 from spacex_model.inputs.assumptions import assumptions_from_ingest
 from spacex_model.inputs.demand_curves import demand_curves_from_ingest
 from spacex_model.inputs.scenarios import load_scenario
@@ -25,14 +25,18 @@ from spacex_model.service.auth import require_api_key
 from spacex_model.service.cache import get_cache
 from spacex_model.service.jobs import JobStatus, get_job_manager
 from spacex_model.service.mc_store import serverless_job_progress
+from spacex_model.service.grid import build_grid_payload
 from spacex_model.service.lineage import lookup_lineage
+from spacex_model.service.lineage_enrich import enrich_lineage
 from spacex_model.service.models import DeterministicRunRequest, McSubmitRequest
+from spacex_model.service.run_store import get_run_store
 from spacex_model.service.serializers import (
     serialize_assumption_catalog,
     serialize_lineage_index,
     serialize_model_result,
     serialize_tornado,
 )
+from spacex_model.service.sheets_meta import get_sheet, serialize_sheets_list
 
 app = FastAPI(
     title="Mach33 SpaceX Valuation Model",
@@ -180,8 +184,101 @@ def lineage_index() -> list[dict[str, Any]]:
     return serialize_lineage_index()
 
 
+def _store_run(run_id: str, payload: dict[str, Any], result: ModelResult) -> None:
+    cache = get_cache()
+    cache.set(f"run:{run_id}", payload, ttl_sec=get_settings().cache_ttl_sec)
+    get_run_store().put(run_id, result)
+
+
+def _resolve_model_result(
+    run_id: str,
+    *,
+    scenario: str | None = None,
+    overrides: dict[str, Any] | None = None,
+) -> ModelResult:
+    """Load ModelResult from run store, cache, or re-execute scenario (serverless-safe)."""
+    store = get_run_store()
+    result = store.get(run_id)
+    if result is not None:
+        return result
+
+    cached = get_cache().get(f"run:{run_id}")
+    sc = scenario or (cached.get("scenario") if cached else None) or "base_case"
+    ov = overrides
+    if ov is None and cached:
+        audit = cached.get("audit") or {}
+        if isinstance(audit.get("overrides"), dict):
+            ov = audit["overrides"]
+
+    result = run_pipeline(
+        scenario_path=_scenario_path(sc),
+        extra_overrides=ov or None,
+        write_outputs=False,
+    )
+    store.put(run_id, result)
+    return result
+
+
+def _embed_audit_grids(result: ModelResult, payload: dict[str, Any]) -> None:
+    """Attach Starlink grid to deterministic payload — avoids a second pipeline on Vercel."""
+    starlink = get_sheet("starlink")
+    if starlink is None or not starlink.enabled:
+        return
+    grid = build_grid_payload(starlink, result)
+    payload["audit_grids"] = {"starlink": grid}
+    cache = get_cache()
+    cache.set(f"grid:{result.run_id}:starlink", grid, ttl_sec=3600)
+
+
+@router.get("/sheets", dependencies=[Depends(require_api_key)])
+def list_sheets() -> list[dict[str, Any]]:
+    return serialize_sheets_list()
+
+
+@router.get("/sheets/{sheet_slug}/grid", dependencies=[Depends(require_api_key)])
+def sheet_grid(
+    sheet_slug: str,
+    run_id: str = Query(..., description="Deterministic run id"),
+    scenario: str | None = Query(default=None, description="Scenario fallback for serverless"),
+) -> dict[str, Any]:
+    meta = get_sheet(sheet_slug)
+    if meta is None or not meta.enabled:
+        raise HTTPException(status_code=404, detail=f"Sheet not found: {sheet_slug}")
+
+    cache = get_cache()
+    grid_cache_key = f"grid:{run_id}:{sheet_slug}"
+    cached_grid = cache.get(grid_cache_key)
+    if cached_grid is not None:
+        return cached_grid
+
+    result = _resolve_model_result(run_id, scenario=scenario)
+    payload = build_grid_payload(meta, result)
+    cache.set(grid_cache_key, payload, ttl_sec=3600)
+    return payload
+
+
 @router.get("/lineage/{key}", dependencies=[Depends(require_api_key)])
-def lineage_detail(key: str) -> dict[str, Any]:
+def lineage_detail(
+    key: str,
+    run_id: str | None = Query(default=None),
+    year: int | None = Query(default=None, ge=2025, le=2050),
+    sheet: str | None = Query(default=None),
+    row: int | None = Query(default=None),
+    scenario: str | None = Query(default=None, description="Scenario fallback for serverless"),
+) -> dict[str, Any]:
+    if run_id:
+        try:
+            result = _resolve_model_result(run_id, scenario=scenario)
+            return enrich_lineage(
+                key,
+                result,
+                year=year,
+                sheet=sheet,
+                row=row,
+            )
+        except KeyError:
+            raise HTTPException(status_code=404, detail=f"Unknown lineage key: {key}") from None
+
     entry = lookup_lineage(key)
     if entry is None:
         raise HTTPException(status_code=404, detail=f"Unknown lineage key: {key}")
@@ -196,12 +293,25 @@ def run_deterministic(body: DeterministicRunRequest) -> dict[str, Any]:
 
     cache = get_cache()
     key = _cache_key(body.scenario, body.overrides)
+    scenario_path = _scenario_path(body.scenario)
     if body.use_cache:
         cached = cache.get(key)
         if cached is not None:
-            return {**cached, "cached": True}
-
-    scenario_path = _scenario_path(body.scenario)
+            out = {**cached, "cached": True}
+            rid = cached.get("run_id")
+            if rid and get_run_store().get(rid) is None:
+                try:
+                    result = run_pipeline(
+                        scenario_path=scenario_path,
+                        extra_overrides=body.overrides or None,
+                        write_outputs=False,
+                    )
+                    get_run_store().put(rid, result)
+                    if is_serverless() and "audit_grids" not in out:
+                        _embed_audit_grids(result, out)
+                except Exception:
+                    pass
+            return out
 
     ingest = ingest_workbook(settings.workbook_path)
     base_assumptions = assumptions_from_ingest(ingest)
@@ -210,12 +320,14 @@ def run_deterministic(body: DeterministicRunRequest) -> dict[str, Any]:
     result = run_pipeline(
         scenario_path=scenario_path,
         extra_overrides=body.overrides or None,
-        write_outputs=True,
+        write_outputs=not is_serverless(),
     )
 
     payload = serialize_model_result(result, cached=False)
     payload["override_warnings"] = override_warnings
     cache.set(key, payload, ttl_sec=settings.cache_ttl_sec)
+    _store_run(result.run_id, payload, result)
+    _embed_audit_grids(result, payload)
     return payload
 
 
@@ -324,6 +436,23 @@ def _mount_ui() -> None:
 _mount_ui()
 
 app.include_router(router)
+
+
+def _mount_spa_fallback() -> None:
+    """Client-side routes (/audit/*, /client/*) — same index.html as Vercel SPA rewrite."""
+    ui = _ui_dir()
+    if ui is None:
+        return
+    index = ui / "index.html"
+
+    @app.get("/{full_path:path}", include_in_schema=False)
+    def spa_fallback(full_path: str) -> FileResponse:
+        if full_path.startswith("api") or full_path.startswith("assets/"):
+            raise HTTPException(status_code=404, detail="Not found")
+        return FileResponse(index)
+
+
+_mount_spa_fallback()
 
 
 def create_app() -> FastAPI:

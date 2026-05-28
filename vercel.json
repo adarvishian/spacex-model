@@ -1,4 +1,9 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "rewrites": [{ "source": "/api/(.*)", "destination": "/$1" }]
+  "buildCommand": "cd frontend && npm ci && npm run build",
+  "outputDirectory": "static/ui",
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "/$1" },
+    { "source": "/((?!api/).*)", "destination": "/index.html" }
+  ]
 }

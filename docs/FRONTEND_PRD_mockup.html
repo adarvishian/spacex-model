@@ -1,0 +1,784 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Mach33 SpaceX Model — Audit Tab Mockup</title>
+<style>
+  :root {
+    --bg: #0f1115;
+    --panel: #161922;
+    --panel-2: #1c2030;
+    --border: #262b3a;
+    --muted: #8a93a8;
+    --text: #e6e9f2;
+    --indigo: #6366f1;
+    --indigo-soft: #2a2a55;
+    --amber: #f59e0b;
+    --green: #10b981;
+    --red: #ef4444;
+    --blue: #3b82f6;
+    --input-bg: #18243a;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; height: 100%; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font: 13px/1.4 -apple-system, BlinkMacSystemFont, "Inter", system-ui, sans-serif;
+  }
+  .app {
+    display: grid;
+    grid-template-rows: 48px 1fr;
+    height: 100vh;
+  }
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px;
+    background: var(--panel);
+    border-bottom: 1px solid var(--border);
+  }
+  header h1 { font-size: 14px; margin: 0; font-weight: 600; letter-spacing: 0.2px; }
+  header .meta { display: flex; gap: 16px; align-items: center; color: var(--muted); font-size: 12px; }
+  header .badge {
+    background: var(--indigo-soft);
+    color: var(--text);
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+  }
+  header .mode-switch {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    cursor: pointer;
+  }
+
+  .body {
+    display: grid;
+    grid-template-columns: 200px 1fr 280px;
+    overflow: hidden;
+  }
+
+  /* Sheet tabs */
+  .tabs {
+    background: var(--panel);
+    border-right: 1px solid var(--border);
+    padding: 12px 0;
+    overflow-y: auto;
+  }
+  .tabs .group { padding: 8px 16px 4px; color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.6px; }
+  .tabs button {
+    display: block;
+    width: 100%;
+    text-align: left;
+    background: transparent;
+    border: none;
+    color: var(--text);
+    padding: 6px 16px;
+    font-size: 12.5px;
+    cursor: pointer;
+    border-left: 2px solid transparent;
+  }
+  .tabs button:hover { background: var(--panel-2); }
+  .tabs button.active {
+    background: var(--panel-2);
+    border-left-color: var(--indigo);
+    font-weight: 600;
+  }
+  .tabs .sidebar-section {
+    margin: 16px 16px 0;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+  }
+  .tabs .sidebar-section h3 { font-size: 11px; margin: 0 0 8px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.6px; }
+  .tabs select, .tabs input {
+    width: 100%;
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 6px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    margin-bottom: 8px;
+  }
+  .tabs .run-btn {
+    width: 100%;
+    background: var(--indigo);
+    border: none;
+    color: white;
+    padding: 7px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  /* Center area: grid + derivation + sources */
+  .center {
+    display: grid;
+    grid-template-rows: 1fr 220px 180px;
+    overflow: hidden;
+    border-right: 1px solid var(--border);
+  }
+
+  .grid-wrap {
+    overflow: auto;
+    background: #0d0f15;
+    position: relative;
+  }
+  .grid-title {
+    position: sticky;
+    top: 0;
+    z-index: 3;
+    background: var(--panel);
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border);
+    font-size: 12px;
+    color: var(--muted);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .grid-title strong { color: var(--text); }
+  table.grid {
+    border-collapse: collapse;
+    width: max-content;
+    min-width: 100%;
+    font-size: 11.5px;
+    font-variant-numeric: tabular-nums;
+  }
+  table.grid th, table.grid td {
+    border: 1px solid #1e2230;
+    padding: 4px 8px;
+    white-space: nowrap;
+  }
+  table.grid thead th {
+    background: var(--panel);
+    color: var(--muted);
+    font-weight: 600;
+    position: sticky;
+    top: 33px;
+    z-index: 2;
+  }
+  table.grid td.label-col, table.grid th.label-col {
+    background: var(--panel);
+    color: var(--text);
+    position: sticky;
+    left: 0;
+    z-index: 1;
+    text-align: left;
+    min-width: 220px;
+    font-weight: 500;
+  }
+  table.grid td.row-id {
+    background: var(--panel);
+    color: var(--muted);
+    position: sticky;
+    left: 0;
+    z-index: 1;
+    min-width: 36px;
+    text-align: right;
+    font-size: 10.5px;
+  }
+  table.grid td.label-col { left: 36px; }
+  table.grid thead th.row-id { left: 0; z-index: 4; }
+  table.grid thead th.label-col { left: 36px; z-index: 4; }
+  table.grid td.num { text-align: right; }
+  table.grid td.input { background: var(--input-bg); }
+  table.grid td.derived { background: #11141c; }
+  table.grid td.divergence { box-shadow: inset 0 0 0 2px var(--amber); position: relative; }
+  table.grid td.divergence::after {
+    content: "▲";
+    color: var(--amber);
+    position: absolute;
+    top: 1px;
+    right: 2px;
+    font-size: 9px;
+  }
+  table.grid td.active {
+    box-shadow: inset 0 0 0 2px var(--indigo);
+  }
+  table.grid td.conserv-ok { color: var(--green); }
+  table.grid td.conserv-fail { color: var(--red); font-weight: 600; }
+  .legend {
+    display: flex;
+    gap: 12px;
+    font-size: 11px;
+    color: var(--muted);
+  }
+  .legend span { display: inline-flex; align-items: center; gap: 4px; }
+  .legend .sw { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+
+  /* Derivation panel */
+  .derivation {
+    background: var(--panel);
+    border-top: 1px solid var(--border);
+    padding: 10px 14px;
+    overflow-y: auto;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  .panel-title {
+    font-size: 11px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    margin: 0 0 6px;
+  }
+  .derivation .addr {
+    grid-column: 1 / -1;
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+  .derivation .addr code {
+    background: var(--panel-2);
+    padding: 3px 7px;
+    border-radius: 4px;
+    color: var(--indigo);
+  }
+  .derivation .addr .pill {
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 10.5px;
+    font-weight: 600;
+  }
+  .pill.match { background: rgba(16, 185, 129, 0.15); color: var(--green); }
+  .pill.intentional { background: rgba(245, 158, 11, 0.15); color: var(--amber); }
+  .formula {
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    padding: 8px 10px;
+    border-radius: 4px;
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 12px;
+    color: #c7d2fe;
+  }
+  .inputs-table { width: 100%; border-collapse: collapse; font-size: 11.5px; margin-top: 4px; }
+  .inputs-table th, .inputs-table td {
+    text-align: left;
+    padding: 4px 6px;
+    border-bottom: 1px solid var(--border);
+  }
+  .inputs-table th { color: var(--muted); font-weight: 500; }
+  .inputs-table td.num { text-align: right; font-variant-numeric: tabular-nums; }
+  .inputs-table a { color: var(--indigo); text-decoration: none; }
+
+  /* Dependency graph */
+  .depgraph {
+    grid-column: 1 / -1;
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 10px;
+    overflow-x: auto;
+  }
+  .depgraph svg { display: block; }
+  .depgraph .node-rect { fill: #1a1f30; stroke: var(--border); }
+  .depgraph .node-rect.active { fill: var(--indigo-soft); stroke: var(--indigo); stroke-width: 2; }
+  .depgraph text { fill: var(--text); font-size: 11px; }
+  .depgraph .edge { stroke: #3a3f55; fill: none; marker-end: url(#arrow); }
+
+  /* Sources panel */
+  .sources {
+    background: var(--panel);
+    border-top: 1px solid var(--border);
+    padding: 10px 14px;
+    overflow-y: auto;
+    display: grid;
+    grid-template-columns: 1fr 1.4fr;
+    gap: 16px;
+  }
+  .sources .group-title { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.6px; margin: 0 0 6px; }
+  .sources .source-row {
+    padding: 6px 0;
+    border-bottom: 1px dashed var(--border);
+    font-size: 12px;
+  }
+  .sources .source-row .lbl { color: var(--muted); display: block; font-size: 11px; margin-bottom: 2px; }
+  .sources a { color: var(--indigo); text-decoration: none; }
+  .history-row {
+    border-left: 2px solid var(--border);
+    padding: 4px 10px 8px;
+    margin-bottom: 6px;
+    font-size: 12px;
+  }
+  .history-row .date { font-weight: 600; color: var(--text); }
+  .history-row .kind {
+    display: inline-block;
+    background: var(--panel-2);
+    padding: 1px 6px;
+    border-radius: 8px;
+    font-size: 10px;
+    color: var(--muted);
+    margin-left: 6px;
+  }
+  .history-row .delta-pos { color: var(--green); }
+  .history-row .delta-neg { color: var(--red); }
+
+  /* Minimap (right rail) */
+  .minimap {
+    background: var(--panel);
+    overflow-y: auto;
+    padding: 14px;
+  }
+  .minimap h2 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.6px; color: var(--muted); margin: 0 0 10px; }
+  .map-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 4px;
+    margin-bottom: 16px;
+  }
+  .map-grid .map-group { font-size: 10.5px; color: var(--muted); text-transform: uppercase; margin: 8px 0 2px; letter-spacing: 0.5px; }
+  .map-grid .map-cell {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 6px;
+    border-radius: 4px;
+    font-size: 11.5px;
+    border: 1px solid transparent;
+  }
+  .map-cell .dot { width: 8px; height: 8px; border-radius: 2px; background: #2a3046; }
+  .map-cell.feeds .dot { background: var(--blue); }
+  .map-cell.depends .dot { background: #6b7280; }
+  .map-cell.active {
+    background: var(--indigo-soft);
+    border-color: var(--indigo);
+    font-weight: 600;
+  }
+  .map-cell.active .dot { background: var(--indigo); }
+
+  .lifecycle {
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 10px;
+    margin-bottom: 12px;
+  }
+  .lifecycle h3 { font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); margin: 0 0 8px; }
+  .lifecycle .stages { display: flex; flex-wrap: wrap; gap: 4px; font-size: 10.5px; }
+  .lifecycle .stage {
+    background: #1a1f2d;
+    padding: 3px 7px;
+    border-radius: 10px;
+    color: var(--muted);
+  }
+  .lifecycle .stage.active {
+    background: var(--indigo);
+    color: white;
+    font-weight: 600;
+  }
+  .section-ref {
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 8px 10px;
+    font-size: 11.5px;
+    margin-bottom: 12px;
+  }
+  .section-ref .lbl { display: block; font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px; }
+
+  .neighbor-block { margin-bottom: 10px; }
+  .neighbor-block h3 { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin: 0 0 6px; }
+  .neighbor-block .n {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 0;
+    font-size: 11.5px;
+    cursor: pointer;
+  }
+  .neighbor-block .n:hover { color: var(--indigo); }
+  .neighbor-block .n .arrow { color: var(--muted); }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header>
+    <div style="display:flex; align-items:center; gap:14px;">
+      <h1>Mach33 SpaceX Valuation Model</h1>
+      <span class="badge">AUDIT MODE</span>
+    </div>
+    <div class="meta">
+      <span>scenario: <strong style="color:var(--text)">Base Case</strong></span>
+      <span>run: <code style="background:var(--panel-2); padding:2px 6px; border-radius:3px;">r_a1b2c3</code></span>
+      <span>build: <code style="background:var(--panel-2); padding:2px 6px; border-radius:3px;">8a9b0c1</code></span>
+      <button class="mode-switch">Switch to Client Mode →</button>
+    </div>
+  </header>
+
+  <div class="body">
+
+    <!-- LEFT: SHEET TABS + SIDEBAR -->
+    <div class="tabs">
+      <div class="group">Inputs</div>
+      <button>Assumptions</button>
+      <div class="group">Allocation</div>
+      <button>Allocator</button>
+      <button>Launch Capacity</button>
+      <div class="group">Modules</div>
+      <button>Customer Launch</button>
+      <button class="active">Starlink</button>
+      <button>Starlink Capacity</button>
+      <button>ODC</button>
+      <button>AI Stack</button>
+      <button>Lunar Mars</button>
+      <div class="group">Cross-cutting</div>
+      <button>OpEx</button>
+      <button>CapEx</button>
+      <button>Group P&amp;L</button>
+      <div class="group">Outputs</div>
+      <button>Valuation</button>
+      <button>Demand Curves</button>
+      <button>Run Audit</button>
+
+      <div class="sidebar-section">
+        <h3>Scenario</h3>
+        <select>
+          <option>Base Case</option>
+          <option>Bear</option>
+          <option>Bull</option>
+        </select>
+        <h3 style="margin-top:8px">Override label</h3>
+        <select>
+          <option>Mars carve-out %</option>
+          <option>Starship $/kg 2030</option>
+          <option>ODC Pr(A)</option>
+        </select>
+        <h3 style="margin-top:8px">Override value</h3>
+        <input placeholder="e.g. 0.05" />
+        <button class="run-btn">Re-run</button>
+      </div>
+    </div>
+
+    <!-- CENTER: GRID + DERIVATION + SOURCES -->
+    <div class="center">
+
+      <div class="grid-wrap">
+        <div class="grid-title">
+          <span><strong>Starlink</strong> &nbsp;·&nbsp; 235 rows × 26 year-columns &nbsp;·&nbsp; section §8 (Starlink module)</span>
+          <span class="legend">
+            <span><span class="sw" style="background:var(--input-bg);"></span>Input</span>
+            <span><span class="sw" style="background:#11141c; border:1px solid var(--border)"></span>Derived</span>
+            <span><span class="sw" style="background:#11141c; box-shadow: inset 0 0 0 2px var(--amber);"></span>Divergence</span>
+          </span>
+        </div>
+        <table class="grid">
+          <thead>
+            <tr>
+              <th class="row-id">#</th>
+              <th class="label-col">Label</th>
+              <th>2025</th><th>2026</th><th>2027</th><th>2028</th><th>2029</th><th>2030</th>
+              <th>2031</th><th>2032</th><th>2033</th><th>2034</th><th>2035</th><th>2036</th>
+              <th>2037</th><th>2038</th><th>2039</th><th>2040</th><th>2041</th><th>2042</th>
+              <th>2043</th><th>2044</th><th>2045</th><th>2046</th><th>2047</th><th>2048</th>
+              <th>2049</th><th>2050</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="row-id">R5</td>
+              <td class="label-col">V2 BB active sats (count)</td>
+              <td class="num input">7,200</td><td class="num input">8,400</td><td class="num input">9,200</td><td class="num input">9,800</td><td class="num input">10,100</td><td class="num input">10,200</td>
+              <td class="num input">10,150</td><td class="num input">10,000</td><td class="num input">9,500</td><td class="num input">8,800</td><td class="num input">7,900</td><td class="num input">6,800</td>
+              <td class="num input">5,600</td><td class="num input">4,400</td><td class="num input">3,200</td><td class="num input">2,000</td><td class="num input">1,200</td><td class="num input">600</td>
+              <td class="num input">200</td><td class="num input">0</td><td class="num input">0</td><td class="num input">0</td><td class="num input">0</td><td class="num input">0</td>
+              <td class="num input">0</td><td class="num input">0</td>
+            </tr>
+            <tr>
+              <td class="row-id">R8</td>
+              <td class="label-col">Total Revenue ($mm)</td>
+              <td class="num derived">7,852</td>
+              <td class="num derived">9,140</td>
+              <td class="num derived">11,420</td>
+              <td class="num derived">14,210</td>
+              <td class="num derived">17,940</td>
+              <td class="num derived active">22,640</td>
+              <td class="num derived">28,520</td>
+              <td class="num derived">35,710</td>
+              <td class="num derived">43,820</td>
+              <td class="num derived divergence">52,400</td>
+              <td class="num derived">61,100</td>
+              <td class="num derived">69,800</td>
+              <td class="num derived">78,200</td>
+              <td class="num derived">86,000</td>
+              <td class="num derived">93,400</td>
+              <td class="num derived">100,200</td>
+              <td class="num derived">106,400</td>
+              <td class="num derived">112,000</td>
+              <td class="num derived">117,200</td>
+              <td class="num derived">121,800</td>
+              <td class="num derived">126,000</td>
+              <td class="num derived">129,800</td>
+              <td class="num derived">133,200</td>
+              <td class="num derived">136,200</td>
+              <td class="num derived">138,800</td>
+              <td class="num derived">141,000</td>
+            </tr>
+            <tr>
+              <td class="row-id">R9</td>
+              <td class="label-col">Total COGS ($mm)</td>
+              <td class="num derived">3,180</td><td class="num derived">3,710</td><td class="num derived">4,640</td><td class="num derived">5,770</td><td class="num derived">7,280</td><td class="num derived">9,180</td>
+              <td class="num derived">11,580</td><td class="num derived">14,500</td><td class="num derived">17,790</td><td class="num derived">21,280</td><td class="num derived">24,800</td><td class="num derived">28,340</td>
+              <td class="num derived">31,750</td><td class="num derived">34,920</td><td class="num derived">37,920</td><td class="num derived">40,680</td><td class="num derived">43,200</td><td class="num derived">45,470</td>
+              <td class="num derived">47,580</td><td class="num derived">49,440</td><td class="num derived">51,150</td><td class="num derived">52,680</td><td class="num derived">54,060</td><td class="num derived">55,280</td>
+              <td class="num derived">56,330</td><td class="num derived">57,220</td>
+            </tr>
+            <tr>
+              <td class="row-id">R10</td>
+              <td class="label-col">Gross Profit = Module EBITDA ($mm)</td>
+              <td class="num derived">4,672</td><td class="num derived">5,430</td><td class="num derived">6,780</td><td class="num derived">8,440</td><td class="num derived">10,660</td><td class="num derived">13,460</td>
+              <td class="num derived">16,940</td><td class="num derived">21,210</td><td class="num derived">26,030</td><td class="num derived">31,120</td><td class="num derived">36,300</td><td class="num derived">41,460</td>
+              <td class="num derived">46,450</td><td class="num derived">51,080</td><td class="num derived">55,480</td><td class="num derived">59,520</td><td class="num derived">63,200</td><td class="num derived">66,530</td>
+              <td class="num derived">69,620</td><td class="num derived">72,360</td><td class="num derived">74,850</td><td class="num derived">77,120</td><td class="num derived">79,140</td><td class="num derived">80,920</td>
+              <td class="num derived">82,470</td><td class="num derived">83,780</td>
+            </tr>
+            <tr>
+              <td class="row-id">R12</td>
+              <td class="label-col">Module CapEx ($mm)</td>
+              <td class="num derived">2,860</td><td class="num derived">3,420</td><td class="num derived">4,200</td><td class="num derived">5,180</td><td class="num derived">6,490</td><td class="num derived">8,140</td>
+              <td class="num derived">10,240</td><td class="num derived">12,820</td><td class="num derived">15,720</td><td class="num derived">18,760</td><td class="num derived">21,830</td><td class="num derived">24,830</td>
+              <td class="num derived">27,640</td><td class="num derived">30,210</td><td class="num derived">32,500</td><td class="num derived">34,520</td><td class="num derived">36,300</td><td class="num derived">37,840</td>
+              <td class="num derived">39,180</td><td class="num derived">40,320</td><td class="num derived">41,300</td><td class="num derived">42,140</td><td class="num derived">42,870</td><td class="num derived">43,500</td>
+              <td class="num derived">44,030</td><td class="num derived">44,480</td>
+            </tr>
+            <tr>
+              <td class="row-id">R14</td>
+              <td class="label-col">Module FCF ($mm)</td>
+              <td class="num derived">1,812</td><td class="num derived">2,010</td><td class="num derived">2,580</td><td class="num derived">3,260</td><td class="num derived">4,170</td><td class="num derived">5,320</td>
+              <td class="num derived">6,700</td><td class="num derived">8,390</td><td class="num derived">10,310</td><td class="num derived">12,360</td><td class="num derived">14,470</td><td class="num derived">16,630</td>
+              <td class="num derived">18,810</td><td class="num derived">20,870</td><td class="num derived">22,980</td><td class="num derived">25,000</td><td class="num derived">26,900</td><td class="num derived">28,690</td>
+              <td class="num derived">30,440</td><td class="num derived">32,040</td><td class="num derived">33,550</td><td class="num derived">34,980</td><td class="num derived">36,270</td><td class="num derived">37,420</td>
+              <td class="num derived">38,440</td><td class="num derived">39,300</td>
+            </tr>
+            <tr>
+              <td class="row-id">R18</td>
+              <td class="label-col">Per-vehicle Blended IRR (V2 BB)</td>
+              <td class="num derived">22.4%</td><td class="num derived">23.1%</td><td class="num derived">24.0%</td><td class="num derived">25.2%</td><td class="num derived">26.1%</td><td class="num derived">27.3%</td>
+              <td class="num derived">28.0%</td><td class="num derived">28.4%</td><td class="num derived">28.6%</td><td class="num derived">28.5%</td><td class="num derived">28.0%</td><td class="num derived">27.1%</td>
+              <td class="num derived">25.8%</td><td class="num derived">23.9%</td><td class="num derived">21.4%</td><td class="num derived">18.2%</td><td class="num derived">14.4%</td><td class="num derived">10.1%</td>
+              <td class="num derived">5.4%</td><td class="num derived">0.6%</td><td class="num derived">−4.0%</td><td class="num derived">−8.2%</td><td class="num derived">−11.8%</td><td class="num derived">−14.8%</td>
+              <td class="num derived">−17.2%</td><td class="num derived">−19.0%</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- DERIVATION PANEL -->
+      <div class="derivation">
+        <div class="addr">
+          <code>Starlink!R8 · column 2030</code>
+          <span style="color:var(--muted)">type: <strong style="color:var(--text)">derived (year-row)</strong></span>
+          <span style="color:var(--muted)">unit: <strong style="color:var(--text)">$mm</strong></span>
+          <span style="flex:1"></span>
+          <span class="pill match">code 22,640 = xlsx 22,640 · match</span>
+        </div>
+
+        <div>
+          <p class="panel-title">Formula</p>
+          <div class="formula">Total Revenue (Starlink) = Σ over { V2 BB, V2 DTC, V3 BB, V3 DTC, Starshield } of<br>&nbsp;&nbsp;active_sats(pool, t) × ARPU(pool, t) × months_active(pool, t)</div>
+
+          <p class="panel-title" style="margin-top:10px">Computed</p>
+          <div class="formula" style="color:var(--green)">= 22,640 $mm</div>
+        </div>
+
+        <div>
+          <p class="panel-title">Resolved inputs (depth 1)</p>
+          <table class="inputs-table">
+            <thead><tr><th>Input</th><th>Source cell</th><th>Value</th><th>Lineage</th></tr></thead>
+            <tbody>
+              <tr><td>V2 BB active sats</td><td><code>Starlink!R5:I</code></td><td class="num">10,200</td><td><a href="#">open ↗</a></td></tr>
+              <tr><td>V2 BB ARPU ($/mo)</td><td><code>Assumptions!§5 R142</code></td><td class="num">14.20</td><td><a href="#">open ↗</a></td></tr>
+              <tr><td>V3 BB active sats</td><td><code>Starlink!R6:I</code></td><td class="num">2,400</td><td><a href="#">open ↗</a></td></tr>
+              <tr><td>V3 DTC ARPU ($/mo)</td><td><code>Assumptions!§5 R148</code></td><td class="num">18.00</td><td><a href="#">open ↗</a></td></tr>
+              <tr><td>Starshield revenue</td><td><code>Starlink!R26:I</code></td><td class="num">2,520</td><td><a href="#">open ↗</a></td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="depgraph">
+          <p class="panel-title" style="margin:0 0 6px">Dependency graph (depth 2)</p>
+          <svg viewBox="0 0 700 200" width="700" height="200" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                <path d="M0,0 L10,5 L0,10 z" fill="#5a6280"/>
+              </marker>
+            </defs>
+            <!-- nodes -->
+            <g transform="translate(20,20)">
+              <rect class="node-rect" x="0" y="0" width="150" height="36" rx="4"/>
+              <text x="75" y="16" text-anchor="middle">Assumptions §5</text>
+              <text x="75" y="29" text-anchor="middle" fill="#8a93a8" font-size="10">V2 BB ARPU</text>
+            </g>
+            <g transform="translate(20,75)">
+              <rect class="node-rect" x="0" y="0" width="150" height="36" rx="4"/>
+              <text x="75" y="16" text-anchor="middle">Allocator!D54</text>
+              <text x="75" y="29" text-anchor="middle" fill="#8a93a8" font-size="10">V2 BB cash alloc</text>
+            </g>
+            <g transform="translate(20,130)">
+              <rect class="node-rect" x="0" y="0" width="150" height="36" rx="4"/>
+              <text x="75" y="16" text-anchor="middle">Launch Cap!D14</text>
+              <text x="75" y="29" text-anchor="middle" fill="#8a93a8" font-size="10">Starship kg/yr</text>
+            </g>
+
+            <g transform="translate(250,50)">
+              <rect class="node-rect" x="0" y="0" width="170" height="36" rx="4"/>
+              <text x="85" y="16" text-anchor="middle">Starlink!R5 (V2 BB sats)</text>
+              <text x="85" y="29" text-anchor="middle" fill="#8a93a8" font-size="10">10,200 sats · 2030</text>
+            </g>
+            <g transform="translate(250,105)">
+              <rect class="node-rect" x="0" y="0" width="170" height="36" rx="4"/>
+              <text x="85" y="16" text-anchor="middle">Starlink!R26 (Starshield)</text>
+              <text x="85" y="29" text-anchor="middle" fill="#8a93a8" font-size="10">$2,520mm · 2030</text>
+            </g>
+
+            <g transform="translate(490,75)">
+              <rect class="node-rect active" x="0" y="0" width="190" height="48" rx="4"/>
+              <text x="95" y="18" text-anchor="middle" font-weight="600">Starlink!R8 (Total Rev)</text>
+              <text x="95" y="34" text-anchor="middle" fill="#a5b4fc" font-size="11">$22,640mm · 2030</text>
+            </g>
+
+            <!-- edges -->
+            <path class="edge" d="M170,38 C 210,38 220,66 250,66"/>
+            <path class="edge" d="M170,93 C 210,93 220,68 250,68"/>
+            <path class="edge" d="M170,148 C 210,148 220,121 250,121"/>
+            <path class="edge" d="M420,66 C 450,66 460,90 490,93"/>
+            <path class="edge" d="M420,123 C 450,123 460,108 490,108"/>
+          </svg>
+        </div>
+      </div>
+
+      <!-- SOURCES + CHANGE HISTORY -->
+      <div class="sources">
+        <div>
+          <p class="group-title">Sources for this cell</p>
+          <div class="source-row">
+            <span class="lbl">Methodology</span>
+            Architecture &amp; Methodology spec <strong>§8.4</strong> (bandwidth-driven revenue curve) ·
+            module <code>calc.starlink.module.compute_revenue</code>
+          </div>
+          <div class="source-row">
+            <span class="lbl">Input provenance</span>
+            V2 BB ARPU from <a href="#">2025 Anchors from Q4'25 §2 (Starlink BB)</a> ·
+            Starshield from <a href="#">S-1 disclosure, p. F-18</a>
+          </div>
+          <div class="source-row">
+            <span class="lbl">Calibration anchor</span>
+            2025 target $7,852mm ± 5% (per Sprint Roadmap §6.8 revised) — code lands 7,852, match.
+          </div>
+          <div class="source-row">
+            <span class="lbl">Principle / Rule</span>
+            Principle 8 (vending-machine framing) · Rule 21 (internal flow conservation) · Rule 23 (anchor-and-offset year-row)
+          </div>
+        </div>
+
+        <div>
+          <p class="group-title">Change history</p>
+
+          <div class="history-row">
+            <span class="date">2026-05-26</span>
+            <span class="kind">FORMULA</span>
+            <div style="color:var(--muted); margin-top:2px;">Sprint 11e merged — split V2/V3 BB into separate allocator queues.</div>
+            <div style="margin-top:4px;">Effect on 2030: 22,210 → <strong>22,640</strong> &nbsp; <span class="delta-pos">(+430 $mm)</span> &nbsp;·&nbsp;
+              <a href="#">commit a1b2c3d</a> &nbsp;·&nbsp; <a href="#">DEV_LOG: Sprint 11e merge</a>
+            </div>
+          </div>
+
+          <div class="history-row">
+            <span class="date">2026-05-19</span>
+            <span class="kind">ANCHOR</span>
+            <div style="color:var(--muted); margin-top:2px;">Q4'25 Starlink BB anchor revised $7,612mm → $7,852mm.</div>
+            <div style="margin-top:4px;">Effect on 2030: 21,890 → 22,210 &nbsp; <span class="delta-pos">(+320 $mm)</span> &nbsp;·&nbsp;
+              <a href="#">commit f4e5d6c</a>
+            </div>
+          </div>
+
+          <div class="history-row">
+            <span class="date">2026-05-12</span>
+            <span class="kind">INITIAL</span>
+            <div style="color:var(--muted); margin-top:2px;">First derivation of Starlink Total Revenue from Architecture §8.4.</div>
+            <div style="margin-top:4px;"><a href="#">commit 8a9b0c1</a></div>
+          </div>
+
+          <div style="text-align:right; margin-top:4px;"><a href="#" style="font-size:11px; color:var(--indigo)">Show all 7 entries →</a></div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- RIGHT: MINIMAP -->
+    <div class="minimap">
+      <h2>Model Map</h2>
+
+      <div class="map-grid">
+        <div class="map-group">Inputs</div>
+        <div class="map-cell feeds"><span class="dot"></span>Assumptions</div>
+
+        <div class="map-group">Allocation</div>
+        <div class="map-cell feeds"><span class="dot"></span>Allocator</div>
+        <div class="map-cell feeds"><span class="dot"></span>Launch Capacity</div>
+
+        <div class="map-group">Modules</div>
+        <div class="map-cell"><span class="dot"></span>Customer Launch</div>
+        <div class="map-cell active"><span class="dot"></span>Starlink</div>
+        <div class="map-cell"><span class="dot"></span>Starlink Capacity</div>
+        <div class="map-cell"><span class="dot"></span>ODC</div>
+        <div class="map-cell"><span class="dot"></span>AI Stack</div>
+        <div class="map-cell"><span class="dot"></span>Lunar Mars</div>
+
+        <div class="map-group">Cross-cutting</div>
+        <div class="map-cell"><span class="dot"></span>OpEx</div>
+        <div class="map-cell"><span class="dot"></span>CapEx</div>
+        <div class="map-cell depends"><span class="dot"></span>Group P&amp;L</div>
+
+        <div class="map-group">Outputs</div>
+        <div class="map-cell depends"><span class="dot"></span>Valuation</div>
+      </div>
+
+      <div class="lifecycle">
+        <h3>Lifecycle stage</h3>
+        <div class="stages">
+          <span class="stage">Input</span>
+          <span class="stage">Demand</span>
+          <span class="stage">Allocation</span>
+          <span class="stage active">Output</span>
+          <span class="stage">P&amp;L</span>
+          <span class="stage">Conservation</span>
+          <span class="stage">Valuation</span>
+        </div>
+      </div>
+
+      <div class="section-ref">
+        <span class="lbl">Section in sheet</span>
+        §8.4 — Bandwidth-driven revenue curve (Starlink BB + DTC; sums vehicle pools)
+      </div>
+
+      <div class="neighbor-block">
+        <h3>Upstream (1-hop)</h3>
+        <div class="n"><span class="arrow">←</span> Allocator!D54 · V2 BB cash alloc</div>
+        <div class="n"><span class="arrow">←</span> Starlink!R5 · V2 BB sats</div>
+        <div class="n"><span class="arrow">←</span> Assumptions!§5 R142 · V2 BB ARPU</div>
+      </div>
+
+      <div class="neighbor-block">
+        <h3>Downstream (1-hop)</h3>
+        <div class="n"><span class="arrow">→</span> Group P&amp;L!R8 · Group Revenue</div>
+        <div class="n"><span class="arrow">→</span> Starlink Cap!D12 · Gbps capacity</div>
+        <div class="n"><span class="arrow">→</span> Valuation!D4 · Starlink SoTP</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</body>
+</html>

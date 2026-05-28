@@ -1,10 +1,10 @@
-const API_BASE = import.meta.env.VITE_API_BASE ?? "/api";
-
-export type Scenario = {
-  name: string;
-  description: string;
-  path: string;
-};
+export type {
+  Scenario,
+  LineageEntry,
+  GridPayload,
+  SheetMeta,
+  ActiveCell,
+} from "./shared/types";
 
 export type YearSeries = {
   label: string;
@@ -12,18 +12,6 @@ export type YearSeries = {
   years: number[];
   values: number[];
   lineage_key: string;
-};
-
-export type LineageEntry = {
-  key: string;
-  display_name: string;
-  module_path: string;
-  function: string;
-  excel_cell: string;
-  excel_label: string;
-  architecture_ref: string;
-  principle: string;
-  input_labels: string[];
 };
 
 export type TornadoBar = {
@@ -57,26 +45,20 @@ export type DeterministicRun = {
       blended_irr: YearSeries;
     }
   >;
-  module_ev: Record<
-    string,
-    { display_name: string; ev_2025_b: number; lineage_key: string }
-  >;
+  module_ev: Record<string, { display_name: string; ev_2025_b: number; lineage_key: string }>;
   override_warnings: { label: string; value: string; message: string }[];
   conservation: { all_ok: boolean };
+  audit_grids?: Record<string, import("./shared/types").GridPayload>;
 };
+
+const API_BASE = import.meta.env.VITE_API_BASE ?? "/api";
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${API_BASE}${path}`, {
     ...init,
-    headers: {
-      "Content-Type": "application/json",
-      ...init?.headers,
-    },
+    headers: { "Content-Type": "application/json", ...init?.headers },
   });
-  if (!res.ok) {
-    const detail = await res.text();
-    throw new Error(detail || `HTTP ${res.status}`);
-  }
+  if (!res.ok) throw new Error(await res.text() || `HTTP ${res.status}`);
   return res.json() as Promise<T>;
 }
 
@@ -89,7 +71,19 @@ export function fetchHealth() {
 }
 
 export function fetchScenarios() {
-  return request<Scenario[]>("/scenarios");
+  return request<import("./shared/types").Scenario[]>("/scenarios");
+}
+
+export function fetchSheets() {
+  return request<import("./shared/types").SheetMeta[]>("/sheets");
+}
+
+export function fetchSheetGrid(runId: string, sheetSlug: string, scenario?: string) {
+  const params = new URLSearchParams({ run_id: runId });
+  if (scenario) params.set("scenario", scenario);
+  return request<import("./shared/types").GridPayload>(
+    `/sheets/${sheetSlug}/grid?${params.toString()}`,
+  );
 }
 
 export function runDeterministic(body: {
@@ -103,14 +97,26 @@ export function runDeterministic(body: {
   });
 }
 
+export function fetchLineage(
+  key: string,
+  opts?: { runId?: string; year?: number; sheet?: string; row?: number; scenario?: string },
+) {
+  const params = new URLSearchParams();
+  if (opts?.runId) params.set("run_id", opts.runId);
+  if (opts?.year != null) params.set("year", String(opts.year));
+  if (opts?.sheet) params.set("sheet", opts.sheet);
+  if (opts?.row != null) params.set("row", String(opts.row));
+  if (opts?.scenario) params.set("scenario", opts.scenario);
+  const qs = params.toString();
+  return request<import("./shared/types").LineageEntry>(
+    `/lineage/${encodeURIComponent(key)}${qs ? `?${qs}` : ""}`,
+  );
+}
+
 export function fetchTornado(runId: string, topN = 10) {
   return request<{ run_id: string; tornado: TornadoBar[] }>(
     `/runs/${runId}/tornado?top_n=${topN}`,
   );
-}
-
-export function fetchLineage(key: string) {
-  return request<LineageEntry>(`/lineage/${encodeURIComponent(key)}`);
 }
 
 export function submitMc(body: {
@@ -120,10 +126,7 @@ export function submitMc(body: {
 }) {
   return request<{ job_id: string; status: string }>("/runs/mc", {
     method: "POST",
-    body: JSON.stringify({
-      scenario: "base_case",
-      ...body,
-    }),
+    body: JSON.stringify({ scenario: "base_case", ...body }),
   });
 }
 
@@ -135,10 +138,7 @@ export function fetchMcJob(jobId: string) {
     error?: string;
     result?: {
       aggregation: {
-        metrics: Record<
-          string,
-          { p5: number; p50: number; p95: number; base_case: number | null }
-        >;
+        metrics: Record<string, { p5: number; p50: number; p95: number; base_case: number | null }>;
       };
       tornado?: TornadoBar[];
     };

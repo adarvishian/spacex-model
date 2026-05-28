@@ -179,6 +179,42 @@ def test_serverless_mc_batched(client, monkeypatch, tmp_path) -> None:
     assert poll.json()["progress"]["trials_done"] == 3
 
 
+@pytest.mark.skipif(not WORKBOOK.exists(), reason="V2.16 workbook not present")
+def test_list_sheets(client) -> None:
+    res = client.get("/api/sheets")
+    assert res.status_code == 200
+    slugs = {s["slug"] for s in res.json()}
+    assert "starlink" in slugs
+    assert "assumptions" in slugs
+
+
+@pytest.mark.skipif(not WORKBOOK.exists(), reason="V2.16 workbook not present")
+@pytest.mark.slow
+def test_starlink_grid_and_extended_lineage(client) -> None:
+    run = client.post(
+        "/api/runs/deterministic",
+        json={"scenario": "base_case", "overrides": {}, "use_cache": True},
+    )
+    assert run.status_code == 200
+    run_id = run.json()["run_id"]
+
+    grid = client.get(f"/api/sheets/starlink/grid?run_id={run_id}")
+    assert grid.status_code == 200
+    body = grid.json()
+    assert body["sheet"] == "starlink"
+    assert len(body["rows"]) > 0
+    assert len(body["years"]) == 26
+
+    detail = client.get(
+        f"/api/lineage/module.starlink.total_revenue?run_id={run_id}&year=2030"
+    )
+    assert detail.status_code == 200
+    ext = detail.json()
+    assert ext["formula_expression"]
+    assert ext["lifecycle_stage"]
+    assert "resolved_inputs" in ext
+
+
 def test_frontend_package_exists() -> None:
     pkg = REPO / "frontend" / "package.json"
     assert pkg.exists()
