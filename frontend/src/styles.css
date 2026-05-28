@@ -426,7 +426,7 @@ table.data-table tbody tr.clickable:hover {
 
 .audit-body {
   display: grid;
-  grid-template-columns: 200px 1fr 280px;
+  grid-template-columns: 200px 1fr;
   overflow: hidden;
   min-height: 0;
 }
@@ -520,9 +520,8 @@ table.data-table tbody tr.clickable:hover {
 
 .audit-center {
   display: grid;
-  grid-template-rows: minmax(200px, 1fr) auto auto auto;
+  grid-template-rows: minmax(200px, 1fr) auto auto auto auto;
   overflow: hidden;
-  border-right: 1px solid var(--border, #262b3a);
   min-height: 0;
 }
 
@@ -702,8 +701,42 @@ table.data-table tbody tr.clickable:hover {
 
 .minimap {
   background: var(--panel, #161922);
+  border-top: 1px solid var(--border, #262b3a);
+  padding: 10px 14px;
+}
+
+.minimap-below-grid {
+  display: grid;
+  grid-template-columns: minmax(180px, 220px) minmax(160px, 1fr) minmax(240px, 2fr);
+  gap: 16px;
+  align-items: start;
+  max-height: 200px;
   overflow-y: auto;
-  padding: 14px;
+}
+
+.minimap-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.minimap-meta .lifecycle-block {
+  margin: 0;
+}
+
+.minimap-meta .section-ref-block {
+  margin: 0;
+}
+
+.minimap-neighbors {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  min-width: 0;
+}
+
+.minimap-map {
+  min-width: 0;
 }
 
 .minimap h2 {
@@ -711,14 +744,30 @@ table.data-table tbody tr.clickable:hover {
   text-transform: uppercase;
   letter-spacing: 0.6px;
   color: var(--muted, #8a93a8);
-  margin: 0 0 10px;
+  margin: 0 0 8px;
+}
+
+.map-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+}
+
+.map-group-block {
+  min-width: 0;
+}
+
+.map-group-cells {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 4px;
 }
 
 .map-group {
   font-size: 10.5px;
   color: var(--muted, #8a93a8);
   text-transform: uppercase;
-  margin: 8px 0 2px;
+  margin: 0 0 4px;
   letter-spacing: 0.5px;
 }
 
@@ -768,7 +817,6 @@ table.data-table tbody tr.clickable:hover {
   border: 1px solid var(--border, #262b3a);
   border-radius: 4px;
   padding: 10px;
-  margin: 12px 0;
 }
 
 .lifecycle-block h3 {
@@ -805,7 +853,6 @@ table.data-table tbody tr.clickable:hover {
   border-radius: 4px;
   padding: 8px 10px;
   font-size: 11.5px;
-  margin-bottom: 12px;
 }
 
 .section-ref-block .lbl {

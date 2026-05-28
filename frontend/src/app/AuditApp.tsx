@@ -336,6 +336,16 @@ export default function AuditApp() {
                   />
                 )}
               </div>
+              <Minimap
+                activeSheetSlug={sheetSlug}
+                lineage={lineage}
+                activeCell={activeCell}
+                onNavigateSheet={onSheetChange}
+                onNavigateCell={(n) => {
+                  const slug = sheetSlugFromName(n.label.split("!")[0]);
+                  navigateToCell({ sheetSlug: slug, lineageKey: n.key });
+                }}
+              />
               <DerivationPanel
                 entry={lineage}
                 activeCell={activeCell}
@@ -359,19 +369,6 @@ export default function AuditApp() {
             </>
           )}
         </div>
-
-        {!isRunAudit && (
-          <Minimap
-            activeSheetSlug={sheetSlug}
-            lineage={lineage}
-            activeCell={activeCell}
-            onNavigateSheet={onSheetChange}
-            onNavigateCell={(n) => {
-              const slug = sheetSlugFromName(n.label.split("!")[0]);
-              navigateToCell({ sheetSlug: slug, lineageKey: n.key });
-            }}
-          />
-        )}
       </div>
 
       <LabelSearchPalette
