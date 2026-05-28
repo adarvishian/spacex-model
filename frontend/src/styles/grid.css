@@ -20,10 +20,17 @@
 
 .audit-grid-wrap .ag-cell.input-cell {
   background-color: var(--input-bg) !important;
+  color: var(--text) !important;
 }
 
 .audit-grid-wrap .ag-cell.derived-cell {
   background-color: #11141c !important;
+  color: var(--text) !important;
+}
+
+.audit-grid-wrap .ag-cell.input-cell .ag-cell-value,
+.audit-grid-wrap .ag-cell.derived-cell .ag-cell-value {
+  color: var(--text) !important;
 }
 
 .audit-grid-wrap .ag-cell.divergence-cell {

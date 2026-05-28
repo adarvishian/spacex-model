@@ -34,7 +34,14 @@ export type LineageGraphPayload = {
   root_key: string;
   depth: number;
   nodes: LineageGraphNode[];
-  edges: Array<{ id: string; source: string; target: string; type?: string }>;
+  edges: Array<{
+    id: string;
+    source: string;
+    target: string;
+    type?: string;
+    style?: Record<string, string | number>;
+    markerEnd?: { type: string; color?: string };
+  }>;
 };
 
 export type RunAuditPayload = {

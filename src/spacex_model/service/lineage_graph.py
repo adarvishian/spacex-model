@@ -12,6 +12,16 @@ def _node_id(key: str) -> str:
     return key.replace(".", "_")
 
 
+def _normalize_grid_key(key: str, year: int | None) -> str:
+    """Accept grid.{slug}.R{n} shorthand and expand with year."""
+    if not key.startswith("grid.") or year is None:
+        return key
+    parts = key.split(".")
+    if len(parts) == 3 and parts[2].startswith("R"):
+        return f"{key}.{year}"
+    return key
+
+
 def build_lineage_graph(
     key: str,
     result: ModelResult,
@@ -70,6 +80,7 @@ def build_lineage_graph(
         }
 
     def walk(k: str, remaining: int, *, is_root: bool = False) -> None:
+        k = _normalize_grid_key(k, year)
         if k in visited:
             return
         visited.add(k)
@@ -82,7 +93,7 @@ def build_lineage_graph(
 
         upstream = entry.get("upstream") or []
         for u in upstream:
-            uk = u.get("key")
+            uk = _normalize_grid_key(u.get("key", ""), year)
             if not uk:
                 continue
             try:
@@ -102,6 +113,7 @@ def build_lineage_graph(
                     "target": _node_id(k),
                     "type": "smoothstep",
                     "animated": False,
+                    "style": {"stroke": "#8a93a8", "strokeWidth": 1.5},
                 }
             )
             if remaining > 1:
@@ -109,10 +121,19 @@ def build_lineage_graph(
 
         if is_root:
             for inp in entry.get("resolved_inputs") or []:
-                ik = inp.get("lineage_key")
+                ik = _normalize_grid_key(str(inp.get("lineage_key", "")), year)
                 if not ik or ik.startswith("grid.resolved"):
                     continue
                 if ik in visited:
+                    edges.append(
+                        {
+                            "id": f"{_node_id(ik)}->{_node_id(k)}",
+                            "source": _node_id(ik),
+                            "target": _node_id(k),
+                            "type": "smoothstep",
+                            "style": {"stroke": "#8a93a8", "strokeWidth": 1.5},
+                        }
+                    )
                     continue
                 u_entry = {
                     "key": ik,
@@ -132,12 +153,13 @@ def build_lineage_graph(
                         "source": _node_id(ik),
                         "target": _node_id(k),
                         "type": "smoothstep",
+                        "style": {"stroke": "#8a93a8", "strokeWidth": 1.5},
                     }
                 )
                 if remaining > 1:
                     walk(ik, remaining - 1)
 
-    walk(key, depth, is_root=True)
+    walk(_normalize_grid_key(key, year), depth, is_root=True)
 
     node_list = list(nodes.values())
     _layout_nodes(node_list, edges)

@@ -8,9 +8,9 @@ from spacex_model.config.constants import FIRST_YEAR
 from spacex_model.engine.label_lookup import lookup_by_label
 from spacex_model.engine.pipeline import ModelResult
 from spacex_model.io.divergence import tolerance_for
-from spacex_model.service.grid import _LABEL_LINEAGE, _infer_unit
+from spacex_model.service.grid import _INPUT_LABEL_PATTERNS, _LABEL_LINEAGE, _infer_unit
 from spacex_model.service.lineage import LineageEntry, lookup_lineage
-from spacex_model.service.sheets_meta import get_sheet
+from spacex_model.service.sheets_meta import get_sheet, sheet_for_name
 
 _FORMULA_EXPRESSIONS: dict[str, str] = {
     "module.starlink.total_revenue": (
@@ -26,7 +26,6 @@ _FORMULA_EXPRESSIONS: dict[str, str] = {
     "group.group_fcf": "Group FCF = NOPAT + D&A − Total Group CapEx − Mars carve-out",
 }
 
-# Static 1-hop graph hints per lineage key (Phase 1 — full graph in Phase 2)
 _UPSTREAM_HINTS: dict[str, list[dict[str, str]]] = {
     "module.starlink.total_revenue": [
         {"key": "grid.starlink.R5", "label": "Starlink!R5 · V2 BB active sats"},
@@ -73,6 +72,64 @@ def _default_inputs(key: str) -> tuple[str, ...]:
         "module.starlink.module_fcf": ("Module EBITDA ($mm)", "Module CapEx ($mm)"),
     }
     return defaults.get(key, ())
+
+
+def _is_input_label(label: str) -> bool:
+    return any(p.search(label) for p in _INPUT_LABEL_PATTERNS)
+
+
+def _grid_key(sheet: str, row: int, year: int) -> str:
+    slug = sheet_for_name(sheet)
+    slug_part = slug.slug if slug else sheet.lower().replace(" ", "_")
+    return f"grid.{slug_part}.R{row}.{year}"
+
+
+def _find_label_row(sheet: str, label: str, result: ModelResult) -> int | None:
+    labels = result.ingest.value_pass.labels_by_sheet.get(sheet, {})
+    for row_idx, lbl in labels.items():
+        if lbl == label:
+            return row_idx
+    return None
+
+
+def _resolve_label_to_grid_key(label: str, year: int, result: ModelResult) -> tuple[str, str] | None:
+    """Return (lineage_key, display_label) for a canonical label on any sheet."""
+    for sheet in ("Starlink", "Assumptions", "Allocator", "Group P&L"):
+        row = _find_label_row(sheet, label, result)
+        if row is not None:
+            return _grid_key(sheet, row, year), f"{sheet}!R{row} · {label}"
+    return None
+
+
+def _lookup_upstream_for_key(
+    key: str,
+    result: ModelResult,
+    *,
+    sheet_name: str,
+    label: str,
+    year: int,
+) -> list[dict[str, str]]:
+    upstream = _UPSTREAM_HINTS.get(key, [])
+    if upstream:
+        return upstream
+
+    reg_key = _LABEL_LINEAGE.get((sheet_name, label))
+    if reg_key:
+        upstream = _UPSTREAM_HINTS.get(reg_key, [])
+        if upstream:
+            return upstream
+
+    if sheet_name != "Assumptions" and _is_input_label(label):
+        row = _find_label_row("Assumptions", label, result)
+        if row is not None:
+            return [
+                {
+                    "key": _grid_key("Assumptions", row, year),
+                    "label": f"Assumptions!R{row} · {label}",
+                }
+            ]
+
+    return []
 
 
 def _parse_grid_key(key: str) -> tuple[str, int, int] | None:
@@ -211,7 +268,22 @@ def enrich_lineage(
     section_ref = _section_for_label(sheet_name, label, result)
 
     resolved_inputs = _build_resolved_inputs(base, result, cell_year)
-    upstream = _UPSTREAM_HINTS.get(key, [])
+    upstream = _lookup_upstream_for_key(
+        key,
+        result,
+        sheet_name=sheet_name,
+        label=label,
+        year=cell_year,
+    )
+    if not upstream and resolved_inputs:
+        upstream = [
+            {
+                "key": ri["lineage_key"],
+                "label": ri.get("cell_address") or ri["label"],
+            }
+            for ri in resolved_inputs
+            if ri.get("lineage_key") and not str(ri["lineage_key"]).startswith("grid.resolved")
+        ]
     downstream = _DOWNSTREAM_HINTS.get(key, [])
 
     payload = base.to_dict()
@@ -309,13 +381,21 @@ def _build_resolved_inputs(
         val = lookup_by_label(result, "Starlink", inp_label, year)
         if val is None and "Revenue" in inp_label:
             val = lookup_by_label(result, "Starlink", "Total Revenue ($mm)", year)
+        resolved = _resolve_label_to_grid_key(inp_label, year, result)
+        if resolved:
+            lineage_key, cell_address = resolved
+            unit = _infer_unit(inp_label)
+        else:
+            lineage_key = f"grid.resolved.{idx}"
+            cell_address = "—"
+            unit = "dollars_mm"
         out.append(
             {
                 "label": inp_label,
-                "cell_address": f"—",
+                "cell_address": cell_address,
                 "value": val,
-                "unit": "dollars_mm",
-                "lineage_key": f"grid.resolved.{idx}",
+                "unit": unit,
+                "lineage_key": lineage_key,
             }
         )
     if not out and base.key == "module.starlink.total_revenue":

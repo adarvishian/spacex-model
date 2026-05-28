@@ -2,8 +2,10 @@ import {
   Background,
   Controls,
   Handle,
+  MarkerType,
   Position,
   ReactFlow,
+  type Edge,
   type Node,
   type NodeProps,
 } from "@xyflow/react";
@@ -86,7 +88,20 @@ export function DependencyGraph({
     () => (graphQ.data?.nodes ?? []) as Node<AuditNodeData>[],
     [graphQ.data?.nodes],
   );
-  const edges = graphQ.data?.edges ?? [];
+  const edges = useMemo(
+    () =>
+      (graphQ.data?.edges ?? []).map(
+        (edge): Edge => ({
+          id: edge.id,
+          source: edge.source,
+          target: edge.target,
+          type: edge.type ?? "smoothstep",
+          style: { stroke: "#8a93a8", strokeWidth: 1.5, ...edge.style },
+          markerEnd: { type: MarkerType.ArrowClosed, color: "#8a93a8" },
+        }),
+      ),
+    [graphQ.data?.edges],
+  );
 
   if (!lineageKey || !runId) {
     return null;
@@ -125,6 +140,11 @@ export function DependencyGraph({
             nodeTypes={nodeTypes}
             onNodeClick={onNodeClick}
             fitView
+            fitViewOptions={{ padding: 0.2 }}
+            defaultEdgeOptions={{
+              style: { stroke: "#8a93a8", strokeWidth: 1.5 },
+              markerEnd: { type: MarkerType.ArrowClosed, color: "#8a93a8" },
+            }}
             nodesDraggable={false}
             nodesConnectable={false}
             elementsSelectable

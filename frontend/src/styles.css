@@ -1023,6 +1023,20 @@ table.data-table tbody tr.clickable:hover {
 
 .depgraph-canvas .react-flow {
   background: transparent;
+  --xy-edge-stroke-default: #8a93a8;
+  --xy-edge-stroke-width-default: 1.5;
+}
+
+.depgraph-canvas .react-flow__edge-path {
+  stroke: #8a93a8;
+  stroke-width: 1.5;
+}
+
+.depgraph-canvas .react-flow__handle {
+  width: 6px;
+  height: 6px;
+  background: #8a93a8;
+  border: 1px solid var(--panel-2, #1c2030);
 }
 
 .dep-node {
