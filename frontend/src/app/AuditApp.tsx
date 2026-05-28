@@ -7,7 +7,6 @@ import { DerivationPanel } from "../audit/DerivationPanel";
 import { Grid, type GridHandle } from "../audit/Grid";
 import { LabelSearchPalette, type LabelSearchHit } from "../audit/LabelSearchPalette";
 import { moveActiveCell } from "../audit/grid-navigation";
-import { Minimap } from "../audit/Minimap";
 import { RunAuditTab } from "../audit/RunAuditTab";
 import { ScenarioSidebar } from "../audit/ScenarioSidebar";
 import { SheetTabs } from "../audit/SheetTabs";
@@ -297,78 +296,71 @@ export default function AuditApp() {
               }
             />
           ) : (
-            <>
-              <div className="audit-grid-panel">
-                <div className="grid-title-bar">
-                  <span>
-                    <strong>{activeSheetMeta?.display_name ?? sheetSlug}</strong>
-                    {gridData && (
-                      <>
-                        {" "}
-                        · {gridData.rows.length} rows × {gridData.years.length} year-columns
-                      </>
-                    )}
+            <div className="audit-grid-panel">
+              <div className="grid-title-bar">
+                <span>
+                  <strong>{activeSheetMeta?.display_name ?? sheetSlug}</strong>
+                  {gridData && (
+                    <>
+                      {" "}
+                      · {gridData.rows.length} rows × {gridData.years.length} year-columns
+                    </>
+                  )}
+                </span>
+                <div className="grid-legend">
+                  <span className="grid-shortcuts-hint" aria-label="Keyboard shortcuts">
+                    ↑↓←→ cell · Enter expand · ⌘J upstream · ⌘K search
                   </span>
-                  <div className="grid-legend">
-                    <span className="grid-shortcuts-hint" aria-label="Keyboard shortcuts">
-                      ↑↓←→ cell · Enter expand · ⌘J upstream · ⌘K search
-                    </span>
-                    <span>
-                      <i className="sw input" /> Input
-                    </span>
-                    <span>
-                      <i className="sw derived" /> Derived
-                    </span>
-                    <span>
-                      <i className="sw divergence" /> Divergence
-                    </span>
-                  </div>
+                  <span>
+                    <i className="sw input" /> Input
+                  </span>
+                  <span>
+                    <i className="sw derived" /> Derived
+                  </span>
+                  <span>
+                    <i className="sw divergence" /> Divergence
+                  </span>
                 </div>
-                {gridQ.isLoading && !gridData && (
-                  <p className="audit-loading">Loading grid…</p>
-                )}
-                {gridData && (
-                  <Grid
-                    ref={gridRef}
-                    payload={gridData}
-                    activeCell={activeCell}
-                    onCellSelect={openLineage}
-                  />
-                )}
               </div>
-              <Minimap
-                activeSheetSlug={sheetSlug}
-                lineage={lineage}
-                activeCell={activeCell}
-                onNavigateSheet={onSheetChange}
-                onNavigateCell={(n) => {
-                  const slug = sheetSlugFromName(n.label.split("!")[0]);
-                  navigateToCell({ sheetSlug: slug, lineageKey: n.key });
-                }}
-              />
-              <DerivationPanel
-                entry={lineage}
-                activeCell={activeCell}
-                expanded={derivationExpanded}
-              />
-              <DependencyGraph
-                lineageKey={activeCell?.lineageKey ?? null}
-                runId={runId}
-                year={activeCell?.year}
-                sheet={gridData?.source_sheet}
-                row={activeCell?.rowIndex}
-                scenario={selectedScenario}
-                onNavigateCell={({ sheetSlug: slug, rowId, year, lineageKey }) => {
-                  navigateToCell({ sheetSlug: slug, rowId, year, lineageKey });
-                }}
-              />
-              <div className="sources-history-row">
-                <SourcesPanel entry={lineage} />
-                <ChangeHistoryList lineageKey={activeCell?.lineageKey ?? null} />
-              </div>
-            </>
+              {gridQ.isLoading && !gridData && (
+                <p className="audit-loading">Loading grid…</p>
+              )}
+              {gridData && (
+                <Grid
+                  ref={gridRef}
+                  payload={gridData}
+                  activeCell={activeCell}
+                  onCellSelect={openLineage}
+                />
+              )}
+            </div>
           )}
         </div>
+
+        {!isRunAudit && (
+          <aside className="audit-detail-rail" aria-label="Cell detail panel">
+            <DerivationPanel
+              entry={lineage}
+              activeCell={activeCell}
+              expanded={derivationExpanded}
+            />
+            <DependencyGraph
+              lineageKey={activeCell?.lineageKey ?? null}
+              runId={runId}
+              year={activeCell?.year}
+              sheet={gridData?.source_sheet}
+              row={activeCell?.rowIndex}
+              scenario={selectedScenario}
+              onNavigateCell={({ sheetSlug: slug, rowId, year, lineageKey }) => {
+                navigateToCell({ sheetSlug: slug, rowId, year, lineageKey });
+              }}
+            />
+            <div className="sources-history-row">
+              <SourcesPanel entry={lineage} />
+              <ChangeHistoryList lineageKey={activeCell?.lineageKey ?? null} />
+            </div>
+          </aside>
+        )}
       </div>
 
       <LabelSearchPalette

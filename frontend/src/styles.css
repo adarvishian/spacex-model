@@ -426,7 +426,7 @@ table.data-table tbody tr.clickable:hover {
 
 .audit-body {
   display: grid;
-  grid-template-columns: 200px 1fr;
+  grid-template-columns: 200px 1fr 320px;
   overflow: hidden;
   min-height: 0;
 }
@@ -520,7 +520,7 @@ table.data-table tbody tr.clickable:hover {
 
 .audit-center {
   display: grid;
-  grid-template-rows: minmax(200px, 1fr) auto auto auto auto;
+  grid-template-rows: 1fr;
   overflow: hidden;
   min-height: 0;
 }
@@ -699,76 +699,44 @@ table.data-table tbody tr.clickable:hover {
   font-variant-numeric: tabular-nums;
 }
 
-.minimap {
+.audit-detail-rail {
+  display: flex;
+  flex-direction: column;
   background: var(--panel, #161922);
-  border-top: 1px solid var(--border, #262b3a);
-  padding: 10px 14px;
+  border-left: 1px solid var(--border, #262b3a);
+  overflow-y: auto;
+  min-height: 0;
 }
 
-.minimap-below-grid {
-  display: grid;
-  grid-template-columns: minmax(180px, 220px) minmax(160px, 1fr) minmax(240px, 2fr);
-  gap: 16px;
-  align-items: start;
-  max-height: 200px;
+.audit-detail-rail .derivation-panel {
+  flex-shrink: 0;
+}
+
+.audit-detail-rail .derivation-columns {
+  grid-template-columns: 1fr;
+}
+
+.audit-detail-rail .depgraph-wrap {
+  flex-shrink: 0;
+}
+
+.audit-detail-rail .sources-history-row {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex: 1;
+  min-height: 0;
+  max-height: none;
   overflow-y: auto;
 }
 
-.minimap-meta {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+.audit-detail-rail .depgraph-canvas {
+  height: 180px;
 }
 
-.minimap-meta .lifecycle-block {
-  margin: 0;
-}
-
-.minimap-meta .section-ref-block {
-  margin: 0;
-}
-
-.minimap-neighbors {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  min-width: 0;
-}
-
-.minimap-map {
-  min-width: 0;
-}
-
-.minimap h2 {
-  font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 0.6px;
-  color: var(--muted, #8a93a8);
-  margin: 0 0 8px;
-}
-
-.map-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px 12px;
-}
-
-.map-group-block {
-  min-width: 0;
-}
-
-.map-group-cells {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 2px 4px;
-}
-
-.map-group {
-  font-size: 10.5px;
-  color: var(--muted, #8a93a8);
-  text-transform: uppercase;
-  margin: 0 0 4px;
-  letter-spacing: 0.5px;
+.audit-detail-rail .derivation-panel.expanded {
+  min-height: 240px;
+  max-height: 45vh;
 }
 
 .map-cell {

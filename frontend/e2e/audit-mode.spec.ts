@@ -1,8 +1,8 @@
 import { test, expect } from "@playwright/test";
 import { installMockApi } from "./mock-api";
 
-/** FRONTEND_PRD A1 — deep-linked audit URL opens derivation + minimap. */
-test("A1: audit URL loads grid, derivation, and lifecycle", async ({ page }) => {
+/** FRONTEND_PRD A1 — deep-linked audit URL opens grid and cell detail rail. */
+test("A1: audit URL loads grid, derivation, and sources", async ({ page }) => {
   await installMockApi(page);
   await page.goto("/audit/starlink?row=R8&col=2030");
 
@@ -10,8 +10,8 @@ test("A1: audit URL loads grid, derivation, and lifecycle", async ({ page }) => 
   await expect(page.getByTestId("derivation-panel")).toContainText(/Total Revenue|2030/i, {
     timeout: 20_000,
   });
-  await expect(page.getByLabel("Model minimap")).toContainText(/Output/i);
-  await expect(page.getByLabel("Model minimap")).toContainText(/§8.4/i);
+  await expect(page.getByLabel("Cell detail panel")).toBeVisible();
+  await expect(page.getByLabel("Sources panel")).toContainText(/§8.4/i);
 });
 
 /** FRONTEND_PRD A9 — keyboard navigation and shortcuts. */
