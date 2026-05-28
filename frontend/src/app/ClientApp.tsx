@@ -82,15 +82,18 @@ export default function ClientApp() {
   const executeRun = useCallback(
     async (scenario: string, overrides: Record<string, number>) => {
       if (choice === "custom") {
-        const { errors } = validateCustomValues(inputs, overrides);
+        const { errors, warnings } = validateCustomValues(inputs, overrides);
+        setFieldWarnings(warnings);
         if (Object.keys(errors).length) {
           setFieldErrors(errors);
           return false;
         }
+        setFieldErrors({});
+      } else {
+        setFieldWarnings({});
       }
       setRunning(true);
       setError(null);
-      setFieldErrors({});
       try {
         const result = await runDeterministic({
           scenario,
@@ -139,6 +142,16 @@ export default function ClientApp() {
     }
   }, [choice]);
 
+  const onCustomChange = (id: string, value: number) => {
+    const next = { ...customValues, [id]: value };
+    setCustomValues(next);
+    if (choice === "custom" && inputs.length) {
+      const { errors, warnings } = validateCustomValues(inputs, next);
+      setFieldErrors(errors);
+      setFieldWarnings(warnings);
+    }
+  };
+
   const onCustomRun = () => {
     void executeRun("base_case", customValues);
   };
@@ -182,7 +195,7 @@ export default function ClientApp() {
   };
 
   return (
-    <div className="client-app">
+    <div className="client-app" data-testid="client-app">
       <header className="audit-header client-header">
         <div className="audit-header-left">
           <h1>Mach33 · SpaceX Valuation</h1>
@@ -214,9 +227,7 @@ export default function ClientApp() {
             <CustomBuilder
               inputs={inputs}
               values={customValues}
-              onChange={(id, v) =>
-                setCustomValues((prev) => ({ ...prev, [id]: v }))
-              }
+              onChange={onCustomChange}
               fieldErrors={fieldErrors}
               fieldWarnings={fieldWarnings}
               onRun={onCustomRun}

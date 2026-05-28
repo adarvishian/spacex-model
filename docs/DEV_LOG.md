@@ -68,6 +68,27 @@ Override source of truth for disclosed inputs: `src/spacex_model/inputs/s1_overr
 
 ---
 
+## 2026-05-28 — Frontend Phase 4 (Polish & a11y)
+
+**Trigger:** `docs/FRONTEND_PRD.md` Phase 4 — keyboard nav, Playwright acceptance, CI performance budgets.
+
+### Shipped
+
+| Area | Change |
+|------|--------|
+| Keyboard | Arrow keys move active cell; Enter toggles expanded derivation; ⌘J upstream jump; ⌘K label search palette |
+| a11y | `aria-label` on grid/minimap/panels; divergence `▲` glyph (grid.css); `tabIndex` on derivation panel |
+| Client | P10/P90 caveats on custom builder (`client-validation.ts`); live field validation on change |
+| Perf | Route-based code splitting (`ModeRouter` lazy + Vite `manualChunks`); `npm run check:bundle` budget script |
+| CI | `frontend` job: build, bundle budget, Playwright A1/A5/A6/A8/A9/A10 |
+| E2E | `frontend/e2e/` with mocked API (no workbook required in CI) |
+
+### Vercel
+
+Unchanged: `vercel.json` build → `static/ui`; preview/e2e use Vite preview only.
+
+---
+
 ## 2026-05-28 — Frontend Phase 3 (Client Mode)
 
 **Trigger:** `docs/FRONTEND_PRD.md` Phase 3 — curated client UI, custom builder, xlsx exports, share links.

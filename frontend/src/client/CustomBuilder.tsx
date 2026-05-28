@@ -51,6 +51,7 @@ export function CustomBuilder({
               value={values[inp.id] ?? defaults[inp.id]}
               onChange={(e) => onChange(inp.id, parseFloat(e.target.value))}
               aria-invalid={Boolean(fieldErrors[inp.id])}
+              data-testid={`custom-input-${inp.id}`}
             />
             {fieldErrors[inp.id] && (
               <span className="client-field-error" role="alert">

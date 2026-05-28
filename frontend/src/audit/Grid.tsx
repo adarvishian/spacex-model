@@ -3,16 +3,21 @@ import {
   CellClickedEvent,
   CellClassParams,
   ColDef,
+  GridApi,
   ModuleRegistry,
 } from "ag-grid-community";
 import { AgGridReact } from "ag-grid-react";
-import { useMemo, useRef } from "react";
+import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef } from "react";
 import type { ActiveCell, GridPayload } from "../shared/types";
 import { formatGridNumber } from "../shared/format";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
 
 ModuleRegistry.registerModules([AllCommunityModule]);
+
+export type GridHandle = {
+  focusActiveCell: (cell: ActiveCell) => void;
+};
 
 type Props = {
   payload: GridPayload;
@@ -22,8 +27,12 @@ type Props = {
 
 type GridRowData = Record<string, string | number | null | boolean>;
 
-export function Grid({ payload, activeCell, onCellSelect }: Props) {
+export const Grid = forwardRef<GridHandle, Props>(function Grid(
+  { payload, activeCell, onCellSelect },
+  ref,
+) {
   const gridRef = useRef<AgGridReact<GridRowData>>(null);
+  const apiRef = useRef<GridApi<GridRowData> | null>(null);
 
   const rowData = useMemo(() => {
     return payload.rows
@@ -90,6 +99,29 @@ export function Grid({ payload, activeCell, onCellSelect }: Props) {
     ];
   }, [payload.years, activeCell]);
 
+  useImperativeHandle(ref, () => ({
+    focusActiveCell(cell: ActiveCell) {
+      const api = apiRef.current;
+      if (!api) return;
+      const rowIdx = rowData.findIndex((r) => r.row_id === cell.rowId);
+      if (rowIdx < 0) return;
+      api.ensureIndexVisible(rowIdx, "middle");
+      const colId = `y_${cell.year}`;
+      api.setFocusedCell(rowIdx, colId);
+    },
+  }));
+
+  useEffect(() => {
+    if (activeCell) {
+      const api = apiRef.current;
+      if (!api) return;
+      const rowIdx = rowData.findIndex((r) => r.row_id === activeCell.rowId);
+      if (rowIdx >= 0) {
+        api.ensureIndexVisible(rowIdx, "middle");
+      }
+    }
+  }, [activeCell, rowData]);
+
   const onCellClicked = (event: CellClickedEvent<GridRowData>) => {
     const field = event.colDef.field;
     if (!field?.startsWith("y_") || !event.data) return;
@@ -109,15 +141,24 @@ export function Grid({ payload, activeCell, onCellSelect }: Props) {
   };
 
   return (
-    <div className="audit-grid-wrap ag-theme-alpine-dark">
+    <div
+      className="audit-grid-wrap ag-theme-alpine-dark"
+      data-testid="audit-grid"
+      tabIndex={0}
+      role="grid"
+      aria-label={`${payload.source_sheet} audit grid`}
+    >
       <AgGridReact
         ref={gridRef}
         rowData={rowData}
         columnDefs={columnDefs}
         defaultColDef={{ sortable: false, filter: false, resizable: true }}
+        onGridReady={(e) => {
+          apiRef.current = e.api;
+        }}
         onCellClicked={onCellClicked}
         suppressCellFocus={false}
-        rowSelection={{ mode: "singleRow", checkboxes: false }}
+        enableCellTextSelection
         getRowId={(p) => String(p.data.row_id)}
         headerHeight={32}
         rowHeight={28}
@@ -125,4 +166,4 @@ export function Grid({ payload, activeCell, onCellSelect }: Props) {
       />
     </div>
   );
-}
+});

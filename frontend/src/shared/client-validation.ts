@@ -11,6 +11,11 @@ const CANONICAL_TO_ID: Record<string, string> = {
   "TAM inflation rate (annual)": "tam_inflation_rate",
 };
 
+/** MC P10/P90 envelopes for client-side caveat (FRONTEND_PRD §7.2, A6). */
+const TYPICAL_ENVELOPE: Partial<Record<string, { p10: number; p90: number }>> = {
+  mars_pct: { p10: 0.02, p90: 0.12 },
+};
+
 export function validateCustomValues(
   inputs: ClientInputSpec[],
   values: Record<string, number>,
@@ -25,6 +30,14 @@ export function validateCustomValues(
     }
     if (v < inp.min || v > inp.max) {
       errors[inp.id] = `Must be between ${inp.min} and ${inp.max}`;
+      continue;
+    }
+    const envelope = TYPICAL_ENVELOPE[inp.id];
+    if (envelope && (v < envelope.p10 || v > envelope.p90)) {
+      warnings[inp.id] =
+        v > envelope.p90
+          ? "Above typical range (above P90)"
+          : "Below typical range (below P10)";
     }
   }
   return { errors, warnings };

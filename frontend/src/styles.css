@@ -1435,3 +1435,97 @@ table.data-table tbody tr.clickable:hover {
   color: var(--muted);
   margin: 0 0 10px;
 }
+
+/* Phase 4 — keyboard shortcuts hint */
+.grid-shortcuts-hint {
+  font-size: 10.5px;
+  color: var(--muted, #8a93a8);
+}
+
+.derivation-panel.expanded {
+  min-height: 280px;
+  max-height: 50vh;
+}
+
+.audit-grid-wrap:focus-visible {
+  outline: 2px solid var(--indigo, #6366f1);
+  outline-offset: -2px;
+}
+
+/* Label search palette (Cmd+K) */
+.label-search-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 12vh;
+}
+
+.label-search-panel {
+  width: min(520px, 92vw);
+  background: var(--panel, #161922);
+  border: 1px solid var(--border, #262b3a);
+  border-radius: 8px;
+  padding: 12px;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.45);
+}
+
+.label-search-input {
+  width: 100%;
+  background: var(--panel-2, #1c2030);
+  border: 1px solid var(--border, #262b3a);
+  color: var(--text, #e6e9f2);
+  padding: 10px 12px;
+  border-radius: 6px;
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+
+.label-search-results {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.label-search-results button {
+  display: grid;
+  grid-template-columns: 100px 48px 1fr;
+  gap: 8px;
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: none;
+  color: var(--text, #e6e9f2);
+  padding: 8px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.label-search-results button:hover,
+.label-search-results button.active {
+  background: var(--indigo-soft, #2a2a55);
+}
+
+.label-search-sheet {
+  color: var(--muted, #8a93a8);
+}
+
+.label-search-row {
+  font-variant-numeric: tabular-nums;
+  color: var(--indigo, #6366f1);
+}
+
+.label-search-hint {
+  margin: 8px 0 0;
+  font-size: 11px;
+}
+
+.label-search-empty {
+  padding: 8px 10px;
+}

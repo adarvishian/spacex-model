@@ -4,6 +4,7 @@ import { formatGridNumber } from "../shared/format";
 type Props = {
   entry: LineageEntry | null;
   activeCell: ActiveCell | null;
+  expanded?: boolean;
 };
 
 function statusPill(entry: LineageEntry): { className: string; text: string } {
@@ -32,10 +33,15 @@ function statusPill(entry: LineageEntry): { className: string; text: string } {
   return { className: "pill match", text: "—" };
 }
 
-export function DerivationPanel({ entry, activeCell }: Props) {
+export function DerivationPanel({ entry, activeCell, expanded = false }: Props) {
   if (!entry || !activeCell) {
     return (
-      <section className="derivation-panel empty" aria-label="Derivation panel">
+      <section
+        className="derivation-panel empty"
+        aria-label="Derivation panel"
+        tabIndex={0}
+        data-testid="derivation-panel"
+      >
         <p className="panel-hint">Click a grid cell to inspect its derivation.</p>
       </section>
     );
@@ -48,7 +54,12 @@ export function DerivationPanel({ entry, activeCell }: Props) {
     : `${activeCell.label} · ${activeCell.year}`;
 
   return (
-    <section className="derivation-panel" aria-label="Derivation panel">
+    <section
+      className={`derivation-panel ${expanded ? "expanded" : ""}`}
+      aria-label="Derivation panel"
+      tabIndex={0}
+      data-testid="derivation-panel"
+    >
       <div className="derivation-addr">
         <code>{addressStr}</code>
         <span className="addr-meta">

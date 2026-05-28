@@ -12,6 +12,8 @@ outputs/          # run artifacts (CLI/API); golden fixtures live in tests/golde
 .env
 node_modules/
 frontend/dist/
+frontend/test-results/
+playwright-report/
 public/
 *.tsbuildinfo
 *.mhtml           # S-1 filing (~200 MB); not read at runtime — see s1_overrides.py

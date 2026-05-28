@@ -1,15 +1,18 @@
 import { useQuery } from "@tanstack/react-query";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { ChangeHistoryList } from "../audit/ChangeHistoryList";
 import { DependencyGraph } from "../audit/DependencyGraph";
 import { DerivationPanel } from "../audit/DerivationPanel";
-import { Grid } from "../audit/Grid";
+import { Grid, type GridHandle } from "../audit/Grid";
+import { LabelSearchPalette, type LabelSearchHit } from "../audit/LabelSearchPalette";
+import { moveActiveCell } from "../audit/grid-navigation";
 import { Minimap } from "../audit/Minimap";
 import { RunAuditTab } from "../audit/RunAuditTab";
 import { ScenarioSidebar } from "../audit/ScenarioSidebar";
 import { SheetTabs } from "../audit/SheetTabs";
 import { SourcesPanel } from "../audit/SourcesPanel";
+import { parseCellAddress, sheetSlugFromName } from "../shared/cell-ref";
 import {
   fetchHealth,
   fetchLineage,
@@ -21,27 +24,6 @@ import {
 import type { ActiveCell, GridPayload, LineageEntry } from "../shared/types";
 
 const RUN_AUDIT_SLUG = "run_audit";
-
-function sheetSlugFromName(sheet?: string): string {
-  if (!sheet) return "starlink";
-  const map: Record<string, string> = {
-    Assumptions: "assumptions",
-    Allocator: "allocator",
-    "Launch Capacity": "launch_capacity",
-    "Customer Launch": "customer_launch",
-    Starlink: "starlink",
-    "Starlink Capacity": "starlink_capacity",
-    ODC: "odc",
-    "AI Stack": "ai_stack",
-    "Lunar Mars": "lunar_mars",
-    "Group P&L": "group_pnl",
-    OpEx: "opex",
-    CapEx: "capex",
-    Valuation: "valuation",
-    "Demand Curves": "demand_curves",
-  };
-  return map[sheet] ?? sheet.toLowerCase().replace(/\s+/g, "_");
-}
 
 export default function AuditApp() {
   const { sheetSlug = "starlink" } = useParams<{ sheetSlug: string }>();
@@ -59,6 +41,9 @@ export default function AuditApp() {
   const [lineage, setLineage] = useState<LineageEntry | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [running, setRunning] = useState(false);
+  const [derivationExpanded, setDerivationExpanded] = useState(false);
+  const [labelSearchOpen, setLabelSearchOpen] = useState(false);
+  const gridRef = useRef<GridHandle>(null);
 
   const healthQ = useQuery({ queryKey: ["health"], queryFn: fetchHealth });
   const scenariosQ = useQuery({ queryKey: ["scenarios"], queryFn: fetchScenarios });
@@ -107,11 +92,11 @@ export default function AuditApp() {
   const openLineage = useCallback(
     async (cell: ActiveCell) => {
       if (!runId) return;
-      setActiveCell(cell);
       const params = new URLSearchParams(searchParams);
       params.set("row", cell.rowId);
       params.set("col", String(cell.year));
       setSearchParams(params, { replace: true });
+      setActiveCell(cell);
       try {
         const entry = await fetchLineage(cell.lineageKey, {
           runId,
@@ -161,11 +146,8 @@ export default function AuditApp() {
       unit: row.unit,
       cellKind: row.cell_kinds[yearIndex],
     };
-    if (activeCell?.rowId === cell.rowId && activeCell?.year === cell.year && lineage) {
-      return;
-    }
     void openLineage(cell);
-  }, [gridData, urlRow, urlCol, openLineage, activeCell, lineage, isRunAudit]);
+  }, [gridData, urlRow, urlCol, openLineage, isRunAudit, sheetSlug]);
 
   const activeSheetMeta = useMemo(
     () => sheetsQ.data?.find((s) => s.slug === sheetSlug),
@@ -175,6 +157,86 @@ export default function AuditApp() {
   const onSheetChange = (slug: string) => {
     navigate(`/audit/${slug}${searchParams.toString() ? `?${searchParams.toString()}` : ""}`);
   };
+
+  const jumpToUpstream = useCallback(() => {
+    const first = lineage?.resolved_inputs?.[0];
+    if (!first?.cell_address) return;
+    const parsed = parseCellAddress(first.cell_address);
+    if (!parsed?.rowId) return;
+    navigateToCell({
+      sheetSlug: sheetSlugFromName(parsed.sheetName),
+      rowId: parsed.rowId,
+      year: parsed.year ?? activeCell?.year,
+      lineageKey: first.lineage_key,
+    });
+  }, [lineage, activeCell, navigateToCell]);
+
+  const onLabelSearchSelect = useCallback(
+    (hit: LabelSearchHit) => {
+      navigateToCell({
+        sheetSlug: hit.sheetSlug,
+        rowId: hit.rowId,
+        year: hit.year,
+        lineageKey: hit.lineageKey,
+      });
+    },
+    [navigateToCell],
+  );
+
+  useEffect(() => {
+    if (isRunAudit || !gridData) return;
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      const mod = e.metaKey || e.ctrlKey;
+      if (mod && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setLabelSearchOpen(true);
+        return;
+      }
+      if (mod && e.key.toLowerCase() === "j") {
+        e.preventDefault();
+        jumpToUpstream();
+        return;
+      }
+
+      const tag = (e.target as HTMLElement)?.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
+
+      if (e.key === "Enter" && activeCell) {
+        e.preventDefault();
+        setDerivationExpanded((v) => !v);
+        return;
+      }
+
+      if (!activeCell) return;
+      const dir =
+        e.key === "ArrowUp"
+          ? "up"
+          : e.key === "ArrowDown"
+            ? "down"
+            : e.key === "ArrowLeft"
+              ? "left"
+              : e.key === "ArrowRight"
+                ? "right"
+                : null;
+      if (!dir) return;
+      e.preventDefault();
+      const next = moveActiveCell(gridData, activeCell, dir);
+      if (next) {
+        void openLineage(next);
+        gridRef.current?.focusActiveCell(next);
+      }
+    };
+
+    window.addEventListener("keydown", onKeyDown, true);
+    return () => window.removeEventListener("keydown", onKeyDown, true);
+  }, [isRunAudit, gridData, activeCell, openLineage, jumpToUpstream]);
+
+  useEffect(() => {
+    if (activeCell) {
+      gridRef.current?.focusActiveCell(activeCell);
+    }
+  }, [activeCell, sheetSlug]);
 
   return (
     <div className="audit-app">
@@ -248,6 +310,9 @@ export default function AuditApp() {
                     )}
                   </span>
                   <div className="grid-legend">
+                    <span className="grid-shortcuts-hint" aria-label="Keyboard shortcuts">
+                      ↑↓←→ cell · Enter expand · ⌘J upstream · ⌘K search
+                    </span>
                     <span>
                       <i className="sw input" /> Input
                     </span>
@@ -263,10 +328,19 @@ export default function AuditApp() {
                   <p className="audit-loading">Loading grid…</p>
                 )}
                 {gridData && (
-                  <Grid payload={gridData} activeCell={activeCell} onCellSelect={openLineage} />
+                  <Grid
+                    ref={gridRef}
+                    payload={gridData}
+                    activeCell={activeCell}
+                    onCellSelect={openLineage}
+                  />
                 )}
               </div>
-              <DerivationPanel entry={lineage} activeCell={activeCell} />
+              <DerivationPanel
+                entry={lineage}
+                activeCell={activeCell}
+                expanded={derivationExpanded}
+              />
               <DependencyGraph
                 lineageKey={activeCell?.lineageKey ?? null}
                 runId={runId}
@@ -299,6 +373,16 @@ export default function AuditApp() {
           />
         )}
       </div>
+
+      <LabelSearchPalette
+        open={labelSearchOpen}
+        onClose={() => setLabelSearchOpen(false)}
+        sheets={sheetsQ.data ?? []}
+        activeSheetSlug={sheetSlug}
+        gridPayload={gridData}
+        gridCache={embeddedGrids}
+        onSelect={onLabelSearchSelect}
+      />
     </div>
   );
 }

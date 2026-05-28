@@ -6,6 +6,22 @@ export default defineConfig({
   build: {
     outDir: "../static/ui",
     emptyOutDir: true,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes("node_modules/ag-grid")) return "vendor-grid";
+          if (id.includes("node_modules/@xyflow") || id.includes("node_modules/@reactflow"))
+            return "vendor-flow";
+          if (id.includes("node_modules/@tanstack")) return "vendor-query";
+          if (
+            id.includes("node_modules/react-dom") ||
+            id.includes("node_modules/react-router") ||
+            id.includes("node_modules/react/")
+          )
+            return "vendor-react";
+        },
+      },
+    },
   },
   server: {
     port: 5173,
