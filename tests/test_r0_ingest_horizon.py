@@ -109,3 +109,28 @@ def test_diagnostic_snapshot_rebuilt(ingest, tmp_path: Path) -> None:
 
 def test_canonical_registry_nonempty() -> None:
     assert len(CANONICAL_LABELS) > 1500
+
+
+@pytest.mark.slow
+def test_v4_113_audit_grid_sheets_have_rows() -> None:
+    """Audit tabs must resolve V4.113 workbook names (not legacy V2.16 tab names)."""
+    from spacex_model.engine.pipeline import run_base_case
+    from spacex_model.service.grid import build_grid_payload
+    from spacex_model.service.sheets_meta import get_sheet
+
+    result = run_base_case(WORKBOOK, write_outputs=False)
+    for slug in (
+        "allocator",
+        "launch_capacity",
+        "starlink_capacity",
+        "ai_stack",
+        "lunar_mars",
+        "opex",
+        "capex",
+        "valuation",
+    ):
+        meta = get_sheet(slug)
+        assert meta is not None
+        assert meta.source_sheet in result.ingest.value_pass.labels_by_sheet
+        grid = build_grid_payload(meta, result)
+        assert len(grid["rows"]) > 0, slug

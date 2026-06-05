@@ -9,7 +9,7 @@ from spacex_model.config.constants import FIRST_YEAR, LAST_YEAR
 from spacex_model.engine.label_lookup import lookup_by_label
 from spacex_model.engine.pipeline import ModelResult
 from spacex_model.io.divergence import tolerance_for
-from spacex_model.service.sheets_meta import SheetMeta, sheet_for_name
+from spacex_model.service.sheets_meta import SheetMeta
 
 _YEARS = list(range(FIRST_YEAR, LAST_YEAR + 1))
 
@@ -27,8 +27,12 @@ _LABEL_LINEAGE: dict[tuple[str, str], str] = {
     ("ODC", "Module FCF ($mm)"): "module.odc.module_fcf",
     ("AI Stack", "Total Revenue ($mm)"): "module.ai_stack.total_revenue",
     ("AI Stack", "Module FCF ($mm)"): "module.ai_stack.module_fcf",
+    ("AI - Compute", "Total Revenue ($mm)"): "module.ai_compute.total_revenue",
+    ("AI - Compute", "Module FCF ($mm)"): "module.ai_compute.module_fcf",
     ("Lunar Mars", "Total Revenue ($mm)"): "module.lunar_mars.total_revenue",
     ("Lunar Mars", "Module FCF ($mm)"): "module.lunar_mars.module_fcf",
+    ("Lunar - Mars", "Total Revenue ($mm)"): "module.lunar_mars.total_revenue",
+    ("Lunar - Mars", "Module FCF ($mm)"): "module.lunar_mars.module_fcf",
     ("Group P&L", "Group Revenue ($mm)"): "group.group_revenue_net",
     ("Group P&L", "Group EBITDA ($mm)"): "group.group_ebitda",
     ("Group P&L", "Group FCF ($mm)"): "group.group_fcf",
@@ -93,13 +97,11 @@ def _divergence_status(
     return "intentional", delta
 
 
-def _lineage_key(sheet: str, label: str, row_idx: int, year: int) -> str:
+def _lineage_key(slug: str, sheet: str, label: str, row_idx: int, year: int) -> str:
     mapped = _LABEL_LINEAGE.get((sheet, label))
     if mapped:
         return mapped
-    slug = sheet_for_name(sheet)
-    slug_part = slug.slug if slug else sheet.lower().replace(" ", "_")
-    return f"grid.{slug_part}.{_row_id(row_idx)}.{year}"
+    return f"grid.{slug}.{_row_id(row_idx)}.{year}"
 
 
 def _section_ref(current_section: str, label: str) -> str:
@@ -118,7 +120,11 @@ def build_grid_payload(meta: SheetMeta, result: ModelResult) -> dict[str, Any]:
     rows: list[dict[str, Any]] = []
     current_section = f"§{meta.display_name} module"
 
+    row_lo, row_hi = meta.row_range if meta.row_range is not None else (None, None)
+
     for row_idx in sorted(labels_map.keys()):
+        if row_lo is not None and row_hi is not None and (row_idx < row_lo or row_idx > row_hi):
+            continue
         label = labels_map[row_idx]
         if _is_section_header(label):
             current_section = _section_ref(current_section, label)
@@ -146,7 +152,7 @@ def build_grid_payload(meta: SheetMeta, result: ModelResult) -> dict[str, Any]:
             year_values.append(display)
             cell_kinds.append(kind)
             divergence_flags.append(div_status)
-            lineage_keys.append(_lineage_key(sheet, label, row_idx, year))
+            lineage_keys.append(_lineage_key(meta.slug, sheet, label, row_idx, year))
 
         rows.append(
             {

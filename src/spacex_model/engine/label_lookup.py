@@ -60,6 +60,18 @@ _LAUNCH_CAPACITY_FIELDS: dict[str, str] = {
     "At-cost launch services rate ($mm/launch)": "starship_at_cost_rate",
 }
 
+# V4.113 Vehicle Build tab — same engine outputs, relabeled rows.
+_VEHICLE_BUILD_LAUNCH_FIELDS: dict[str, str] = {
+    "F9 launches per year": "f9_launches",
+    "Starship launches per year": "total_starship_launches",
+    "Total launch capacity (kg)": "total_annual_capacity_kg",
+    "F9 fleet EoY (boosters)": "f9_fleet_eoy",
+    "F9 boosters built per year": "f9_manufactured",
+    "Starship at-cost rate, fully reusable ($mm/launch)": "starship_at_cost_rate",
+}
+
+_LAUNCH_CAPACITY_SHEETS = frozenset({"Launch Capacity", "Vehicle Build"})
+
 _ALLOCATOR_SHEETS = frozenset({"Allocator", "Cash Allocation Engine"})
 
 _ALLOCATOR_FIELDS: dict[str, str] = {
@@ -127,8 +139,10 @@ def lookup_by_label(result: ModelResult, sheet: str, label: str, year: int) -> f
     if sheet == "Group P&L" and label in _GROUP_PNL_FIELDS:
         return _year_value(getattr(result.group_pnl, _GROUP_PNL_FIELDS[label]), year)
 
-    if sheet == "Launch Capacity" and label in _LAUNCH_CAPACITY_FIELDS:
-        return _year_value(getattr(result.launch_capacity, _LAUNCH_CAPACITY_FIELDS[label]), year)
+    if sheet in _LAUNCH_CAPACITY_SHEETS:
+        field = _LAUNCH_CAPACITY_FIELDS.get(label) or _VEHICLE_BUILD_LAUNCH_FIELDS.get(label)
+        if field:
+            return _year_value(getattr(result.launch_capacity, field), year)
 
     if sheet in _ALLOCATOR_SHEETS:
         if label in _ALLOCATOR_FIELDS:

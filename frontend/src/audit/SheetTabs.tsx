@@ -12,7 +12,7 @@ export function SheetTabs({ sheets, activeSlug, onSelect }: Props) {
     <nav className="sheet-tabs" aria-label="Sheet tabs">
       {SHEET_GROUPS.map((group) => {
         const groupSheets = sheets.filter((s) => {
-          if (s.is_run_audit) return false;
+          if (s.is_run_audit || !s.enabled) return false;
           const node = group.id;
           if (node === "inputs") return s.slug === "assumptions" || s.slug === "demand_curves";
           if (node === "allocation")
