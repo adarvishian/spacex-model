@@ -74,6 +74,9 @@ jobs:
 
       - name: Build frontend
         working-directory: frontend
+        env:
+          # Full 2,000-trial MC precache at deploy; smoke count in CI to stay within job budget.
+          SPACEX_MODEL_MC_PRECOMPUTE_TRIALS: "64"
         run: npm run build
 
       - name: Frontend bundle budget (FRONTEND_PRD §8.3)

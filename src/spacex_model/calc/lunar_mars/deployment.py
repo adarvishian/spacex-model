@@ -36,6 +36,8 @@ def compute_deployment(
     Excel label:       "Lunar ships deployed"
     Architecture ref:  §11 deployment
     Principle:         22 (carve-out cash deployment)
+    
+    Formula: Deploy Lunar/Mars ships from carve-out cash shares; zero before first mission year.
 
     """
     first_mission = int(assumption_scalar(assumptions, cl.FIRST_MISSION_YEAR_LUNAR_MARS, default=2028.0))

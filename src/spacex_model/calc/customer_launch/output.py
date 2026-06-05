@@ -23,6 +23,8 @@ def compute_output(demand: DemandResult, allocation: AllocatorAllocation) -> Out
     Excel label:       "Customer Launch proposed allocation ($mm)"
     Architecture ref:  §6.5 / §20.3 (Sprint 11f Option A)
     Principle:         12 (output bounded by cash; never feeds demand)
+    
+    Formula: Output = MIN(cash_alloc / unit_cost, kg_alloc / mass, internal_target); Phase B returns zeros.
 
     """
     _ = (demand, allocation)

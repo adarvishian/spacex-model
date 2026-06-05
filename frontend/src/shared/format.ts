@@ -135,9 +135,8 @@ export function formatValueWithUnit(v: number | null | undefined, unit: string):
 }
 
 export function isStubLineage(
-  entry: { computed_value?: number | null; cell_kind?: string },
+  entry: { cell_kind?: string },
   cellKind?: string,
 ): boolean {
-  if (entry.cell_kind === "stub" || cellKind === "stub") return true;
-  return entry.computed_value == null;
+  return entry.cell_kind === "stub" || cellKind === "stub";
 }

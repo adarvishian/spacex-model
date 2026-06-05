@@ -211,19 +211,32 @@ test("A1 UX: full label in tooltip and derivation strip", async ({ page }) => {
   );
 });
 
-/** FRONTEND_UX_PRD A2 — stub cells show explicit state, never "= $mm" (F2). */
-test("A2 UX: stub cell shows stub state not empty computed", async ({ page }) => {
+/** FRONTEND_UX_PRD A2 — stub cells show Planned state, never "= $mm" (F2). */
+test("A2 UX: stub cell shows Planned state not empty computed", async ({ page }) => {
   await installMockApi(page);
   await page.goto("/audit/starlink?row=R11&col=2030");
   await expect(page.getByTestId("audit-grid")).toBeVisible({ timeout: 5_000 });
 
   const panel = page.getByTestId("derivation-panel");
-  await expect(panel).toContainText(/stub/i, { timeout: 10_000 });
-  await expect(panel).toContainText(/No computed value/i);
+  await expect(panel).toContainText(/Planned/i, { timeout: 10_000 });
+  await expect(panel).not.toContainText(/not yet ported to a traced derivation/i);
   await expect(panel).not.toContainText("= $mm");
   await expect(page.getByTestId("derivation-stub-state")).toBeVisible();
   await expect(page.getByTestId("depgraph-empty")).toBeVisible();
   await expect(page.locator(".depgraph-canvas")).not.toBeVisible();
+});
+
+/** Lineage Trust L1 — derived numeric cells never show the stub Planned copy. */
+test("L1: derived cell does not show Planned stub state", async ({ page }) => {
+  await installMockApi(page);
+  await page.goto("/audit/group_pnl?row=R14&col=2026");
+  await expect(page.getByTestId("audit-grid")).toBeVisible({ timeout: 5_000 });
+
+  const panel = page.getByTestId("derivation-panel");
+  await expect(panel).toContainText(/Group Revenue/i, { timeout: 10_000 });
+  await expect(page.getByTestId("derivation-stub-state")).not.toBeVisible();
+  await expect(panel).not.toContainText(/Planned —/i);
+  await expect(page.getByTestId("derivation-computed")).toBeVisible();
 });
 
 /** FRONTEND_UX_PRD A2 — derived cells show formula and resolved inputs (F2). */
@@ -242,6 +255,42 @@ test("A2 UX: derived cell shows formula and resolved inputs", async ({ page }) =
   await expect(inputRows).toHaveCount(2);
   await expect(page.locator(".depgraph-canvas")).toBeVisible();
   await expect(page.getByTestId("depgraph-empty")).not.toBeVisible();
+});
+
+/** Lineage Trust Sprint 3 — derived formula is an expression; Sources has no code paths (L2/L4). */
+test("L2/L4: derived cell shows real formula and clean sources panel", async ({ page }) => {
+  await installMockApi(page);
+  await page.goto("/audit/group_pnl?row=R14&col=2026");
+  await expect(page.getByTestId("audit-grid")).toBeVisible({ timeout: 5_000 });
+
+  const formula = page.getByTestId("derivation-formula");
+  await expect(formula).toContainText(/Σ module revenues/i);
+  await expect(formula).not.toContainText(/see Architecture/i);
+
+  const sources = page.getByLabel("Sources panel");
+  await expect(sources).toBeVisible();
+  await expect(sources).toContainText(/Architecture & Methodology/i);
+  await expect(sources).toContainText(/§9\.2/);
+  await expect(sources).not.toContainText(/spacex_model\./i);
+  await expect(sources).not.toContainText(/module calc\./i);
+  await expect(sources.getByText("Principle", { exact: true })).toBeVisible();
+  await expect(sources.getByText("Rule", { exact: true })).toBeVisible();
+  await expect(sources).toContainText(/Rule 9/i);
+});
+
+/** Lineage Trust Sprint 4 — change history shows before→after effect from ingest diff (L3). */
+test("L3: change history renders effect_on_cell before and after", async ({ page }) => {
+  await installMockApi(page);
+  await page.goto("/audit/group_pnl?row=R14&col=2030");
+  await expect(page.getByTestId("audit-grid")).toBeVisible({ timeout: 5_000 });
+
+  const history = page.getByLabel("Change history");
+  await expect(history).toBeVisible();
+  await expect(history).toContainText(/Effect:/i);
+  await expect(history).toContainText(/12,000/);
+  await expect(history).toContainText(/12,100/);
+  await expect(history).toContainText(/\+100/);
+  await expect(history).toContainText(/VALUE/i);
 });
 
 /** FRONTEND_UX_PRD A3 — grid value matches derivation displayed value (F6). */
@@ -364,6 +413,49 @@ test("A9 UX: title bar does not wrap at 1280px; help popover shows shortcuts", a
   await expect(page.getByTestId("grid-help-popover")).toBeVisible();
   await expect(page.getByTestId("grid-help-popover")).toContainText(/Move active cell/i);
   await expect(page.getByTestId("grid-help-popover")).toContainText(/Search row labels/i);
+});
+
+/** Lineage Trust Sprint 7 — MC panel from headline module FCF cell (R-M1.9). */
+test("MC3: audit MC panel opens from module FCF with distribution and provenance", async ({
+  page,
+}) => {
+  await installMockApi(page);
+  await page.goto("/audit/starlink?row=R106&col=2026");
+  await expect(page.getByTestId("audit-grid")).toBeVisible({ timeout: 5_000 });
+
+  await expect(page.getByTestId("rail-view-toggle")).toBeVisible();
+  await page.getByTestId("rail-view-mc").click();
+
+  const panel = page.getByTestId("audit-mc-panel");
+  await expect(panel).toBeVisible();
+  await expect(page.getByTestId("audit-mc-progress")).toHaveCount(0);
+  await expect(page.getByTestId("mc-ev-distribution")).toBeVisible({ timeout: 5_000 });
+  await expect(page.getByTestId("mc-percentile-table")).toBeVisible();
+  await expect(page.getByTestId("tornado-chart")).toBeVisible();
+  await expect(page.getByTestId("audit-mc-provenance-detail")).toContainText(/2,000/);
+  await expect(page.getByTestId("audit-mc-provenance-detail")).toContainText(/Seed:\s*42/i);
+  await expect(page.getByTestId("audit-mc-provenance-detail")).toContainText(/Convergence:\s*converged/i);
+  await expect(page.getByTestId("mc-p5")).toHaveText("$220B");
+  await expect(page.getByTestId("mc-p50")).toHaveText("$278B");
+  await expect(page.getByTestId("mc-p95")).toHaveText("$340B");
+
+  await page.getByTestId("rail-view-derivation").click();
+  await expect(page.getByTestId("derivation-panel")).toBeVisible();
+  await expect(page.getByTestId("audit-mc-panel")).not.toBeVisible();
+});
+
+/** Lineage Trust Sprint 7 — deep-linked MC run reproduces identical aggregates (R-M1.8). */
+test("MC4: audit MC run id deep-link reproduces percentiles", async ({ page }) => {
+  await installMockApi(page);
+  await page.goto("/audit/starlink?row=R106&col=2026&mc=precache");
+  await expect(page.getByTestId("audit-grid")).toBeVisible({ timeout: 5_000 });
+
+  await expect(page.getByTestId("audit-mc-panel")).toBeVisible({ timeout: 5_000 });
+  await expect(page.getByTestId("mc-ev-distribution")).toBeVisible({ timeout: 5_000 });
+  await expect(page.getByTestId("mc-p5")).toHaveText("$220B");
+  await expect(page.getByTestId("mc-p50")).toHaveText("$278B");
+  await expect(page.getByTestId("mc-p95")).toHaveText("$340B");
+  await expect(page.getByTestId("audit-mc-provenance")).toContainText(/precomputed/i);
 });
 
 /** FRONTEND_UX_PRD A1 — implausible pct values show raw + warning (F4 guard). */

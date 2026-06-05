@@ -190,6 +190,8 @@ def compute_allocator(inputs: AllocatorInputs) -> AllocatorResult:
     Excel label:       "▸ Cash Allocation Engine inputs"
     Architecture ref:  §2.3 CAE map + PRD U2
     Principle:         4 (queue gate before IRR-weighted allocation)
+    
+    Formula: Run full CAE spine: pool → gate → carve-out → two-resource fill → debt.
 
     """
     a = inputs.assumptions

@@ -1,0 +1,37 @@
+# Methodology overlay — display polish for Formula / Sources panels (PRD §6).
+# Overlay wins for method_statement and rule; formula/principle default to docstrings.
+
+[section_rules]
+default = "Rule 1 — One concept per write; every formula traces to its source cell"
+"§3" = "Rule 8 — Module COGS contains direct production costs only"
+"§6" = "Rule 4 — Reserve non-module claims before IRR queue allocation"
+"§6.1" = "Rule 4 — Cash BoY chains prior FCF; queue gate reserves non-module claims"
+"§7" = "Rule 9 — Internal transfers count gross at module IRR; eliminate at Group P&L"
+"§7.1" = "Rule 9 — Internal launch transfers at fully-allocated cost"
+"§8" = "Rule 12 — Demand is exogenous; module output never feeds demand curves"
+"§8.4" = "Rule 2 — Per-sat marginal IRR is the only IRR for pre-revenue modules"
+"§15" = "Rule 9 — Group P&L eliminates inter-module flows once"
+"§15.1" = "Rule 9 — Consolidated revenue nets eliminations exactly once"
+
+[lineage]
+"group.group_revenue_net" = { method_statement = "Σ module gross revenues minus inter-module elimination rows", rule = "Rule 9 — Internal transfers eliminate only at Group P&L" }
+"group.group_ebitda" = { method_statement = "Group Gross Profit minus corporate OpEx (vending-machine roll-up)", rule = "Rule 8 — Module tabs carry no corporate OpEx; Group P&L owns it" }
+"group.group_fcf" = { method_statement = "NOPAT + D&A − Group CapEx − Mars strategic carve-out", rule = "Rule 4 — Cash pool reserves carve-out and non-module claims before allocation" }
+"module.starlink.total_revenue" = { method_statement = "Σ active sats × ARPU × months active across vehicle pools", rule = "Rule 12 — Starlink demand inputs are exogenous; revenue is output only" }
+"module.starlink.module_fcf" = { method_statement = "Module EBITDA − CapEx + D&A add-back (pre-tax, pre-corp)", rule = "Rule 8 — Module FCF excludes taxes, SG&A, and corporate overhead" }
+
+[label.Starlink]
+"total revenue" = { method_statement = "Σ vehicle-pool revenue (BB, DTC, Starshield) from unit economics", rule = "Rule 2 — Per-vehicle marginal IRR drives pool weights" }
+
+[label."Customer Launch"]
+"total revenue" = { method_statement = "F9 and Starship launch services revenue at contracted price × volume", rule = "Rule 12 — Launch demand is exogenous from demand curves" }
+
+[label."AI - Compute"]
+"total revenue" = { method_statement = "Orbital DC + terrestrial DC + AI Apps revenue stack", rule = "Rule 8 — Module COGS is direct production cost only" }
+
+[label."Group P&L"]
+"group revenue net of elims" = { method_statement = "Σ module revenues minus elimination block", rule = "Rule 9 — Eliminations applied once at consolidation" }
+
+[label."Cash Allocation Engine"]
+"cash available for year" = { method_statement = "Cash BoY minus queue-gate non-module claims reserved for year N", rule = "Rule 4 — Non-module claims reserved before IRR-weighted allocation" }
+"remaining pool for irr weighted allocation" = { method_statement = "Pool after carve-out, queue gate, and strategic seed senior claims", rule = "Rule 5 — Allocation is IRR-ranked; strategic weights are not a separate mechanism" }

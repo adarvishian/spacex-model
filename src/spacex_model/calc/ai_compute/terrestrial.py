@@ -45,6 +45,8 @@ def compute_ai_apps_revenue(inputs: TerrestrialInputs) -> YearVector:
     Excel label:       "Revenue: AI Apps"
     Architecture ref:  §9 unified AI - Compute
     Principle:         8 (vending-machine module)
+    
+    Formula: AI Apps external revenue (legacy S-1 AI segment line).
 
     """
     return _ai_apps_revenue(inputs)
@@ -57,6 +59,8 @@ def compute_terrestrial_dc_revenue(inputs: TerrestrialInputs) -> YearVector:
     Excel label:       "Revenue: Terrestrial DC"
     Architecture ref:  §9 unified AI - Compute
     Principle:         8 (vending-machine module)
+    
+    Formula: Terrestrial DC external revenue (Anthropic compute services).
 
     """
     return _terrestrial_dc_revenue(inputs)
@@ -69,6 +73,8 @@ def compute_terrestrial_revenue(inputs: TerrestrialInputs) -> YearVector:
     Excel label:       "Revenue: Terrestrial"
     Architecture ref:  §9 unified AI - Compute
     Principle:         8 (vending-machine module)
+    
+    Formula: Terrestrial DC + AI Apps combined revenue.
 
     """
     return YearVector(
@@ -83,6 +89,8 @@ def compute_terrestrial_cogs(inputs: TerrestrialInputs) -> YearVector:
     Excel label:       "COGS: Terrestrial"
     Architecture ref:  §9 unified COGS
     Principle:         9 (S-1 adherence path)
+    
+    Formula: Terrestrial COGS from S-1 ratio + Anthropic cost share.
 
     """
     legacy_rev = _ai_apps_revenue(inputs)
@@ -99,6 +107,8 @@ def compute_terrestrial_capex(inputs: TerrestrialInputs) -> YearVector:
     Excel label:       "Terrestrial AI (COLOSSUS) CapEx ($mm) — year-row"
     Architecture ref:  §10 CapEx
     Principle:         8 (vending-machine module)
+    
+    Formula: Terrestrial data-center CapEx year-row (COLOSSUS path).
 
     """
     row = inputs.assumptions.lookup(cl.TERRESTRIAL_AI_CAPEX_YEAR_ROW)

@@ -8,7 +8,7 @@ export type ChangeHistoryEntry = {
   date: string;
   commit_sha: string;
   title: string;
-  change_kind: "formula" | "anchor" | "input" | "initial";
+  change_kind: "formula" | "anchor" | "input" | "initial" | "value";
   effect_on_cell?: { before: number | null; after: number | null; delta: number | null } | null;
   dev_log_anchor?: string | null;
   summary?: string;
@@ -153,6 +153,7 @@ export type LineageEntry = {
     year?: number;
   };
   cell_kind?: CellKind;
+  stub_spec_section?: string | null;
   unit?: string;
   formula_expression?: string;
   resolved_inputs?: ResolvedInput[];
@@ -168,7 +169,12 @@ export type LineageEntry = {
   downstream?: Array<{ key: string; label: string }>;
   sources?: {
     input_provenance?: { source: string; reference: string; url?: string };
-    methodology: { spec_section: string; principle: string; rule: string; module?: string };
+    methodology: {
+      spec_section: string;
+      method_statement?: string;
+      principle: string;
+      rule: string;
+    };
     calibration_anchor?: { target: number; tolerance_pct: number; basis: string };
   };
 };
@@ -228,6 +234,91 @@ export type ClientRunSummary = {
     }
   >;
   override_warnings: { label: string; value: string; message: string }[];
+};
+
+export type TornadoBar = {
+  label: string;
+  low_ev: number;
+  high_ev: number;
+  base_ev: number;
+  delta: number;
+};
+
+export type McMetricSummary = {
+  metric: string;
+  p5: number;
+  p10: number;
+  p25: number;
+  p50: number;
+  p75: number;
+  p90: number;
+  p95: number;
+  mean: number;
+  std: number;
+  cvar_5: number;
+  base_case: number | null;
+};
+
+export type McHistogram = {
+  metric: string;
+  bin_edges: number[];
+  counts: number[];
+  n_bins: number;
+};
+
+export type McFcfFan = {
+  years: number[];
+  p5: number[];
+  p25: number[];
+  p50: number[];
+  p75: number[];
+  p95: number[];
+  base_case: (number | null)[];
+};
+
+export type McAggregationPayload = {
+  n_trials: number;
+  n_converged: number;
+  base_seed: number;
+  convergence_status: string;
+  metrics: Record<string, McMetricSummary>;
+  group_ev_histogram?: McHistogram;
+  group_fcf_fan?: McFcfFan;
+  convergence_trace?: Record<string, number[]>;
+};
+
+export type McJobResult = {
+  scenario?: string;
+  n_trials?: number;
+  n_converged?: number;
+  base_seed?: number;
+  convergence_status?: string;
+  aggregation: McAggregationPayload;
+  tornado?: TornadoBar[];
+};
+
+export type McJobStatus = {
+  job_id: string;
+  status: string;
+  progress?: { trials_done: number; trials: number };
+  error?: string;
+  result?: McJobResult;
+};
+
+export type BaseCaseMcArtifact = {
+  git_sha: string;
+  scenario: string;
+  job_id: string;
+  run_id: string;
+  trials: number;
+  base_seed: number;
+  trials_completed: number;
+  trials_converged: number;
+  n_trials: number;
+  n_converged: number;
+  convergence_status: string;
+  aggregation: McAggregationPayload;
+  tornado?: TornadoBar[];
 };
 
 export type ActiveCell = {

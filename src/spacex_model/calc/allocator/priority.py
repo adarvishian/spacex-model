@@ -66,6 +66,8 @@ def compute_two_year_avg_prior_irr(spot_irr: FourProgramIrrs) -> FourProgramIrrs
     Excel label:       "▸ IRR-weighted allocation parameters"
     Architecture ref:  PRD §5.2 priority + D3
     Principle:         2 (prior-yr IRR only; no this-year returns)
+    
+    Formula: 2-yr rolling average of prior-year marginal IRR (D3).
 
     """
     def _avg(vec: np.ndarray) -> np.ndarray:
@@ -97,6 +99,8 @@ def compute_soft_floor_shares(
     Excel label:       "Allocation share: Starlink" … "Allocation share: terrestrial"
     Architecture ref:  PRD §5.2 share = floor + (1−N·floor)·w/Σw
     Principle:         2 (priority order only; floor kept per D1)
+    
+    Formula: Soft-floor shares from 2-yr-avg prior IRR weights (D1).
 
     """
     floor = _soft_floor(assumptions)
@@ -144,6 +148,8 @@ def compute_softmax_shares(
     Excel label:       "Allocation share: Starlink" … "Allocation share: AI-Compute"
     Architecture ref:  §5.2 priority (order only)
     Principle:         2 (prior-yr IRR drives softmax weights)
+    
+    Formula: exp(β·IRR) weights → soft-floor shares (D1).
 
     """
     beta = _beta(assumptions)

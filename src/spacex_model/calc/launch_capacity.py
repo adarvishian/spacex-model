@@ -65,6 +65,8 @@ def compute_launch_capacity(inputs: LaunchCapacityInputs) -> LaunchCapacityResul
     Excel label:       "Total Annual Capacity (kg-to-LEO)"
     Architecture ref:  §20.4 capacity supply
     Principle:         3 (supply-side tab; no module P&L)
+    
+    Formula: Compute full Launch Capacity tab per V2.16 mechanics / Architecture §20.4.
 
     """
     a = inputs.assumptions
@@ -310,6 +312,8 @@ def total_annual_capacity_kg(inputs: LaunchCapacityInputs | None = None) -> Year
     Excel label:       "Total Annual Capacity (kg-to-LEO)"
     Architecture ref:  §20.4 capacity supply
     Principle:         3 (supply-side tab; no module P&L)
+    
+    Formula: Total Annual Capacity (kg-to-LEO) — Starship-only canonical label.
 
     """
     if inputs is None:

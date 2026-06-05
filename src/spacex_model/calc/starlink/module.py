@@ -91,6 +91,8 @@ def compute_constellation_da(inputs: StarlinkInputs) -> YearVector:
     Excel label:       "Constellation D&A ($mm)"
     Architecture ref:  §8 Starlink COGS
     Principle:         8 (vending-machine module)
+    
+    Formula: Constellation D&A = active mass × $/kg/yr + legacy V1/V1.5 D&A runoff.
 
     """
     pools = _pools(inputs)
@@ -135,6 +137,8 @@ def compute_starlink_capacity_result(inputs: StarlinkInputs) -> StarlinkCapacity
     Excel label:       "BB Gbps available for external Starlink revenue"
     Architecture ref:  §8.5
     Principle:         3 (supply-side bandwidth aggregation)
+    
+    Formula: Run Starlink Capacity sub-tab from module intermediates.
 
     """
     pools = _pools(inputs)
@@ -218,6 +222,8 @@ def compute_starshield_revenue(inputs: StarlinkInputs) -> YearVector:
     Excel label:       "Starshield revenue ($mm)"
     Architecture ref:  §8 Starshield
     Principle:         8 (vending-machine module)
+    
+    Formula: Starshield revenue = reserved Gbps × $/Gbps/yr.
 
     """
     pools = _pools(inputs)
@@ -240,6 +246,8 @@ def compute_hardware_revenue(inputs: StarlinkInputs) -> YearVector:
     Excel label:       "Terminal hardware revenue ($mm)"
     Architecture ref:  §8.4
     Principle:         8 (derived subs from revenue / ARPU)
+    
+    Formula: Terminal hardware revenue from net subscriber adds × blended retail price.
 
     """
     capacity = compute_starlink_capacity_result(inputs)
@@ -290,6 +298,8 @@ def compute_internal_bandwidth_revenue(inputs: StarlinkInputs) -> YearVector:
     Excel label:       "Starlink internal bandwidth revenue ($mm)"
     Architecture ref:  §7.2
     Principle:         9 (at-cost internal transfer)
+    
+    Formula: Internal bandwidth transfer revenue from ODC Gbps claim × pool rates.
 
     """
     if inputs.odc_bandwidth_claim is None:
@@ -310,6 +320,8 @@ def compute_revenue(inputs: StarlinkInputs | None = None) -> YearVector:
     Excel label:       "Total Revenue ($mm)"
     Architecture ref:  §8 Starlink revenue
     Principle:         8 (vending-machine module)
+    
+    Formula: BB + DTC + Starshield + hardware + internal bandwidth revenue.
 
     """
     if inputs is None:
@@ -340,6 +352,8 @@ def compute_launch_services_cost(inputs: StarlinkInputs) -> YearVector:
     Excel label:       "Launch services cost ($mm)"
     Architecture ref:  §8 Starlink COGS / §7.1
     Principle:         9 (internal transfers at fully-allocated cost)
+    
+    Formula: Internal launch services at fully-allocated F9/Starship rates.
 
     """
     if inputs.launch_capacity is None:
@@ -359,6 +373,8 @@ def compute_cogs(inputs: StarlinkInputs | None = None) -> YearVector:
     Excel label:       "Total COGS ($mm)"
     Architecture ref:  §8 Starlink COGS
     Principle:         9 (internal launch at fully-allocated rate)
+    
+    Formula: Constellation D&A, launch services, ground ops, spectrum, terminals.
 
     """
     if inputs is None:
@@ -398,6 +414,8 @@ def compute_gross_profit(inputs: StarlinkInputs | None = None) -> YearVector:
     Excel label:       "Gross Profit ($mm)"
     Architecture ref:  §3 module framing
     Principle:         7 (Module EBITDA = Gross Profit)
+    
+    Formula: Gross profit = revenue − COGS.
 
     """
     if inputs is None:
@@ -412,6 +430,8 @@ def compute_capex(inputs: StarlinkInputs | None = None) -> YearVector:
     Excel label:       "Module CapEx ($mm)"
     Architecture ref:  §8 Starlink CapEx
     Principle:         8 (vehicle build via queue gate for Starship kg)
+    
+    Formula: Sat manufacturing CapEx from launches × unit cost (no facility lag in Phase C).
 
     """
     if inputs is None:
@@ -441,6 +461,8 @@ def compute_fcf(inputs: StarlinkInputs | None = None) -> YearVector:
     Excel label:       "Module FCF ($mm)"
     Architecture ref:  §3 module FCF
     Principle:         8 (pre-tax module FCF)
+    
+    Formula: Module FCF = EBITDA + constellation D&A add-back − CapEx.
 
     """
     if inputs is None:
@@ -458,6 +480,8 @@ def compute_allocator_out(inputs: StarlinkInputs | None = None) -> AllocatorOut:
     Excel label:       "CENTRAL ALLOCATOR OUTPUTS"
     Architecture ref:  §8 Allocator OUT contract
     Principle:         3 (canonical cross-tab labels via registry)
+    
+    Formula: Assemble Allocator OUT from vending-machine sections.
 
     """
     if inputs is None:

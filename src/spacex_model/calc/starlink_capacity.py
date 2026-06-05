@@ -54,6 +54,8 @@ def compute_starlink_capacity(inputs: StarlinkCapacityInputs) -> StarlinkCapacit
     Excel label:       "BB pool at-cost rate ($/Gbps/yr)"
     Architecture ref:  §8.5 / §7.2
     Principle:         9 (fully-allocated internal transfer pricing)
+    
+    Formula: Aggregate Gbps, subtract ODC claim, compute pool at-cost rates.
 
     """
     pools = inputs.pools

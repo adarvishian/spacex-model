@@ -1880,6 +1880,338 @@ table.data-table tbody tr.clickable:hover {
   margin: 0 0 10px;
 }
 
+/* Client Mode — Monte Carlo (Sprint 6) */
+.client-mc-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.client-mc-intro {
+  font-size: 0.85rem;
+  margin: 0 0 12px;
+}
+
+.client-mc-controls {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.client-mc-trials {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.client-mc-trials input {
+  width: 88px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--panel-elevated);
+  color: var(--text);
+}
+
+.mc-badge-precache {
+  background: color-mix(in srgb, var(--accent) 18%, transparent);
+}
+
+.mc-progress {
+  margin: 8px 0 12px;
+  font-size: 0.85rem;
+}
+
+.mc-progress-bar {
+  height: 4px;
+  background: var(--border-subtle);
+  border-radius: 2px;
+  margin-top: 6px;
+  overflow: hidden;
+}
+
+.mc-progress-fill {
+  height: 100%;
+  background: var(--accent);
+  transition: width 0.3s ease;
+}
+
+.mc-ev-chart {
+  margin-bottom: 12px;
+}
+
+.mc-ev-histogram {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  gap: 1px;
+  height: 100px;
+  background: var(--panel-elevated);
+  border-radius: 6px;
+  padding: 8px 8px 0;
+  margin-bottom: 10px;
+}
+
+.mc-ev-bar {
+  flex: 1;
+  min-width: 2px;
+  background: color-mix(in srgb, var(--accent) 55%, transparent);
+  border-radius: 2px 2px 0 0;
+  align-self: flex-end;
+}
+
+.mc-ev-marker {
+  position: absolute;
+  bottom: 0;
+  top: 4px;
+  width: 2px;
+  transform: translateX(-1px);
+  pointer-events: none;
+}
+
+.mc-ev-marker.p5 { background: var(--muted); }
+.mc-ev-marker.p50 { background: var(--accent); width: 3px; }
+.mc-ev-marker.p95 { background: var(--muted); }
+.mc-ev-marker.base-case {
+  background: var(--warn);
+  width: 3px;
+  border-left: 1px dashed var(--warn);
+}
+
+.mc-ev-percentiles {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.mc-percentile-callout {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 72px;
+}
+
+.mc-percentile-callout.primary .mc-percentile-value {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.mc-percentile-label {
+  font-size: 0.7rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.mc-percentile-value {
+  font-size: 1rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.mc-cvar-readout {
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin: 0 0 16px;
+  line-height: 1.45;
+}
+
+.mc-fcf-fan {
+  margin-bottom: 16px;
+}
+
+.mc-fan-outer {
+  fill: color-mix(in srgb, var(--accent) 12%, transparent);
+}
+
+.mc-fan-inner {
+  fill: color-mix(in srgb, var(--accent) 22%, transparent);
+}
+
+.mc-fan-median {
+  stroke: var(--accent);
+  stroke-width: 2;
+}
+
+.mc-fan-base {
+  stroke: var(--warn);
+  stroke-width: 1.5;
+  stroke-dasharray: 4 3;
+}
+
+.mc-fcf-fan-axis {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.7rem;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+.mc-fcf-fan-legend {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  font-size: 0.72rem;
+  color: var(--muted);
+  margin-top: 6px;
+}
+
+.mc-fcf-fan-caption {
+  font-size: 0.78rem;
+  margin: 6px 0 0;
+}
+
+.mc-provenance-line {
+  font-size: 0.75rem;
+  margin-top: 12px;
+}
+
+/* Audit Mode — MC distribution rail (Sprint 7) */
+.rail-view-toggle {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 10px;
+  padding: 4px;
+  background: var(--surface-2);
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+
+.rail-view-toggle button {
+  flex: 1;
+  padding: 6px 10px;
+  font-size: 0.78rem;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.rail-view-toggle button.active,
+.rail-view-toggle button[aria-pressed="true"] {
+  background: var(--panel);
+  color: var(--text);
+  font-weight: 500;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.audit-mc {
+  margin-bottom: 12px;
+}
+
+.audit-mc-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.audit-mc-header h2 {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.audit-mc-intro {
+  font-size: 0.8rem;
+  margin: 0 0 10px;
+}
+
+.audit-mc-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: flex-end;
+  margin-bottom: 12px;
+}
+
+.audit-mc-trials {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.audit-mc-trials input {
+  width: 88px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+.mc-percentile-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.78rem;
+  margin-bottom: 12px;
+}
+
+.mc-percentile-table th,
+.mc-percentile-table td {
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--border-subtle);
+  text-align: left;
+}
+
+.mc-percentile-table td.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.mc-percentile-table tr.base-case-row {
+  font-weight: 500;
+}
+
+.audit-mc-year-band {
+  margin-bottom: 12px;
+}
+
+.audit-mc-year-band h3 {
+  margin: 0 0 6px;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+}
+
+.audit-mc-year-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin: 0;
+  font-size: 0.78rem;
+}
+
+.audit-mc-year-stats dt {
+  color: var(--muted);
+  font-size: 0.7rem;
+}
+
+.audit-mc-year-stats dd {
+  margin: 0;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.audit-mc-provenance {
+  font-size: 0.78rem;
+  color: var(--muted);
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.audit-mc-provenance p {
+  margin: 0 0 4px;
+}
+
 /* Phase 4 — keyboard shortcuts hint */
 .grid-shortcuts-hint {
   font-size: 10.5px;

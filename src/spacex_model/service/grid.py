@@ -10,6 +10,7 @@ from spacex_model.engine.label_lookup import lookup_by_label
 from spacex_model.engine.pipeline import ModelResult
 from spacex_model.io.divergence import tolerance_for
 from spacex_model.service.sheets_meta import SheetMeta
+from spacex_model.service.stub_registry import is_registered_stub
 
 _YEARS = list(range(FIRST_YEAR, LAST_YEAR + 1))
 
@@ -70,14 +71,37 @@ def _is_section_header(label: str) -> bool:
     return label.startswith("§") or label.startswith("▸") or label.isupper()
 
 
-def _cell_kind(sheet: str, label: str, code_val: float | None) -> str:
+def resolve_cell_values(
+    result: ModelResult,
+    sheet: str,
+    label: str,
+    row: int,
+    year: int,
+) -> tuple[float | None, float | None, float | None]:
+    """Return (code_value, xlsx_value, display_value) using the grid render path."""
     if _is_section_header(label):
+        return None, None, None
+
+    code_val = lookup_by_label(result, sheet, label, year)
+    xlsx_raw = result.ingest.value_pass.cached_values.get((sheet, row, year))
+    xlsx_val = float(xlsx_raw) if isinstance(xlsx_raw, (int, float)) else None
+    display = code_val if code_val is not None else xlsx_val
+    return code_val, xlsx_val, display
+
+
+def _cell_kind(
+    meta_slug: str,
+    sheet: str,
+    label: str,
+    display_val: float | None,
+) -> str:
+    if is_registered_stub(sheet_slug=meta_slug, source_sheet=sheet, label=label):
         return "stub"
     if sheet == "Assumptions":
         return "input"
     if any(p.search(label) for p in _INPUT_LABEL_PATTERNS):
         return "input"
-    if code_val is not None:
+    if display_val is not None:
         return "derived"
     return "stub"
 
@@ -141,12 +165,11 @@ def build_grid_payload(meta: SheetMeta, result: ModelResult) -> dict[str, Any]:
             base_case_value = None
 
         for year in _YEARS:
-            xlsx_raw = cached.get((sheet, row_idx, year))
-            xlsx_val = float(xlsx_raw) if isinstance(xlsx_raw, (int, float)) else None
-            code_val = None if _is_section_header(label) else lookup_by_label(result, sheet, label, year)
-            display = code_val if code_val is not None else xlsx_val
+            code_val, xlsx_val, display = resolve_cell_values(
+                result, sheet, label, row_idx, year
+            )
 
-            kind = _cell_kind(sheet, label, code_val)
+            kind = _cell_kind(meta.slug, sheet, label, display)
             div_status, _ = _divergence_status(label, xlsx_val, code_val)
 
             year_values.append(display)

@@ -14,13 +14,16 @@ export type YearSeries = {
   lineage_key: string;
 };
 
-export type TornadoBar = {
-  label: string;
-  low_ev: number;
-  high_ev: number;
-  base_ev: number;
-  delta: number;
-};
+export type {
+  TornadoBar,
+  McMetricSummary,
+  McHistogram,
+  McFcfFan,
+  McAggregationPayload,
+  McJobResult,
+  McJobStatus,
+  BaseCaseMcArtifact,
+} from "./shared/types";
 
 export type DeterministicRun = {
   run_id: string;
@@ -114,9 +117,13 @@ export function fetchLineage(
   );
 }
 
-export function fetchLineageHistory(key: string, limit = 20) {
+export function fetchLineageHistory(key: string, opts?: { limit?: number; year?: number }) {
+  const params = new URLSearchParams();
+  if (opts?.limit != null) params.set("limit", String(opts.limit));
+  if (opts?.year != null) params.set("year", String(opts.year));
+  const qs = params.toString();
   return request<{ key: string; entries: import("./shared/types").ChangeHistoryEntry[]; total: number }>(
-    `/lineage/${encodeURIComponent(key)}/history?limit=${limit}`,
+    `/lineage/${encodeURIComponent(key)}/history${qs ? `?${qs}` : ""}`,
   );
 }
 
@@ -152,17 +159,19 @@ export function fetchRunAuditDashboard(runId: string, scenario?: string) {
 }
 
 export function fetchTornado(runId: string, topN = 10) {
-  return request<{ run_id: string; tornado: TornadoBar[] }>(
+  return request<{ run_id: string; tornado: import("./shared/types").TornadoBar[] }>(
     `/runs/${runId}/tornado?top_n=${topN}`,
   );
 }
 
 export function submitMc(body: {
   trials: number;
+  scenario?: string;
+  base_seed?: number;
   include_tornado?: boolean;
   tornado_top?: number;
 }) {
-  return request<{ job_id: string; status: string }>("/runs/mc", {
+  return request<{ job_id: string; status: string; execution?: string }>("/runs/mc", {
     method: "POST",
     body: JSON.stringify({ scenario: "base_case", ...body }),
   });
@@ -232,16 +241,20 @@ export function methodologyDownloadUrl() {
 }
 
 export function fetchMcJob(jobId: string) {
+  return request<import("./shared/types").McJobStatus>(`/runs/mc/${jobId}`);
+}
+
+export function fetchMcDistribution(jobId: string) {
   return request<{
     job_id: string;
-    status: string;
-    progress?: { trials_done: number; trials: number };
-    error?: string;
-    result?: {
-      aggregation: {
-        metrics: Record<string, { p5: number; p50: number; p95: number; base_case: number | null }>;
-      };
-      tornado?: TornadoBar[];
-    };
-  }>(`/runs/mc/${jobId}`);
+    scenario?: string;
+    n_trials: number;
+    n_converged: number;
+    base_seed: number;
+    convergence_status: string;
+    group_ev_histogram?: import("./shared/types").McHistogram;
+    group_fcf_fan?: import("./shared/types").McFcfFan;
+    metrics: Record<string, import("./shared/types").McMetricSummary>;
+    convergence_trace?: Record<string, number[]>;
+  }>(`/runs/mc/${jobId}/distribution`);
 }

@@ -21,6 +21,8 @@ def compute_mars_carveout(
     Excel label:       "Mars carve-out ($mm)"
     Architecture ref:  §11.1 / §6.2
     Principle:         22 (Mars carve-out off-the-top)
+    
+    Formula: Mars carve-out = MAX(floor, prior-year Group FCF × Mars pct).
 
     """
     pct = assumption_scalar(assumptions, cl.LUNAR_MARS_CARVE_OUT_OF_PRIOR_YEAR_GROUP_FCF, default=0.15)

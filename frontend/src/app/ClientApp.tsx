@@ -15,6 +15,7 @@ import { DownloadsPanel } from "../client/DownloadsPanel";
 import { HeadlinePanel } from "../client/HeadlinePanel";
 import { ModuleSummaryGrid } from "../client/ModuleSummaryGrid";
 import { ScenarioCards, type ScenarioChoice } from "../client/ScenarioCards";
+import { MonteCarloPanel } from "../client/MonteCarloPanel";
 import { ShareLinkButton } from "../client/ShareLinkButton";
 import {
   defaultCustomValues,
@@ -221,6 +222,7 @@ export default function ClientApp() {
         <div className="client-content-grid">
           <div className="client-column-primary">
             <HeadlinePanel run={run} loading={running} />
+            <MonteCarloPanel scenario={activeScenario} overrides={activeOverrides} />
             <ModuleSummaryGrid run={run} />
           </div>
           <div className="client-column-secondary">

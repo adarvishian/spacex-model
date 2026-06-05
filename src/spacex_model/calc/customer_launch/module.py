@@ -40,6 +40,8 @@ def f9_effective_dep_lifetime(assumptions: Assumptions) -> float:
     Excel label:       "F9 effective dep lifetime (flights)"
     Architecture ref:  §4 Customer Launch COGS / MDA §11.5
     Principle:         8 (accounting cap on booster depreciation)
+    
+    Formula: F9 booster D&A denominator — min(engineering reuses, 25-flight accounting cap) P1-3.
 
     """
     engineering = assumption_scalar(assumptions, cl.F9_LIFETIME_REUSES_PER_BOOSTER)
@@ -107,6 +109,8 @@ def compute_revenue(inputs: CustomerLaunchInputs) -> YearVector:
     Excel label:       "Total Revenue ($mm)"
     Architecture ref:  §4 Customer Launch revenue
     Principle:         8 (vending-machine; no OpEx on module tab)
+    
+    Formula: External + internal launch revenue.
 
     """
     f9_launches = _f9_customer_launches(inputs)
@@ -134,6 +138,8 @@ def compute_cogs(inputs: CustomerLaunchInputs) -> YearVector:
     Excel label:       "Total COGS ($mm)"
     Architecture ref:  §4 Customer Launch COGS
     Principle:         9 (internal transfers at fully-allocated cost)
+    
+    Formula: Launch COGS at fully-allocated at-cost rate.
 
     """
     a = inputs.assumptions
@@ -194,6 +200,8 @@ def compute_gross_profit(inputs: CustomerLaunchInputs) -> YearVector:
     Excel label:       "Gross Profit ($mm)"
     Architecture ref:  §3 module framing
     Principle:         7 (Module EBITDA = Gross Profit)
+    
+    Formula: Gross profit = revenue − COGS.
 
     """
     return YearVector(compute_revenue(inputs).values - compute_cogs(inputs).values)
@@ -206,6 +214,8 @@ def compute_capex(inputs: CustomerLaunchInputs) -> YearVector:
     Excel label:       "Module CapEx ($mm)"
     Architecture ref:  §4 Customer Launch CapEx
     Principle:         8 (vehicle build at queue gate, not module CapEx)
+    
+    Formula: Ground equipment + integration CapEx; excludes vehicle build.
 
     """
     revenue = compute_revenue(inputs)
@@ -224,6 +234,8 @@ def compute_fcf(inputs: CustomerLaunchInputs) -> YearVector:
     Excel label:       "Module FCF ($mm)"
     Architecture ref:  §3 module FCF definition
     Principle:         8 (pre-tax module FCF; no corp overhead)
+    
+    Formula: Module FCF = EBITDA + D&A add-back − CapEx.
 
     """
     ebitda = compute_gross_profit(inputs)
@@ -243,6 +255,8 @@ def compute_launch_services_revenue_memo(inputs: CustomerLaunchInputs) -> YearVe
     Excel label:       "Launch Services revenue ($mm) — S-1 memo"
     Architecture ref:  §4 Customer Launch + MDA §1.3
     Principle:         3 (reconciliation memo; total revenue unchanged)
+    
+    Formula: P1-11 memo: Launch Services vs L&D split of external CL revenue (S-1 Space sub-mix).
 
     """
     f9_launches = _f9_customer_launches(inputs)
@@ -265,6 +279,8 @@ def compute_launch_development_revenue_memo(inputs: CustomerLaunchInputs) -> Yea
     Excel label:       "Launch & Development revenue ($mm) — S-1 memo"
     Architecture ref:  §4 Customer Launch + MDA §1.3
     Principle:         3 (reconciliation memo)
+    
+    Formula: P1-11 memo: L&D portion of external CL revenue.
 
     """
     f9_launches = _f9_customer_launches(inputs)
@@ -308,6 +324,8 @@ def compute_allocator_out(inputs: CustomerLaunchInputs | None = None) -> Allocat
     Excel label:       "CENTRAL ALLOCATOR OUTPUTS"
     Architecture ref:  §4 Allocator OUT contract
     Principle:         3 (canonical cross-tab labels via registry)
+    
+    Formula: Assemble Allocator OUT from vending-machine sections.
 
     """
     if inputs is None:

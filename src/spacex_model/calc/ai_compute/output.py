@@ -36,6 +36,8 @@ def compute_output(
     Excel label:       "Orbital DC proposed allocation ($mm)"
     Architecture ref:  §9.2 (cash-driven deployment)
     Principle:         12 (output never feeds demand)
+    
+    Formula: Actual deployment = MIN(cash/unit, kg/mass, exogenous demand cap).
 
     """
     if assumptions is not None:

@@ -18,6 +18,8 @@ def historical_opening_balance_deorbit(
     Excel label:       "V2 BB historical retirement"
     Architecture ref:  §8.3
     Principle:         23 (anchor-and-offset; not year-chained cumulative)
+    
+    Formula: Linear retirement of SoY 2025 historical fleet over N years.
 
     """
     rate = baseline_sats / useful_life_years if useful_life_years > 0 else 0.0
@@ -39,6 +41,8 @@ def launch_cohort_deorbit(
     Excel label:       "V2 BB launch-cohort retirement"
     Architecture ref:  §8.3
     Principle:         23 (year-chained cumulative deorbit)
+    
+    Formula: Retire launch cohorts after useful life (Rule 23 year-chained exception).
 
     """
     deorbit = np.zeros(HORIZON_YEARS, dtype=np.float64)

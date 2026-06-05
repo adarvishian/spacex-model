@@ -56,6 +56,8 @@ def compute_kg_binding_flag(
     Excel label:       "Kg demand binding flag (1 = binding)"
     Architecture ref:  PRD U0 demand-spine; U4 retired pro-rata R49 shim
     Principle:         12 (reads unified R102 total, not inflated R46)
+    
+    Formula: Honest kg-binding flag: IF(R102 > capacity_after_lm) — U0 / superseded R49.
 
     """
     binding = np.zeros(HORIZON_YEARS, dtype=np.float64)
@@ -86,6 +88,8 @@ def compute_starlink_exogenous_kg_demand(
     Excel label:       "Kg demand year N+1"
     Architecture ref:  U0 demand-spine (de-inflate CAE R99)
     Principle:         12 (exogenous demand only; no saturation-headroom inflation)
+    
+    Formula: Realistic Starlink launch kg — deployment trajectory × mass, not saturation headroom.
 
     """
     sub_kg = _sub_block_starlink_kg(sub_demands)
@@ -122,6 +126,8 @@ def compute_customer_launch_exogenous_kg_demand(
     Excel label:       "Kg demand year N+1"
     Architecture ref:  U0 demand-spine
     Principle:         12 (exogenous demand only)
+    
+    Formula: Customer Launch kg demand year N+1 — external Starship launches × payload.
 
     """
     if np.any(sub_demands.customer_launch_kg.values > 0.0):
@@ -155,6 +161,8 @@ def compute_ai_compute_exogenous_kg_demand(
     Excel label:       "Kg demand year N+1"
     Architecture ref:  U0 demand-spine
     Principle:         12 (exogenous demand only)
+    
+    Formula: AI-Compute orbital kg demand year N+1 (Terrestrial is cash-only).
 
     """
     sub_kg = _sub_block_ai_kg(sub_demands)
@@ -173,6 +181,8 @@ def compute_unified_kg_demands(
     Excel label:       "Desired launch kg: Starlink" … "Total desired launch kg"
     Architecture ref:  PRD U0 / F4 demand-spine unification
     Principle:         12 (demand⊥output; no saturation-headroom inflation)
+    
+    Formula: One realistic exogenous deployable-demand per program; total ≡ memo (R102 ≡ R46).
 
     """
     starlink = compute_starlink_exogenous_kg_demand(assumptions, sub_demands)

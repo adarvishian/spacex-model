@@ -17,13 +17,8 @@ export function SourcesPanel({ entry }: Props) {
 
       <div className="source-row">
         <span className="source-lbl">Methodology</span>
-        Architecture &amp; Methodology spec <strong>{methodology.spec_section}</strong>
-        {methodology.module && (
-          <>
-            {" "}
-            · module <code>{methodology.module}</code>
-          </>
-        )}
+        Architecture &amp; Methodology <strong>{methodology.spec_section}</strong>
+        {methodology.method_statement ? <> — {methodology.method_statement}</> : null}
       </div>
 
       {input_provenance && (
@@ -51,14 +46,13 @@ export function SourcesPanel({ entry }: Props) {
       )}
 
       <div className="source-row">
-        <span className="source-lbl">Principle / Rule</span>
+        <span className="source-lbl">Principle</span>
         {methodology.principle}
-        {methodology.rule !== methodology.principle && (
-          <>
-            {" "}
-            · {methodology.rule}
-          </>
-        )}
+      </div>
+
+      <div className="source-row">
+        <span className="source-lbl">Rule</span>
+        {methodology.rule}
       </div>
     </section>
   );

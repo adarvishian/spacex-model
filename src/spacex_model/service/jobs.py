@@ -117,7 +117,7 @@ class JobManager:
             table = read_trials_parquet(mc.trials_parquet)
             base = run_base_case(workbook_path=path, write_outputs=False)
             base_metrics = extract_trial_metrics(base)
-            agg = aggregate_trials(table, base_metrics=base_metrics)
+            agg = aggregate_trials(table, base_metrics=base_metrics, base_seed=cfg.base_seed)
 
             payload: dict[str, Any] = {
                 "job_id": job_id,
@@ -125,6 +125,10 @@ class JobManager:
                 "scenario": mc.scenario,
                 "trials_completed": mc.trials_completed,
                 "trials_converged": mc.trials_converged,
+                "n_trials": agg.n_trials,
+                "n_converged": agg.n_converged,
+                "base_seed": cfg.base_seed,
+                "convergence_status": agg.convergence_status,
                 "wall_clock_sec": mc.wall_clock_sec,
                 "audit": mc.audit,
                 "aggregation": serialize_mc_aggregation(agg),

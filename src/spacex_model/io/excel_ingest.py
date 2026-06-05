@@ -293,9 +293,13 @@ def ingest_workbook(workbook_path: Path) -> IngestResult:
     values = run_value_pass(workbook_path)
     demand = _parse_demand_curves_pass(workbook_path)
     values.warnings.extend(demand.warnings)
-    return IngestResult(
+    result = IngestResult(
         workbook_path=workbook_path,
         formula_pass=formula,
         value_pass=values,
         demand_curves=demand,
     )
+    from spacex_model.io.snapshot_store import record_ingest_changes
+
+    record_ingest_changes(result)
+    return result

@@ -62,6 +62,8 @@ def compute_strategic_seed(inputs: StrategicSeedInputs) -> StrategicSeedResult:
     Excel label:       "ODC strategic seed cash ($mm)"
     Architecture ref:  PRD §5.2 + D4 strategic seed
     Principle:         2 (prior-yr IRR graduation; no this-year returns)
+    
+    Formula: ODC pre-revenue seed — senior claim after LM carve-out, sunsets on prior-yr IRR.
 
     """
     a = inputs.assumptions

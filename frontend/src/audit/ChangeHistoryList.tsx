@@ -6,6 +6,7 @@ import { formatGridNumber } from "../shared/format";
 
 type Props = {
   lineageKey: string | null;
+  year?: number;
 };
 
 const KIND_LABELS: Record<ChangeHistoryEntry["change_kind"], string> = {
@@ -13,6 +14,7 @@ const KIND_LABELS: Record<ChangeHistoryEntry["change_kind"], string> = {
   anchor: "ANCHOR",
   input: "INPUT",
   initial: "INITIAL",
+  value: "VALUE",
 };
 
 function HistoryRow({ entry }: { entry: ChangeHistoryEntry }) {
@@ -62,12 +64,12 @@ function HistoryRow({ entry }: { entry: ChangeHistoryEntry }) {
   );
 }
 
-export function ChangeHistoryList({ lineageKey }: Props) {
+export function ChangeHistoryList({ lineageKey, year }: Props) {
   const [showAll, setShowAll] = useState(false);
 
   const historyQ = useQuery({
-    queryKey: ["lineage-history", lineageKey],
-    queryFn: () => fetchLineageHistory(lineageKey!),
+    queryKey: ["lineage-history", lineageKey, year],
+    queryFn: () => fetchLineageHistory(lineageKey!, { year }),
     enabled: Boolean(lineageKey),
   });
 

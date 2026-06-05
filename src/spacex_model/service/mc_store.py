@@ -132,7 +132,7 @@ def _finalize_job(state: _JobState) -> dict[str, Any]:
     table = read_trials_parquet(_trials_path(state.job_id))
     base = run_base_case(workbook_path=path, write_outputs=False)
     base_metrics = extract_trial_metrics(base)
-    agg = aggregate_trials(table, base_metrics=base_metrics)
+    agg = aggregate_trials(table, base_metrics=base_metrics, base_seed=state.base_seed)
 
     out_dir = settings.outputs_dir / "mc" / state.scenario_name / state.job_id
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -146,6 +146,10 @@ def _finalize_job(state: _JobState) -> dict[str, Any]:
         "scenario": state.scenario_name,
         "trials_completed": state.trials,
         "trials_converged": converged,
+        "n_trials": agg.n_trials,
+        "n_converged": agg.n_converged,
+        "base_seed": state.base_seed,
+        "convergence_status": agg.convergence_status,
         "wall_clock_sec": round(time.time() - state.created_at, 3),
         "aggregation": serialize_mc_aggregation(agg),
         "trials_parquet": str(trials_path),

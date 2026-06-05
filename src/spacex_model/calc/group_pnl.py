@@ -95,6 +95,8 @@ def compute_module_revenue_gross(module_outputs: dict[str, AllocatorOut]) -> Yea
     Excel label:       "Σ Module revenue (gross, pre-elim) ($mm)"
     Architecture ref:  §15.1 group revenue build
     Principle:         9 (internal transfer 4-step pattern)
+    
+    Formula: Σ module Total Revenue ($mm) before eliminations.
 
     """
     return _sum_module_field(module_outputs, "total_revenue")
@@ -110,6 +112,8 @@ def compute_group_revenue_net(
     Excel label:       "GROUP REVENUE NET OF ELIMS ($mm)"
     Architecture ref:  §15.1
     Principle:         9 (elimination row subtracts once)
+    
+    Formula: Group revenue net of inter-module eliminations.
 
     """
     return YearVector(module_revenue_gross.values - eliminations.total.values)
@@ -122,6 +126,8 @@ def compute_module_cogs_gross(module_outputs: dict[str, AllocatorOut]) -> YearVe
     Excel label:       "Σ Module COGS (gross, pre-elim) ($mm)"
     Architecture ref:  §15.1 group COGS build
     Principle:         9 (internal transfers in consumer COGS)
+    
+    Formula: Σ module Total COGS ($mm) before eliminations.
 
     """
     return _sum_module_field(module_outputs, "total_cogs")
@@ -137,6 +143,8 @@ def compute_group_cogs_net(
     Excel label:       "Group COGS (net of elims) ($mm)"
     Architecture ref:  §15.1
     Principle:         9 (elimination symmetry)
+    
+    Formula: Group COGS net of inter-module eliminations.
 
     """
     return YearVector(module_cogs_gross.values - eliminations.total.values)
@@ -152,6 +160,8 @@ def compute_group_gross_profit(
     Excel label:       "Group Gross Profit ($mm)"
     Architecture ref:  §15.1
     Principle:         7 (module EBITDA = gross profit)
+    
+    Formula: Group Gross Profit = net revenue − net COGS (= Σ module EBITDA when elims balance).
 
     """
     return YearVector(group_revenue_net.values - group_cogs_net.values)
@@ -167,6 +177,8 @@ def compute_group_ebitda(
     Excel label:       "Group EBITDA ($mm)"
     Architecture ref:  §15.1
     Principle:         8 (OpEx only at group level)
+    
+    Formula: Group EBITDA = Group Gross Profit − Total OpEx.
 
     """
     return YearVector(group_gross_profit.values - opex.total_opex.values)
@@ -182,6 +194,8 @@ def compute_group_da(
     Excel label:       "Group D&A ($mm)"
     Architecture ref:  §15.1 / §13.4
     Principle:         10 (LM BV decay is NOT Group D&A)
+    
+    Formula: Group D&A = Σ module D&A in COGS + Corporate D&A + Spectrum amort.
 
     """
     module_da = np.zeros(HORIZON_YEARS, dtype=np.float64)
@@ -201,6 +215,8 @@ def compute_group_ebit(
     Excel label:       "Group EBIT ($mm)"
     Architecture ref:  §15.1
     Principle:         7 (no double-count of module D&A at EBIT)
+    
+    Formula: Group EBIT = EBITDA − Corporate D&A − Spectrum amort (module D&A already in COGS).
 
     """
     return YearVector(
@@ -217,6 +233,8 @@ def compute_taxes(group_ebit: YearVector, tax_rate: float) -> YearVector:
     Excel label:       "Taxes ($mm)"
     Architecture ref:  §15.1
     Principle:         8 (corporate tax at group level only)
+    
+    Formula: Taxes = MAX(0, Group EBIT) × tax rate.
 
     """
     return YearVector(np.maximum(0.0, group_ebit.values) * tax_rate)
@@ -229,6 +247,8 @@ def compute_nopat(group_ebit: YearVector, taxes: YearVector) -> YearVector:
     Excel label:       "NOPAT ($mm)"
     Architecture ref:  §15.1
     Principle:         8 (post-tax operating profit)
+    
+    Formula: NOPAT = Group EBIT − Taxes.
 
     """
     return YearVector(group_ebit.values - taxes.values)
@@ -244,6 +264,8 @@ def compute_total_da_addback(
     Excel label:       "Total D&A add-back ($mm)"
     Architecture ref:  §15.1 FCF walk
     Principle:         8 (non-cash add-back at FCF)
+    
+    Formula: Total D&A add-back for FCF = module D&A + corporate D&A + spectrum amort.
 
     """
     module_da = np.zeros(HORIZON_YEARS, dtype=np.float64)
@@ -265,6 +287,8 @@ def compute_group_fcf(
     Excel label:       "GROUP FCF ($mm)"
     Architecture ref:  §15.1 + Sprint 9 Lock a
     Principle:         22 (Mars carve-out as real cash drain)
+    
+    Formula: GROUP FCF = NOPAT + D&A add-back − Group CapEx − Mars carve-out (Lock a).
 
     """
     return YearVector(
@@ -320,6 +344,8 @@ def compute_group_pnl(inputs: GroupPnlInputs) -> GroupPnlResult:
     Excel label:       "GROUP P&L -- consolidated Revenue / EBITDA ..."
     Architecture ref:  §15 Group P&L walk
     Principle:         19 (conservation block must read OK)
+    
+    Formula: Full Group P&L walk from module outputs through FCF.
 
     """
     module_rev = compute_module_revenue_gross(inputs.module_outputs)

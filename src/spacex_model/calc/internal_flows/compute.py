@@ -72,6 +72,8 @@ def rate_per_unit(inputs: AiComputeInputs) -> YearVector:
     Excel label:       (see module docstring)
     Architecture ref:  PRD V4.113 §2 / context.md §6
     Principle:         6 (one-tab-one-module)
+    
+    Formula: Fully-allocated at-cost compute rate ($/PFLOP-hr).
 """
     cost = _fully_allocated_annual_cost_mm(inputs).values
     hours = _fleet_pflop_hrs(inputs).values
@@ -89,6 +91,8 @@ def internal_transfer_revenue(
     Excel label:       (see module docstring)
     Architecture ref:  PRD V4.113 §2 / context.md §6
     Principle:         6 (one-tab-one-module)
+    
+    Formula: ODC internal compute transfer revenue = internal PFLOP-hrs × at-cost rate.
 """
     rate = rate_per_unit(inputs)
     if internal_pflop_hrs is None:
@@ -112,6 +116,8 @@ def conservation_residual(
     Excel label:       (see module docstring)
     Architecture ref:  PRD V4.113 §2 / context.md §6
     Principle:         6 (one-tab-one-module)
+    
+    Formula: Compute elimination check — source rev − consumer COGS.
 """
     return YearVector(
         internal_transfer_revenue_vec.values - consumer_internal_compute_cost.values

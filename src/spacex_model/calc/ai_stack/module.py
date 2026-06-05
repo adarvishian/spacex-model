@@ -57,6 +57,8 @@ def compute_revenue(inputs: AIStackInputs | None = None) -> YearVector:
     Excel label:       "Total Revenue ($mm)"
     Architecture ref:  §12 AI Stack; S-1 MDA §1.5
     Principle:         8 (vending-machine)
+    
+    Formula: Total revenue — S-1 AI segment + Anthropic compute services.
 
     """
     if inputs is None:
@@ -73,6 +75,8 @@ def compute_cogs(inputs: AIStackInputs | None = None) -> YearVector:
     Excel label:       "Total COGS ($mm)"
     Architecture ref:  §7.3 internal compute transfer (ODC at-cost when live)
     Principle:         9 (at-cost internal compute)
+    
+    Formula: COGS — S-1 FY2025 AI segment cost ratio on legacy line; Anthropic at 85% of rev.
 
     """
     if inputs is None:
@@ -91,6 +95,8 @@ def compute_gross_profit(inputs: AIStackInputs | None = None) -> YearVector:
     Excel label:       "Gross Profit ($mm)"
     Architecture ref:  §3 module framing
     Principle:         7 (Module EBITDA = Gross Profit)
+    
+    Formula: Gross profit = revenue − COGS.
 
     """
     return YearVector(compute_revenue(inputs).values - compute_cogs(inputs).values)
@@ -103,6 +109,8 @@ def compute_capex(inputs: AIStackInputs | None = None) -> YearVector:
     Excel label:       "Terrestrial AI data-center CapEx ($mm) — year-row"
     Architecture ref:  §13 CapEx; S-1 AI segment CapEx
     Principle:         8 (module CapEx separate from corp)
+    
+    Formula: Terrestrial AI (COLOSSUS) CapEx — S-1 MDA §5.4 year-row.
 
     """
     if inputs is None:
@@ -120,6 +128,8 @@ def compute_fcf(inputs: AIStackInputs | None = None) -> YearVector:
     Excel label:       "Module FCF ($mm)"
     Architecture ref:  §3 module FCF
     Principle:         8 (pre-tax module FCF)
+    
+    Formula: Module FCF = EBITDA − CapEx (no D&A add-back on terrestrial build in v1).
 
     """
     ebitda = compute_gross_profit(inputs)
@@ -133,6 +143,8 @@ def compute_allocator_out(inputs: AIStackInputs | None = None) -> AllocatorOut:
     Excel label:       "CENTRAL ALLOCATOR OUTPUTS"
     Architecture ref:  §12 AI Stack OUT
     Principle:         3 (canonical labels via registry)
+    
+    Formula: Allocator OUT — AI Stack with S-1 revenue and terrestrial CapEx.
 
     """
     if inputs is None:

@@ -23,6 +23,8 @@ def compute_output(demand: DemandResult, allocation: AllocatorAllocation) -> Out
     Excel label:       "Lunar Mars proposed allocation ($mm)"
     Architecture ref:  §11 deployment
     Principle:         12 (output never feeds demand)
+    
+    Formula: Bounded by carve-out allocation; Phase B returns zeros.
 
     """
     _ = (demand, allocation)

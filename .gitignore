@@ -8,6 +8,7 @@ __pycache__/
 dist/
 *.egg-info/
 outputs/          # run artifacts (CLI/API); golden fixtures live in tests/golden/
+data/cell_history/  # per-cell xlsx ingest diff store (L3)
 .DS_Store
 .env
 node_modules/

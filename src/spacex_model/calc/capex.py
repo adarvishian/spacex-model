@@ -107,6 +107,8 @@ def compute_module_capex(inputs: CapExInputs) -> dict[str, YearVector]:
     Excel label:       "Module CapEx ($mm)"
     Architecture ref:  §13.1 module CapEx aggregation
     Principle:         3 (canonical label INDEX/MATCH)
+    
+    Formula: Read Module CapEx ($mm) from each module Allocator OUT row.
 
     """
     out = inputs.module_outputs
@@ -125,6 +127,8 @@ def compute_total_module_capex(module_capex: dict[str, YearVector]) -> YearVecto
     Excel label:       "Total Module CapEx ($mm)"
     Architecture ref:  §13.1
     Principle:         3 (canonical cross-tab labels)
+    
+    Formula: Sum of five module Module CapEx rows.
 
     """
     total = np.zeros(HORIZON_YEARS, dtype=np.float64)
@@ -140,6 +144,8 @@ def compute_corporate_capex(inputs: CapExInputs) -> tuple[YearVector, YearVector
     Excel label:       "Total Corporate CapEx ($mm)"
     Architecture ref:  §13.2 corporate CapEx
     Principle:         12 (flat year-row reads)
+    
+    Formula: Corporate CapEx flat year-rows from Assumptions §10.
 
     """
     a = inputs.assumptions
@@ -158,6 +164,8 @@ def compute_corporate_da(inputs: CapExInputs) -> YearVector:
     Excel label:       "Total Corporate D&A ($mm)"
     Architecture ref:  §13.2 corporate D&A schedule
     Principle:         12 (Rule 23 exception: cumulative CapEx running sum)
+    
+    Formula: Corporate D&A = Σ cumulative category CapEx ÷ useful life (straight-line).
 
     """
     a = inputs.assumptions
@@ -183,6 +191,8 @@ def compute_spectrum_capex(inputs: CapExInputs) -> YearVector:
     Excel label:       "EchoStar mid-band CapEx ($mm) — year-row"
     Architecture ref:  §13.3 spectrum CapEx
     Principle:         12 (anchor year-row from Assumptions)
+    
+    Formula: EchoStar mid-band spectrum CapEx year-row from Assumptions.
 
     """
     row = assumption_year_vector(
@@ -207,6 +217,8 @@ def compute_spectrum_amortization(
     Excel label:       "Annual spectrum amortization ($mm)"
     Architecture ref:  §13.3 spectrum amortization
     Principle:         12 (Rule 23 exception: cumulative running sum)
+    
+    Formula: Cumulative spectrum intangible and annual amortization ÷ useful life.
 
     """
     life = assumption_scalar(assumptions, cl.SPECTRUM_USEFUL_LIFE_YEARS, default=15.0)
@@ -225,6 +237,8 @@ def compute_capex(inputs: CapExInputs) -> CapExResult:
     Excel label:       "Total Group CapEx ($mm)"
     Architecture ref:  §13 CapEx tab
     Principle:         4 (queue gate reserves non-module claims first)
+    
+    Formula: Assemble CapEx tab: module + corporate + spectrum + vehicle build claim.
 
     """
     module_capex = compute_module_capex(inputs)
@@ -279,6 +293,8 @@ def capex_conservation_ok(
     Excel label:       "CapEx check"
     Architecture ref:  §15.2 conservation block
     Principle:         19 (R101 module CapEx aggregation)
+    
+    Formula: Verify Total Module CapEx equals sum of module rows within tolerance.
 
     """
     module_sum = np.zeros(HORIZON_YEARS, dtype=np.float64)

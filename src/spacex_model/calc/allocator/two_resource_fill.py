@@ -178,6 +178,8 @@ def compute_two_resource_fill(
     Excel label:       "▸ TOP-LEVEL IRR-WEIGHTED ALLOCATION"
     Architecture ref:  PRD §5.2 unified engine + U2
     Principle:         2 (prior-yr IRR; cash + launch one pass)
+    
+    Formula: Cash + Gigabay two-resource fill with cross-resource MIN (U2).
 
     """
     prior_avg = compute_two_year_avg_prior_irr(prior_spot_irr)
@@ -250,6 +252,8 @@ def kg_per_ship_year(assumptions: Assumptions, launch_per_launch_upmass: YearVec
     Excel label:       "Installed Starship build capacity (ships/yr): rate-limited ramp"
     Architecture ref:  PRD D8 Gigabay throughput
     Principle:         12 (predetermined capacity inputs)
+    
+    Formula: Annual kg throughput per Starship ship slot (payload × cadence).
 
     """
     cadence = assumption_scalar(

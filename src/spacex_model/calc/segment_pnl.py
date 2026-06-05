@@ -71,6 +71,8 @@ def compute_segment_pnl(inputs: SegmentPnlInputs) -> SegmentPnlResult:
     Excel label:       "Segment P&L — full Group waterfall ..."
     Architecture ref:  §15 presentation roll-up
     Principle:         3 (read-only; ties to Group P&L)
+    
+    Formula: Build Segment P&L presentation from module sub-lines and Group P&L.
 
     """
     sl = inputs.starlink_inputs
@@ -140,6 +142,8 @@ def segment_tieouts_ok(result: SegmentPnlResult, *, tolerance_mm: float = 1.0) -
     Excel label:       (see module docstring)
     Architecture ref:  PRD V4.113 §2 / context.md §6
     Principle:         6 (one-tab-one-module)
+    
+    Formula: True when all Segment P&L tie-out memos are within tolerance.
 """
     checks = (
         result.memo_starlink_sub_lines,

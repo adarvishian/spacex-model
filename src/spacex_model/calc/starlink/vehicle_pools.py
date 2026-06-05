@@ -250,6 +250,8 @@ def compute_vehicle_pools(
     Excel label:       "V2 BB launches per year"
     Architecture ref:  §8.1 / §8.2 / §8.3
     Principle:         12 (demand/output decoupling at module boundary)
+    
+    Formula: Track four vehicle pools; 2025 launch anchors; V2 phase-out + V3 startup gates.
 
     """
     if allocations is not None:

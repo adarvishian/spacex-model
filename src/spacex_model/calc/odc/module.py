@@ -85,6 +85,8 @@ def per_sat_combined_revenue_mm(assumptions: Assumptions, year_index: int) -> fl
     Excel label:       "Per-sat combined revenue ($mm/yr)"
     Architecture ref:  §9.2 dual revenue
     Principle:         8 (Pr(A) credence-weighted)
+    
+    Formula: Credence-weighted Model A/B per-sat revenue ($mm/yr).
 
     """
     pr_a = assumption_scalar(assumptions, "Credence on Model A (Pr(A))", default=0.6)
@@ -104,6 +106,8 @@ def per_sat_bandwidth_cost_mm(
     Excel label:       "Bandwidth services cost ($mm)"
     Architecture ref:  §7.2 / §9.4
     Principle:         9 (at-cost internal bandwidth)
+    
+    Formula: Per-sat bandwidth services cost from Starlink Capacity pool rates.
 
     """
     if starlink_capacity is None:
@@ -128,6 +132,8 @@ def per_sat_net_marginal_revenue_mm(
     Excel label:       "Per-sat net marginal revenue ($mm/yr)"
     Architecture ref:  §9.4 IRR engine input
     Principle:         2 (per-unit marginal IRR)
+    
+    Formula: Combined revenue minus opex and bandwidth per sat ($mm/yr).
 
     """
     combined = per_sat_combined_revenue_mm(assumptions, year_index)
@@ -157,6 +163,8 @@ def odc_bandwidth_claim(inputs: OdcInputs) -> tuple[YearVector, YearVector]:
     Excel label:       "ODC BB Gbps demand"
     Architecture ref:  §7.2
     Principle:         3 (canonical cross-tab labels)
+    
+    Formula: BB and DTC Gbps claim for Starlink Capacity (fleet × per-sat Gbps).
 
     """
     fleet = _fleet_from_deployment(inputs.sats_deployed)
@@ -176,6 +184,8 @@ def compute_revenue(inputs: OdcInputs | None = None) -> YearVector:
     Excel label:       "Total Revenue ($mm)"
     Architecture ref:  §20.8 ODC revenue
     Principle:         8 (vending-machine module)
+    
+    Formula: External + internal compute revenue; zero fleet under D6 Base Case.
 
     """
     if inputs is None:
@@ -200,6 +210,8 @@ def compute_cogs(inputs: OdcInputs | None = None) -> YearVector:
     Excel label:       "Total COGS ($mm)"
     Architecture ref:  §20.8 ODC COGS
     Principle:         9 (at-cost internal bandwidth from Starlink Capacity)
+    
+    Formula: Bandwidth, launch, sat D&A COGS — zero at zero deployment.
 
     """
     if inputs is None:
@@ -221,6 +233,8 @@ def compute_gross_profit(inputs: OdcInputs | None = None) -> YearVector:
     Excel label:       "Gross Profit ($mm)"
     Architecture ref:  §3 module framing
     Principle:         7 (Module EBITDA = Gross Profit)
+    
+    Formula: Gross profit = revenue − COGS.
 
     """
     if inputs is None:
@@ -235,6 +249,8 @@ def compute_capex(inputs: OdcInputs | None = None) -> YearVector:
     Excel label:       "Module CapEx ($mm)"
     Architecture ref:  §20.8 ODC CapEx
     Principle:         8 (no corp overhead on module)
+    
+    Formula: Satellite manufacturing + launch CapEx at zero deployment.
 
     """
     if inputs is None:
@@ -249,6 +265,8 @@ def compute_fcf(inputs: OdcInputs | None = None) -> YearVector:
     Excel label:       "Module FCF ($mm)"
     Architecture ref:  §3 module FCF
     Principle:         8 (pre-tax module FCF)
+    
+    Formula: Module FCF = EBITDA − CapEx (zero under D6 verdict).
 
     """
     if inputs is None:
@@ -263,6 +281,8 @@ def per_sat_blended_irr(inputs: OdcInputs) -> float:
     Excel label:       "Blended IRR"
     Architecture ref:  §9.4
     Principle:         2 (per-unit marginal IRR)
+    
+    Formula: Per-sat blended IRR for 2025 gate (expected ≤ 0 per D6).
 
     """
     a = inputs.assumptions
@@ -285,6 +305,8 @@ def compute_allocator_out(inputs: OdcInputs | None = None) -> AllocatorOut:
     Excel label:       "CENTRAL ALLOCATOR OUTPUTS"
     Architecture ref:  §20.8 Allocator OUT
     Principle:         3 (canonical labels via registry)
+    
+    Formula: Allocator OUT contract — zeros under negative-IRR D6 verdict.
 
     """
     if inputs is None:

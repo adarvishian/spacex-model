@@ -81,6 +81,8 @@ def compute_v2_bb_irr(inputs: StarlinkInputs) -> YearVector:
     Excel label:       "V2 BB Blended IRR"
     Architecture ref:  §8.4 per-vehicle IRR
     Principle:         2 (per-unit marginal IRR)
+    
+    Formula: V2 BB per-sat blended IRR engine.
 
     """
     spec = vp._pool_spec_v2_bb(inputs.assumptions)
@@ -94,6 +96,8 @@ def compute_v2_dtc_irr(inputs: StarlinkInputs) -> YearVector:
     Excel label:       "V2 DTC Blended IRR"
     Architecture ref:  §8.4 per-vehicle IRR
     Principle:         2 (per-unit marginal IRR)
+    
+    Formula: V2 DTC per-sat blended IRR engine.
 
     """
     spec = vp._pool_spec_v2_dtc(inputs.assumptions)
@@ -107,6 +111,8 @@ def compute_v3_bb_irr(inputs: StarlinkInputs) -> YearVector:
     Excel label:       "V3 BB Blended IRR"
     Architecture ref:  §8.4 per-vehicle IRR
     Principle:         2 (per-unit marginal IRR)
+    
+    Formula: V3 BB per-sat blended IRR engine.
 
     """
     spec = vp._pool_spec_v3_bb(inputs.assumptions)
@@ -120,6 +126,8 @@ def compute_v3_dtc_irr(inputs: StarlinkInputs) -> YearVector:
     Excel label:       "V3 DTC Blended IRR"
     Architecture ref:  §8.4 per-vehicle IRR
     Principle:         2 (per-unit marginal IRR)
+    
+    Formula: V3 DTC per-sat blended IRR engine.
 
     """
     spec = vp._pool_spec_v3_dtc(inputs.assumptions)
@@ -133,6 +141,8 @@ def build_starlink_vehicle_irrs(inputs: StarlinkInputs) -> QueueSubBlockIrrs:
     Excel label:       "V2 BB / V2 DTC / V3 BB / V3 DTC Blended IRR"
     Architecture ref:  §8.4 per-vehicle IRR
     Principle:         2 (per-unit marginal IRR drives sigmoid weights)
+    
+    Formula: Roll four Starlink pool IRR year-vectors into a queue sub-block slice.
 
     Non-Starlink slots in the returned struct are zeroed for irr_display roll-up.
 

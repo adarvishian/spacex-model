@@ -31,6 +31,8 @@ def compute_carve_out(
     Excel label:       "Lunar/Mars carve-out cash ($mm)" … "Remaining pool for IRR-weighted allocation ($mm)"
     Architecture ref:  §2.3 carve-out + §5.2 senior claims
     Principle:         22 (Mars carve-out off-the-top on prior-yr FCF)
+    
+    Formula: LM carve-out off the top; remaining pool gated to 0 in 2025 anchor.
 
     ODC strategic seed is a separate senior claim after LM carve-out (U3); LM uses prior FCF × pct.
 

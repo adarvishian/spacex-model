@@ -39,7 +39,12 @@ function statusPill(entry: LineageEntry): { className: string; text: string } {
 }
 
 function stubSpecRef(entry: LineageEntry): string {
-  return entry.section_ref ?? entry.architecture_ref ?? "architecture spec";
+  return (
+    entry.stub_spec_section ??
+    entry.section_ref ??
+    entry.architecture_ref ??
+    "architecture spec"
+  );
 }
 
 export function DerivationPanel({ entry, activeCell, expanded = false }: Props) {
@@ -108,10 +113,8 @@ export function DerivationPanel({ entry, activeCell, expanded = false }: Props) 
               <p className="panel-title">Computed (traced)</p>
               <div className="stub-state" data-testid="derivation-stub-state">
                 <p>
-                  No computed value — this cell is a <strong>stub</strong> (not yet ported to a
-                  traced derivation).
+                  <strong>Planned</strong> — {stubSpecRef(entry)}
                 </p>
-                <p className="stub-spec">Spec: {stubSpecRef(entry)}</p>
               </div>
             </>
           ) : (

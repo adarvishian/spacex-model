@@ -37,6 +37,8 @@ def aggregate_cae_demands(
     Excel label:       "Desired cash: Starlink ($mm)" … "Desired cash: AI-Compute ($mm)"
     Architecture ref:  §2.3 desired cash rows; U0 unified kg spine
     Principle:         12 (exogenous demand only)
+    
+    Formula: Roll seven sub-block demands into CAE three-module totals.
 
     """
     _ = module_outputs  # kg spine is exogenous only (U0); cash roll-up unchanged
@@ -76,6 +78,8 @@ def four_program_demands(
     Excel label:       "Cap: Starlink max deployable ($mm)" … "Desired launch kg: Starlink"
     Architecture ref:  PRD U2 two-resource fill inputs
     Principle:         12 (exogenous demand; growth slice only)
+    
+    Formula: Map cap-base + unified kg spine into four first-class program demands (U2).
 
     """
     return FourProgramDemands(
@@ -104,6 +108,8 @@ def four_cash_to_sub_blocks(
     Excel label:       "Allocated cash to Starlink ($mm)" … seven sub-blocks
     Architecture ref:  PRD U2 four-program → legacy pipeline consumers
     Principle:         6 (one-tab-one-module; shim until sub-blocks retire)
+    
+    Formula: Split four-program cash into seven legacy sub-blocks for pipeline consumers.
 
     """
     module_cash = ModuleSpotIrrs(
@@ -129,6 +135,8 @@ def four_kg_to_sub_blocks(
     Excel label:       "Launch capacity allotment: Starlink (kg)" … five sub-blocks
     Architecture ref:  PRD U2 four-program → legacy pipeline consumers
     Principle:         6 (one-tab-one-module; shim until sub-blocks retire)
+    
+    Formula: Split four-program kg into five legacy kg sub-blocks.
 
     """
     module_kg = ModuleSpotIrrs(
@@ -150,6 +158,8 @@ def cae_cash_to_sub_blocks(
     Excel label:       (see module docstring)
     Architecture ref:  PRD V4.113 §2 / context.md §6
     Principle:         6 (one-tab-one-module)
+    
+    Formula: Split CAE module cash back into seven legacy sub-blocks for pipeline consumers.
 """
     sl_parts = [
         sub_demands.starlink_v2_bb_cash.values,
@@ -184,6 +194,8 @@ def cae_kg_to_sub_blocks(
     Excel label:       (see module docstring)
     Architecture ref:  PRD V4.113 §2 / context.md §6
     Principle:         6 (one-tab-one-module)
+    
+    Formula: Split CAE kg allotments into five legacy kg sub-blocks.
 """
     v3_parts = [
         sub_demands.starlink_v3_bb_kg.values,

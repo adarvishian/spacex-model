@@ -62,6 +62,8 @@ def per_sat_combined_revenue_mm(assumptions: Assumptions, year_index: int) -> fl
     Excel label:       "Per-sat combined revenue ($mm/yr)"
     Architecture ref:  §9.2 dual revenue
     Principle:         8 (vending-machine module)
+    
+    Formula: Credence-weighted Model A/B per-sat revenue ($mm/yr).
 
     """
     pr_a = assumption_scalar(assumptions, cl.CREDENCE_ON_MODEL_A_PR_A, default=0.6)
@@ -81,6 +83,8 @@ def per_sat_bandwidth_cost_mm(
     Excel label:       "Bandwidth services cost ($mm)"
     Architecture ref:  §7.2 / §9.4
     Principle:         9 (at-cost internal bandwidth)
+    
+    Formula: Per-sat bandwidth services cost from Starlink Capacity pool rates.
 
     """
     if starlink_capacity is None:
@@ -105,6 +109,8 @@ def per_sat_net_marginal_revenue_mm(
     Excel label:       "Per-sat net marginal revenue ($mm/yr)"
     Architecture ref:  §9.4 IRR engine input
     Principle:         2 (per-unit marginal IRR)
+    
+    Formula: Combined revenue minus opex and bandwidth per sat ($mm/yr).
 
     """
     combined = per_sat_combined_revenue_mm(assumptions, year_index)
@@ -134,6 +140,8 @@ def orbital_bandwidth_claim(inputs: OrbitalDcInputs) -> tuple[YearVector, YearVe
     Excel label:       "ODC BB Gbps demand"
     Architecture ref:  §7.2
     Principle:         3 (canonical cross-tab labels)
+    
+    Formula: BB and DTC Gbps claim for Starlink Capacity.
 
     """
     fleet = _fleet_from_deployment(inputs.sats_deployed)
@@ -153,6 +161,8 @@ def compute_orbital_revenue(inputs: OrbitalDcInputs) -> YearVector:
     Excel label:       "Revenue: Orbital DC"
     Architecture ref:  §9 unified AI - Compute
     Principle:         8 (vending-machine module)
+    
+    Formula: External orbital DC revenue from deployed fleet.
 
     """
     deployed = inputs.sats_deployed or YearVector.zeros()
@@ -175,6 +185,8 @@ def compute_orbital_cogs(inputs: OrbitalDcInputs) -> YearVector:
     Excel label:       "COGS: Orbital DC"
     Architecture ref:  §9.4 + U1 at-cost chip transfer
     Principle:         9 (predetermined at-cost transfer; fab not in growth CapEx)
+    
+    Formula: Orbital DC COGS — bandwidth at-cost + Terafab chip transfer (bucket 2).
 
     """
     deployed = inputs.sats_deployed or YearVector.zeros()
@@ -196,6 +208,8 @@ def per_sat_blended_irr(inputs: OrbitalDcInputs) -> float:
     Excel label:       "Spot IRR: ODC"
     Architecture ref:  §9.4 + U1 three-bucket split
     Principle:         2 (per-unit marginal IRR; bucket-2 fab out of −CapEx leg)
+    
+    Formula: Per-sat blended IRR — growth CapEx slug only; Terafab lump excluded (U1).
 
     """
     a = inputs.assumptions

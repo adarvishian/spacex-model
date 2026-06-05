@@ -79,6 +79,8 @@ def compute_exogenous_demands(assumptions: Assumptions) -> QueueSubBlockDemands:
     Excel label:       "Starlink V2 BB cash demand ($mm)"
     Architecture ref:  §6.5 / §20.3 (Sprint 11f Option A)
     Principle:         12 (demand purely exogenous; output never feeds back)
+    
+    Formula: Build exogenous cash/kg queue demands from anchors and assumptions.
 
     """
     a = assumptions

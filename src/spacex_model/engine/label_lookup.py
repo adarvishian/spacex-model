@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from typing import TYPE_CHECKING, Callable
 
 from spacex_model.calc._allocator_out import AllocatorOut
@@ -125,6 +126,35 @@ def _year_value(vec: YearVector | None, year: int) -> float | None:
 def _module_field(result: ModelResult, module_key: str, field: str, year: int) -> float:
     mod: AllocatorOut = result.module_outputs[module_key]
     return _year_value(getattr(mod, field), year)  # type: ignore[arg-type]
+
+
+_UNIT_SUFFIX_RE = re.compile(r"\s*\(\$mm\)|\s*\(%\)|\s*\(count\)", re.I)
+_RESTATED_RE = re.compile(r"\s*—\s*restated", re.I)
+
+
+def normalize_label(label: str) -> str:
+    """Strip unit suffixes, section markers, and punctuation for tolerant matching."""
+    s = label.strip()
+    if s.startswith("▸"):
+        s = s.lstrip("▸ ").strip()
+    s = _UNIT_SUFFIX_RE.sub("", s)
+    s = _RESTATED_RE.sub("", s)
+    s = re.sub(r"[^\w\s]", " ", s)
+    s = re.sub(r"\s+", " ", s).strip().lower()
+    return s
+
+
+def labels_match(a: str, b: str) -> bool:
+    """Exact or normalized label equality."""
+    return a == b or normalize_label(a) == normalize_label(b)
+
+
+def find_label_row(labels: dict[int, str], label: str) -> int | None:
+    """Find row index for a label using exact then normalized match."""
+    for row_idx, lbl in labels.items():
+        if labels_match(lbl, label):
+            return row_idx
+    return None
 
 
 def lookup_by_label(result: ModelResult, sheet: str, label: str, year: int) -> float | None:

@@ -31,6 +31,8 @@ def compute_module_spot_irrs(module_outputs: dict[str, AllocatorOut]) -> ModuleS
     Excel label:       "Spot IRR: Starlink" … "Spot IRR: AI-Compute"
     Architecture ref:  §5.3 acyclicity (prior-yr IRR only)
     Principle:         2 (per-unit marginal IRR drives allocation weights)
+    
+    Formula: Prior-year spot IRR for CAE softmax (acyclicity firewall).
 
     """
     cl = module_outputs.get("customer_launch", AllocatorOut.zeros())
@@ -79,6 +81,8 @@ def compute_four_program_prior_irrs(
     Excel label:       "Spot IRR: Starlink" … "Spot IRR: Terrestrial (prior yr)"
     Architecture ref:  PRD U2 four first-class programs
     Principle:         2 (acyclicity firewall — prior-yr IRR only)
+    
+    Formula: Prior-year spot IRR for {Starlink, ODC, Terr, CL} — retires AI roll-up + Level-2.
 
     """
     cl_out = module_outputs.get("customer_launch", AllocatorOut.zeros())
@@ -115,6 +119,8 @@ def roll_up_module_irrs(
     Excel label:       "Customer Launch Blended IRR"
     Architecture ref:  §6 central IRR display
     Principle:         2 (per-unit marginal IRR drives sigmoid weights)
+    
+    Formula: Roll up blended IRR year-vectors for cash sigmoid queue sub-blocks.
 
     Uses per-vehicle Starlink IRRs when provided; otherwise falls back to module-level.
 

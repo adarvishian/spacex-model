@@ -38,6 +38,8 @@ def compute_bv_engine(
     Excel label:       "Lunar Accumulated Book Value ($mm)"
     Architecture ref:  §11 BV engine
     Principle:         8 (BV decay memo-only, not Group D&A)
+    
+    Formula: Accumulated BV from labour output + hardware value add; memo decay for Valuation.
 
     """
     capital_life = assumption_scalar(

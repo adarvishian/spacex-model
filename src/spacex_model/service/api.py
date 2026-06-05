@@ -282,17 +282,18 @@ def sheet_grid(
 
 
 @router.get("/lineage/{key}/history", dependencies=[Depends(require_api_key)])
-def lineage_history(key: str, limit: int = Query(default=20, ge=1, le=100)) -> dict[str, Any]:
+def lineage_history(
+    key: str,
+    limit: int = Query(default=20, ge=1, le=100),
+    year: int | None = Query(default=None, ge=2025, le=2050),
+) -> dict[str, Any]:
     cache = get_cache()
-    cache_key = history_cache_key(key)
+    cache_key = history_cache_key(key, year=year)
     cached = cache.get(cache_key)
     if cached is not None:
         return cached
 
-    base = lookup_lineage(key)
-    module_path = base.module_path if base else None
-    function = base.function if base else None
-    entries = fetch_change_history(key, module_path=module_path, function=function, limit=limit)
+    entries = fetch_change_history(key, year=year, limit=limit)
     payload = {"key": key, "entries": entries, "total": len(entries)}
     cache.set(cache_key, payload, ttl_sec=900)
     return payload
@@ -509,6 +510,30 @@ def get_mc_job(job_id: str) -> dict[str, Any]:
     if job.result:
         response["result"] = job.result
     return response
+
+
+@router.get("/runs/mc/{job_id}/distribution", dependencies=[Depends(require_api_key)])
+def get_mc_distribution(job_id: str) -> dict[str, Any]:
+    """Distribution shape (histogram + FCF fan) and provenance for a completed MC job."""
+    job = get_job_manager().get(job_id)
+    if job is None:
+        raise HTTPException(status_code=404, detail=f"MC job not found: {job_id}")
+    if job.status != JobStatus.COMPLETED or not job.result:
+        raise HTTPException(status_code=409, detail=f"MC job not completed: {job_id}")
+    result = job.result
+    agg = result.get("aggregation") or {}
+    return {
+        "job_id": job_id,
+        "scenario": result.get("scenario"),
+        "n_trials": result.get("n_trials", agg.get("n_trials")),
+        "n_converged": result.get("n_converged", agg.get("n_converged")),
+        "base_seed": result.get("base_seed", agg.get("base_seed")),
+        "convergence_status": result.get("convergence_status", agg.get("convergence_status")),
+        "group_ev_histogram": agg.get("group_ev_histogram"),
+        "group_fcf_fan": agg.get("group_fcf_fan"),
+        "metrics": agg.get("metrics"),
+        "convergence_trace": agg.get("convergence_trace"),
+    }
 
 
 def _preview_ev_for_scenario(scenario: str, overrides: dict[str, Any] | None = None) -> float | None:

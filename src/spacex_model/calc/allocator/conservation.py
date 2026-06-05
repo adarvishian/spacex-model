@@ -64,6 +64,8 @@ def compute_r14_cash_flow_identity(
     Excel label:       "Cash-flow identity"
     Architecture ref:  PRD U4 / MASTER CONTEXT §4.7
     Principle:         19 (R14 repaired: … − R134 + R135 + R136)
+    
+    Formula: Conservation tab R14 — CAE cash spine includes all facility flows (F6).
 
     residual = R56 − R11 − R55 + R106 + R107 − R134 + R135 + R136
 
@@ -104,6 +106,8 @@ def compute_allocator_conservation(inputs: AllocatorConservationInputs) -> Alloc
     Excel label:       "ALL OK (R108-equivalent)" … "Cash-flow identity"
     Architecture ref:  PRD U4 gate
     Principle:         19 (F6 repaired; superseded paths retired)
+    
+    Formula: Unified allocator guardrails: bounds, deploy identity, leftovers, R14.
 
     """
     alloc = inputs.allocator

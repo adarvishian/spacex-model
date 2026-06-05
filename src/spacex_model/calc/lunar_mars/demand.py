@@ -30,6 +30,8 @@ def compute_demand(inputs: DemandInputs) -> DemandResult:
     Excel label:       "Lunar Mars cash demand ($mm)"
     Architecture ref:  §11 strategic carve-out
     Principle:         22 (Mars carve-off prior-year Group FCF)
+    
+    Formula: Exogenous carve-out-driven demand (Phase B pass-through).
 
     """
     return DemandResult(

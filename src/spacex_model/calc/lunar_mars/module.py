@@ -49,6 +49,8 @@ def compute_revenue(inputs: LunarMarsInputs | None = None) -> YearVector:
     Excel label:       "Total Revenue ($mm)"
     Architecture ref:  §11 Lunar Mars
     Principle:         8 (vending-machine framing; no IRR queue)
+    
+    Formula: Revenue = 0 every year (pre-revenue strategic module).
 
     """
     return YearVector.zeros()
@@ -61,6 +63,8 @@ def compute_cogs(inputs: LunarMarsInputs | None = None) -> YearVector:
     Excel label:       "Total COGS ($mm)"
     Architecture ref:  §20.5 LM COGS
     Principle:         8 (BV decay is memo-only for Valuation)
+    
+    Formula: Mission ops % of CapEx only; no BV depreciation in COGS per §20.5.
 
     """
     if inputs is None:
@@ -81,6 +85,8 @@ def compute_gross_profit(inputs: LunarMarsInputs | None = None) -> YearVector:
     Excel label:       "Gross Profit ($mm)"
     Architecture ref:  §3 module framing
     Principle:         7 (Module EBITDA = Gross Profit)
+    
+    Formula: Gross profit = revenue − COGS (negative COGS-only in steady state).
 
     """
     if inputs is None:
@@ -95,6 +101,8 @@ def compute_capex(inputs: LunarMarsInputs | None = None) -> YearVector:
     Excel label:       "Module CapEx ($mm)"
     Architecture ref:  §11 carve-out deployment
     Principle:         22 (Mars carve-out off the top)
+    
+    Formula: Annual carve-out cash deployed as Module CapEx (zero before first mission year).
 
     """
     if inputs is None:
@@ -110,6 +118,8 @@ def compute_fcf(inputs: LunarMarsInputs | None = None) -> YearVector:
     Excel label:       "Module FCF ($mm)"
     Architecture ref:  §20.5 LM FCF
     Principle:         8 (pre-tax module FCF)
+    
+    Formula: Module FCF = EBITDA + Module D&A − CapEx.
 
     """
     if inputs is None:
@@ -127,6 +137,8 @@ def compute_allocator_out(inputs: LunarMarsInputs | None = None) -> AllocatorOut
     Excel label:       "CENTRAL ALLOCATOR OUTPUTS"
     Architecture ref:  §11 Allocator OUT
     Principle:         3 (canonical labels via registry)
+    
+    Formula: Allocator OUT — IRR rows = 0; not in IRR queue.
 
     """
     if inputs is None:

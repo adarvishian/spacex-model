@@ -4,6 +4,7 @@ import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom"
 import { ChangeHistoryList } from "../audit/ChangeHistoryList";
 import { DependencyGraph } from "../audit/DependencyGraph";
 import { DerivationPanel } from "../audit/DerivationPanel";
+import { McAuditPanel } from "../audit/McAuditPanel";
 import { Grid, GridSkeleton, type GridHandle } from "../audit/Grid";
 import { GridHelpPopover } from "../audit/GridHelpPopover";
 import { GridToolbar } from "../audit/GridToolbar";
@@ -36,9 +37,12 @@ import {
   runDeterministic,
 } from "../api";
 import { loadGridPrefs, saveGridPrefs, type GridPrefs } from "../shared/grid-prefs";
+import { resolveMcOutputKind } from "../shared/mc-headline";
 import type { ActiveCell, GridPayload, LineageEntry, RunAuditPayload } from "../shared/types";
 
 const RUN_AUDIT_SLUG = "run_audit";
+
+type RailView = "derivation" | "mc";
 
 function buildOverrides(overrideLabel: string, overrideValue: string): Record<string, number> {
   const overrides: Record<string, number> = {};
@@ -70,8 +74,14 @@ export default function AuditApp() {
   const [derivationExpanded, setDerivationExpanded] = useState(false);
   const [labelSearchOpen, setLabelSearchOpen] = useState(false);
   const [gridPrefs, setGridPrefs] = useState<GridPrefs>(() => loadGridPrefs());
+  const [railView, setRailView] = useState<RailView>("derivation");
   const gridRef = useRef<GridHandle>(null);
   const backgroundRunRef = useRef(false);
+
+  const mcOutputKind = useMemo(() => {
+    if (!activeCell) return null;
+    return resolveMcOutputKind(activeCell.lineageKey, activeCell.label);
+  }, [activeCell]);
 
   const healthQ = useQuery({ queryKey: ["health"], queryFn: fetchHealth });
   const scenariosQ = useQuery({ queryKey: ["scenarios"], queryFn: fetchScenarios });
@@ -241,6 +251,7 @@ export default function AuditApp() {
       params.set("col", String(cell.year));
       setSearchParams(params, { replace: true });
       setActiveCell(cell);
+      setRailView("derivation");
       try {
         const entry = await fetchLineage(cell.lineageKey, {
           runId,
@@ -272,6 +283,13 @@ export default function AuditApp() {
 
   const urlRow = searchParams.get("row");
   const urlCol = searchParams.get("col");
+  const urlMc = searchParams.get("mc");
+
+  useEffect(() => {
+    if (urlMc && activeCell && mcOutputKind) {
+      setRailView("mc");
+    }
+  }, [urlMc, activeCell, mcOutputKind]);
 
   useEffect(() => {
     if (!gridData || !urlRow || !urlCol || isRunAudit) return;
@@ -526,26 +544,63 @@ export default function AuditApp() {
               <RailEmptyState />
             ) : (
               <>
-                <DerivationPanel
-                  entry={lineage}
-                  activeCell={activeCell}
-                  expanded={derivationExpanded}
-                />
-                <DependencyGraph
-                  lineageKey={activeCell.lineageKey}
-                  runId={runId}
-                  year={activeCell.year}
-                  sheet={gridData?.source_sheet}
-                  row={activeCell.rowIndex}
-                  scenario={selectedScenario}
-                  onNavigateCell={({ sheetSlug: slug, rowId, year, lineageKey }) => {
-                    navigateToCell({ sheetSlug: slug, rowId, year, lineageKey });
-                  }}
-                />
-                <div className="sources-history-row">
-                  <SourcesPanel entry={lineage} />
-                  <ChangeHistoryList lineageKey={activeCell.lineageKey} />
-                </div>
+                {mcOutputKind && (
+                  <div className="rail-view-toggle" data-testid="rail-view-toggle">
+                    <button
+                      type="button"
+                      className={railView === "derivation" ? "active" : ""}
+                      aria-pressed={railView === "derivation"}
+                      onClick={() => setRailView("derivation")}
+                      data-testid="rail-view-derivation"
+                    >
+                      Derivation
+                    </button>
+                    <button
+                      type="button"
+                      className={railView === "mc" ? "active" : ""}
+                      aria-pressed={railView === "mc"}
+                      onClick={() => setRailView("mc")}
+                      data-testid="rail-view-mc"
+                    >
+                      Distribution
+                    </button>
+                  </div>
+                )}
+                {railView === "mc" && mcOutputKind ? (
+                  <McAuditPanel
+                    outputKind={mcOutputKind}
+                    label={activeCell.label}
+                    year={activeCell.year}
+                    scenario={selectedScenario}
+                    overrides={overrides}
+                  />
+                ) : (
+                  <>
+                    <DerivationPanel
+                      entry={lineage}
+                      activeCell={activeCell}
+                      expanded={derivationExpanded}
+                    />
+                    <DependencyGraph
+                      lineageKey={activeCell.lineageKey}
+                      runId={runId}
+                      year={activeCell.year}
+                      sheet={gridData?.source_sheet}
+                      row={activeCell.rowIndex}
+                      scenario={selectedScenario}
+                      onNavigateCell={({ sheetSlug: slug, rowId, year, lineageKey }) => {
+                        navigateToCell({ sheetSlug: slug, rowId, year, lineageKey });
+                      }}
+                    />
+                    <div className="sources-history-row">
+                      <SourcesPanel entry={lineage} />
+                      <ChangeHistoryList
+                        lineageKey={activeCell.lineageKey}
+                        year={activeCell.year}
+                      />
+                    </div>
+                  </>
+                )}
               </>
             )}
           </aside>

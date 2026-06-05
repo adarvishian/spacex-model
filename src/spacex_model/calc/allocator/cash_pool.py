@@ -24,6 +24,8 @@ def starting_cash_mm(assumptions: Assumptions) -> float:
     Excel label:       "Starting cash position EoY 2024 ($mm)"
     Architecture ref:  §6.1 + §15.2 R109
     Principle:         4 (cash pool feeds queue gate)
+    
+    Formula: Starting cash position EoY 2024 ($mm) for R109 identity.
 
     """
     return assumption_scalar(
@@ -51,6 +53,8 @@ def compute_bridge_drawdown(assumptions: Assumptions) -> YearVector:
     Excel label:       "Pre-IPO debt facility ($mm)"
     Architecture ref:  §2.13 + §15.2 R109
     Principle:         4 (bridge inflow in cash pool tracker)
+    
+    Formula: Pre-IPO bridge loan drawdown by year ($mm); $20B in bridge year per §2.13.
 
     """
     bridge = assumption_scalar(
@@ -73,6 +77,8 @@ def compute_ipo_drawdown(assumptions: Assumptions) -> YearVector:
     Excel label:       "IPO injection amount ($mm)"
     Architecture ref:  §6.1 + §15.2 R109
     Principle:         4 (IPO inflow in cash pool tracker)
+    
+    Formula: IPO injection by year ($mm).
 
     """
     ipo_year = int(

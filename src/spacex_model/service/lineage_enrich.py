@@ -2,29 +2,37 @@
 
 from __future__ import annotations
 
+import logging
+import re
 from typing import Any
 
 from spacex_model.config.constants import FIRST_YEAR
-from spacex_model.engine.label_lookup import lookup_by_label
+from spacex_model.engine.label_lookup import (
+    find_label_row,
+    labels_match,
+    lookup_by_label,
+    normalize_label,
+)
 from spacex_model.engine.pipeline import ModelResult
+from spacex_model.inputs.s1_2025_anchors import S1_INGEST_ANCHORS_2025
+from spacex_model.inputs.v4_113_2025_anchors import AnchorSpec
 from spacex_model.io.divergence import tolerance_for
-from spacex_model.service.grid import _INPUT_LABEL_PATTERNS, _LABEL_LINEAGE, _infer_unit
+from spacex_model.service.grid import (
+    _INPUT_LABEL_PATTERNS,
+    _LABEL_LINEAGE,
+    _infer_unit,
+    resolve_cell_values,
+)
 from spacex_model.service.lineage import LineageEntry, lookup_lineage
-from spacex_model.service.sheets_meta import get_sheet, sheet_for_name
+from spacex_model.service.methodology_registry import lookup_methodology
+from spacex_model.service.sheets_meta import SHEETS, get_sheet, sheet_for_name
+from spacex_model.service.stub_registry import (
+    is_registered_stub,
+    slug_for_sheet_row,
+    stub_spec_section,
+)
 
-_FORMULA_EXPRESSIONS: dict[str, str] = {
-    "module.starlink.total_revenue": (
-        "Total Revenue (Starlink) = Σ over { V2 BB, V2 DTC, V3 BB, V3 DTC, Starshield } of "
-        "active_sats(pool, t) × ARPU(pool, t) × months_active(pool, t)"
-    ),
-    "module.starlink.module_ebitda": "Module EBITDA = Total Revenue − Total COGS",
-    "module.starlink.module_fcf": "Module FCF = Module EBITDA − Module CapEx + D&A add-back",
-    "module.starlink.module_capex": "Module CapEx = Σ vehicle-pool sat CapEx + facility CapEx (1-yr lag)",
-    "module.starlink.blended_irr": "Blended IRR = IRR-weighted blend of per-vehicle pool IRRs",
-    "group.group_revenue_net": "Group Revenue = Σ module revenues − inter-module eliminations",
-    "group.group_ebitda": "Group EBITDA = Group Gross Profit − Total OpEx",
-    "group.group_fcf": "Group FCF = NOPAT + D&A − Total Group CapEx − Mars carve-out",
-}
+_log = logging.getLogger(__name__)
 
 _UPSTREAM_HINTS: dict[str, list[dict[str, str]]] = {
     "module.starlink.total_revenue": [
@@ -86,19 +94,51 @@ def _grid_key(sheet: str, row: int, year: int) -> str:
 
 def _find_label_row(sheet: str, label: str, result: ModelResult) -> int | None:
     labels = result.ingest.value_pass.labels_by_sheet.get(sheet, {})
-    for row_idx, lbl in labels.items():
-        if lbl == label:
-            return row_idx
-    return None
+    return find_label_row(labels, label)
 
 
 def _resolve_label_to_grid_key(label: str, year: int, result: ModelResult) -> tuple[str, str] | None:
-    """Return (lineage_key, display_label) for a canonical label on any sheet."""
-    for sheet in ("Starlink", "Assumptions", "Allocator", "Group P&L"):
-        row = _find_label_row(sheet, label, result)
-        if row is not None:
-            return _grid_key(sheet, row, year), f"{sheet}!R{row} · {label}"
+    """Return (lineage_key, display_label) for a canonical label on any grid sheet."""
+    ingest = result.ingest
+    for meta in SHEETS:
+        if meta.slug == "run_audit":
+            continue
+        sheet = meta.source_sheet
+        labels = ingest.value_pass.labels_by_sheet.get(sheet, {})
+        for row_idx, lbl in labels.items():
+            if meta.row_range is not None:
+                lo, hi = meta.row_range
+                if row_idx < lo or row_idx > hi:
+                    continue
+            if not labels_match(lbl, label):
+                continue
+            return (
+                f"grid.{meta.slug}.R{row_idx}.{year}",
+                f"{sheet}!R{row_idx} · {lbl}",
+            )
     return None
+
+
+def _classify_cell_kind(
+    *,
+    sheet_slug: str | None,
+    source_sheet: str,
+    label: str,
+    display_val: float | None,
+    lineage_key: str,
+) -> str:
+    if is_registered_stub(
+        sheet_slug=sheet_slug,
+        source_sheet=source_sheet,
+        label=label,
+        lineage_key=lineage_key,
+    ):
+        return "stub"
+    if source_sheet == "Assumptions" or _is_input_label(label):
+        return "input"
+    if display_val is not None:
+        return "derived"
+    return "stub"
 
 
 def _lookup_upstream_for_key(
@@ -159,18 +199,18 @@ def _resolve_cell_context(
     year: int | None = None,
     sheet: str | None = None,
     row: int | None = None,
-) -> tuple[str, str, int, float | None, float | None]:
-    """Return (sheet_name, label, year, code_value, xlsx_value)."""
+) -> tuple[str, str, int, float | None, float | None, float | None, str | None]:
+    """Return (sheet, label, year, code_value, xlsx_value, display_value, sheet_slug)."""
     ingest = result.ingest
     resolved_year = year or FIRST_YEAR
+    sheet_slug: str | None = None
 
     if sheet and row:
         labels = ingest.value_pass.labels_by_sheet.get(sheet, {})
         label = labels.get(row, key)
-        code = lookup_by_label(result, sheet, label, resolved_year)
-        xlsx_raw = ingest.value_pass.cached_values.get((sheet, row, resolved_year))
-        xlsx = float(xlsx_raw) if isinstance(xlsx_raw, (int, float)) else None
-        return sheet, label, resolved_year, code, xlsx
+        sheet_slug = slug_for_sheet_row(sheet, row)
+        code, xlsx, display = resolve_cell_values(result, sheet, label, row, resolved_year)
+        return sheet, label, resolved_year, code, xlsx, display, sheet_slug
 
     parsed = _parse_grid_key(key)
     if parsed:
@@ -179,31 +219,30 @@ def _resolve_cell_context(
             y = year
         labels = ingest.value_pass.labels_by_sheet.get(s, {})
         label = labels.get(r, key)
-        code = lookup_by_label(result, s, label, y)
-        xlsx_raw = ingest.value_pass.cached_values.get((s, r, y))
-        xlsx = float(xlsx_raw) if isinstance(xlsx_raw, (int, float)) else None
-        return s, label, y, code, xlsx
+        slug = key.split(".")[1] if key.startswith("grid.") else ""
+        meta = get_sheet(slug)
+        sheet_slug = meta.slug if meta else slug_for_sheet_row(s, r)
+        code, xlsx, display = resolve_cell_values(result, s, label, r, y)
+        return s, label, y, code, xlsx, display, sheet_slug
 
     # Registry key — find label from reverse map
     for (s, lbl), reg_key in _LABEL_LINEAGE.items():
         if reg_key == key:
             y = year or FIRST_YEAR
-            code = lookup_by_label(result, s, lbl, y)
-            xlsx_row = next(
-                (
-                    ri
-                    for ri, ln in ingest.value_pass.labels_by_sheet.get(s, {}).items()
-                    if ln == lbl
-                ),
-                None,
+            xlsx_row = _find_label_row(s, lbl, result)
+            code, xlsx, display = (
+                (None, None, None)
+                if xlsx_row is None
+                else resolve_cell_values(result, s, lbl, xlsx_row, y)
             )
-            xlsx = None
-            if xlsx_row is not None:
-                raw = ingest.value_pass.cached_values.get((s, xlsx_row, y))
-                xlsx = float(raw) if isinstance(raw, (int, float)) else None
-            return s, lbl, y, code, xlsx
+            if code is None and xlsx_row is not None:
+                code = lookup_by_label(result, s, lbl, y)
+                if code is not None and display is None:
+                    display = code
+            sheet_slug = slug_for_sheet_row(s, xlsx_row) if xlsx_row is not None else None
+            return s, lbl, y, code, xlsx, display, sheet_slug
 
-    return "", key, resolved_year, None, None
+    return "", key, resolved_year, None, None, None, sheet_slug
 
 
 def enrich_lineage(
@@ -213,6 +252,7 @@ def enrich_lineage(
     year: int | None = None,
     sheet: str | None = None,
     row: int | None = None,
+    sheet_slug: str | None = None,
 ) -> dict[str, Any]:
     """Return extended LineageEntry payload per FRONTEND_PRD §6.4."""
     base = lookup_lineage(key)
@@ -232,9 +272,29 @@ def enrich_lineage(
                 )
                 break
 
-    sheet_name, label, cell_year, code_val, xlsx_val = _resolve_cell_context(
-        key, result, year=year, sheet=sheet, row=row
+    sheet_name, label, cell_year, code_val, xlsx_val, display_val, inferred_slug = (
+        _resolve_cell_context(key, result, year=year, sheet=sheet, row=row)
     )
+    if sheet_slug is None:
+        sheet_slug = inferred_slug
+    if sheet_slug is None and key.startswith("grid."):
+        meta = get_sheet(key.split(".")[1])
+        if meta is not None:
+            sheet_slug = meta.slug
+
+    if display_val is None and not is_registered_stub(
+        sheet_slug=sheet_slug,
+        source_sheet=sheet_name,
+        label=label,
+        lineage_key=key,
+    ):
+        _log.warning(
+            "lineage resolver: no display value for non-stub cell %s (%s!%s · %s)",
+            key,
+            sheet_name,
+            row,
+            label,
+        )
 
     if base is None and key.startswith("grid."):
         base = LineageEntry(
@@ -252,10 +312,6 @@ def enrich_lineage(
         raise KeyError(key)
 
     unit = _infer_unit(label if label else base.excel_label)
-    formula = _FORMULA_EXPRESSIONS.get(
-        key,
-        f"{base.excel_label} — see Architecture {base.architecture_ref or 'spec'}",
-    )
 
     div_status = "n_a"
     div_delta: float | None = None
@@ -264,8 +320,36 @@ def enrich_lineage(
         div_delta = code_val - xlsx_val
         div_status = "match" if abs(div_delta) <= tol else "intentional"
 
+    cell_kind = _classify_cell_kind(
+        sheet_slug=sheet_slug,
+        source_sheet=sheet_name,
+        label=label,
+        display_val=display_val,
+        lineage_key=key,
+    )
+    stub_section = (
+        stub_spec_section(
+            sheet_slug=sheet_slug,
+            label=label,
+            architecture_ref=base.architecture_ref,
+            section_ref=_section_for_label(sheet_name, label, result),
+        )
+        if cell_kind == "stub"
+        else None
+    )
+
     lifecycle = _LIFECYCLE_BY_KEY.get(key, "output")
     section_ref = _section_for_label(sheet_name, label, result)
+
+    formula = _resolve_formula(
+        key=key,
+        base=base,
+        cell_kind=cell_kind,
+        stub_section=stub_section,
+        sheet_name=sheet_name,
+        label=label,
+        architecture_section=_architecture_section_for_methodology(base, sheet_name),
+    )
 
     resolved_inputs = _build_resolved_inputs(base, result, cell_year)
     upstream = _lookup_upstream_for_key(
@@ -295,11 +379,12 @@ def enrich_lineage(
                 "column": str(cell_year),
                 "year": cell_year,
             },
-            "cell_kind": "derived" if code_val is not None else "stub",
+            "cell_kind": cell_kind,
+            "stub_spec_section": stub_section,
             "unit": unit,
             "formula_expression": formula,
             "resolved_inputs": resolved_inputs,
-            "computed_value": code_val,
+            "computed_value": display_val,
             "xlsx_cached_value": xlsx_val,
             "divergence_status": div_status,
             "divergence_delta_mm": div_delta,
@@ -309,16 +394,91 @@ def enrich_lineage(
             "downstream_keys": [d["key"] for d in downstream],
             "upstream": upstream,
             "downstream": downstream,
-            "sources": _build_sources(base, sheet_name, label, code_val, xlsx_val, cell_year),
+            "sources": _build_sources(
+                base,
+                sheet_name,
+                label,
+                code_val,
+                xlsx_val,
+                cell_year,
+                key=key,
+                architecture_section=_architecture_section_for_methodology(base, sheet_name),
+                cell_kind=cell_kind,
+            ),
         }
     )
     return payload
 
 
+def _architecture_section_for_methodology(base: LineageEntry, sheet_name: str) -> str:
+    """Map a cell to an Architecture § section — not the Excel row-group banner."""
+    ref = base.architecture_ref or ""
+    token = re.search(r"§\d+(?:\.\d+)?", ref)
+    if token:
+        return token.group(0)
+    sheet_defaults: dict[str, str] = {
+        "Assumptions": "§3",
+        "Launch Capacity": "§6",
+        "Customer Launch": "§8",
+        "Starlink": "§8",
+        "Starlink Capacity": "§8",
+        "AI - Compute": "§8",
+        "ODC": "§8",
+        "Lunar - Mars": "§8",
+        "Cash Allocation Engine": "§6",
+        "OpEx": "§15",
+        "CapEx": "§15",
+        "Group P&L": "§15",
+        "Demand Curves": "§8",
+    }
+    return sheet_defaults.get(sheet_name, "§3")
+
+
+def _resolve_formula(
+    *,
+    key: str,
+    base: LineageEntry,
+    cell_kind: str,
+    stub_section: str | None,
+    sheet_name: str,
+    label: str,
+    architecture_section: str,
+) -> str:
+    """Formula from methodology registry; Architecture placeholder only for stubs."""
+    if cell_kind == "stub":
+        section = stub_section or base.architecture_ref or "spec"
+        return f"{base.excel_label} — see Architecture {section}"
+
+    if cell_kind == "input":
+        return f"{label or base.excel_label} — exogenous input"
+
+    rec = lookup_methodology(
+        key,
+        sheet=sheet_name or None,
+        label=label or base.excel_label,
+        section_ref=architecture_section,
+    )
+    if rec and rec.formula_expression.strip():
+        return rec.formula_expression
+
+    arch = architecture_section or base.architecture_ref or "§3"
+    return f"{base.excel_label} = computed per {arch}"
+
+
+def _match_ingest_anchor(label: str) -> AnchorSpec | None:
+    norm = normalize_label(label)
+    for anchor in S1_INGEST_ANCHORS_2025:
+        if anchor.assumptions_label and labels_match(anchor.assumptions_label, label):
+            return anchor
+        if labels_match(anchor.name, label) or normalize_label(anchor.name) == norm:
+            return anchor
+    return None
+
+
 def _row_label(sheet_name: str, label: str, result: ModelResult) -> str:
     labels = result.ingest.value_pass.labels_by_sheet.get(sheet_name, {})
     for row_idx, lbl in labels.items():
-        if lbl == label:
+        if labels_match(lbl, label):
             return f"R{row_idx}"
     return "—"
 
@@ -329,7 +489,7 @@ def _section_for_label(sheet_name: str, label: str, result: ModelResult) -> str:
     for _, lbl in sorted(labels.items()):
         if lbl.startswith("▸"):
             current = lbl.lstrip("▸ ").strip()
-        if lbl == label:
+        if labels_match(lbl, label):
             return current
     return current
 
@@ -341,32 +501,81 @@ def _build_sources(
     code_val: float | None,
     xlsx_val: float | None,
     year: int,
+    *,
+    key: str,
+    architecture_section: str,
+    cell_kind: str,
 ) -> dict[str, Any]:
-    sources: dict[str, Any] = {
-        "methodology": {
-            "spec_section": base.architecture_ref or "Architecture spec",
+    rec = lookup_methodology(
+        key,
+        sheet=sheet_name or None,
+        label=label or base.excel_label,
+        section_ref=architecture_section,
+    )
+    if rec:
+        methodology: dict[str, str] = {
+            "spec_section": rec.architecture_section,
+            "method_statement": rec.method_statement,
+            "principle": rec.principle,
+            "rule": rec.rule,
+        }
+    elif cell_kind == "stub":
+        section = base.architecture_ref or architecture_section or "spec"
+        methodology = {
+            "spec_section": section,
+            "method_statement": f"Planned implementation per Architecture {section}",
             "principle": base.principle or "—",
-            "rule": base.principle or "—",
-            "module": f"{base.module_path}.{base.function}",
-        },
-    }
-    if sheet_name == "Assumptions" or base.key.startswith("grid.assumptions"):
-        sources["input_provenance"] = {
-            "source": "Assumptions sheet / S-1 ingest",
-            "reference": "inputs/s1_2025_anchors.py · Q4'25 anchors",
-            "url": "docs/DEV_LOG.md",
+            "rule": "Not yet implemented — placeholder tab",
         }
-    elif "Starlink" in sheet_name and year == 2025 and "Revenue" in label:
-        sources["input_provenance"] = {
-            "source": "Q4'25 anchor",
-            "reference": "2025 Anchors from Q4_25.md §2 (Starlink BB)",
+    else:
+        arch = architecture_section or base.architecture_ref or "§3"
+        methodology = {
+            "spec_section": arch,
+            "method_statement": f"Computed per Architecture {arch}",
+            "principle": base.principle or "8 (vending-machine module framing)",
+            "rule": "Rule 1 — One concept per write; every formula traces to its source cell",
         }
-    if year == 2025 and code_val is not None and xlsx_val is not None:
+
+    sources: dict[str, Any] = {"methodology": methodology}
+
+    anchor = _match_ingest_anchor(label)
+    is_input = cell_kind == "input" or sheet_name == "Assumptions" or _is_input_label(label)
+
+    if is_input:
+        if anchor:
+            tol = (
+                f"±{anchor.tolerance_pct:.0%}"
+                if anchor.tolerance_pct > 0
+                else "exact"
+            )
+            sources["input_provenance"] = {
+                "source": "S-1 disclosure / V4.113 ingest anchor",
+                "reference": f"{anchor.name} — target {anchor.target:,.2f} ({tol})",
+            }
+        elif sheet_name == "Assumptions" or base.key.startswith("grid.assumptions"):
+            sources["input_provenance"] = {
+                "source": "Assumptions sheet",
+                "reference": "Exogenous model input (not derived from other tabs)",
+            }
+        elif _is_input_label(label):
+            sources["input_provenance"] = {
+                "source": "Assumptions cross-reference",
+                "reference": "Input row sourced from Assumptions tab",
+            }
+
+    if year == 2025 and anchor and code_val is not None:
+        sources["calibration_anchor"] = {
+            "target": anchor.target,
+            "tolerance_pct": anchor.tolerance_pct,
+            "basis": f"S-1 ingest anchor · code lands {code_val:,.2f}",
+        }
+    elif year == 2025 and code_val is not None and xlsx_val is not None:
         sources["calibration_anchor"] = {
             "target": xlsx_val,
             "tolerance_pct": 0.05,
             "basis": f"2025 xlsx cached · code lands {code_val:,.0f}",
         }
+
     return sources
 
 

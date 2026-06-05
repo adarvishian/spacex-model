@@ -10,10 +10,21 @@ import pyarrow.parquet as pq
 
 from spacex_model.config.constants import FIRST_YEAR, LAST_YEAR
 
+FCF_FAN_PERCENTILES = (5, 25, 50, 75, 95)
+GROUP_EV_HISTOGRAM_BINS = 30
+_LEGACY_MODULE_KEYS = {"odc": "ai_compute", "ai_stack": "ai_compute"}
+
+
+def group_fcf_year_keys() -> tuple[str, ...]:
+    """Per-year Group FCF columns for MC percentile fan."""
+    return tuple(f"group_fcf_{year}_mm" for year in range(FIRST_YEAR, LAST_YEAR + 1))
+
+
 # Core outputs for aggregation per PRD §8.4
 TRIAL_METRIC_KEYS = (
     "group_ev_2025_b",
     "group_revenue_2050_mm",
+    *group_fcf_year_keys(),
     "group_fcf_2030_mm",
     "group_fcf_2040_mm",
     "group_fcf_2050_mm",
@@ -41,11 +52,14 @@ def extract_trial_metrics(result: Any, *, revenue_multiple: float = 10.0) -> dic
     valuation = result.valuation
     mods = result.module_outputs
 
-    def _mod_ev(key: str) -> float:
-        rev = mods[key].total_revenue.at(FIRST_YEAR)
-        return rev * revenue_multiple / 1000.0
+    def _mod_rev(key: str, year: int) -> float:
+        resolved = _LEGACY_MODULE_KEYS.get(key, key)
+        return float(mods[resolved].total_revenue.at(year))
 
-    return {
+    def _mod_ev(key: str) -> float:
+        return _mod_rev(key, FIRST_YEAR) * revenue_multiple / 1000.0
+
+    metrics: dict[str, float | bool | int] = {
         "group_ev_2025_b": float(valuation.implied_ev_2025_billions),
         "group_revenue_2050_mm": float(group.group_revenue_net.at(y2050)),
         "group_fcf_2030_mm": float(group.group_fcf.at(y2030)),
@@ -56,14 +70,17 @@ def extract_trial_metrics(result: Any, *, revenue_multiple: float = 10.0) -> dic
         "odc_ev_2025_b": _mod_ev("odc"),
         "ai_stack_ev_2025_b": _mod_ev("ai_stack"),
         "lunar_mars_ev_2025_b": _mod_ev("lunar_mars"),
-        "customer_launch_revenue_2050_mm": float(mods["customer_launch"].total_revenue.at(y2050)),
-        "starlink_revenue_2050_mm": float(mods["starlink"].total_revenue.at(y2050)),
-        "odc_revenue_2050_mm": float(mods["odc"].total_revenue.at(y2050)),
-        "ai_stack_revenue_2050_mm": float(mods["ai_stack"].total_revenue.at(y2050)),
-        "lunar_mars_revenue_2050_mm": float(mods["lunar_mars"].total_revenue.at(y2050)),
+        "customer_launch_revenue_2050_mm": _mod_rev("customer_launch", y2050),
+        "starlink_revenue_2050_mm": _mod_rev("starlink", y2050),
+        "odc_revenue_2050_mm": _mod_rev("odc", y2050),
+        "ai_stack_revenue_2050_mm": _mod_rev("ai_stack", y2050),
+        "lunar_mars_revenue_2050_mm": _mod_rev("lunar_mars", y2050),
         "converged": bool(result.solver_trace.converged),
         "solver_iterations": int(result.solver_trace.iterations),
     }
+    for year in range(FIRST_YEAR, LAST_YEAR + 1):
+        metrics[f"group_fcf_{year}_mm"] = float(group.group_fcf.at(year))
+    return metrics
 
 
 def trials_to_table(rows: list[dict[str, Any]]) -> pa.Table:

@@ -96,6 +96,8 @@ def compute_chip_at_cost_per_sat(
     Excel label:       "Chip cost at-cost ($/sat)"
     Architecture ref:  §5.1 bucket-2 at-cost transfer
     Principle:         9 (predetermined absorption basis)
+    
+    Formula: Predetermined Terafab chip transfer — design-capacity absorption, never ÷ this-year volume.
 
     """
     a = assumptions
@@ -184,6 +186,8 @@ def compute_ai_demand_buildable(
     Excel label:       "ODC demand-buildable CapEx ($mm)" … "Terr demand-buildable CapEx ($mm)"
     Architecture ref:  §5.1 bucket-1 growth slice
     Principle:         12 (exogenous demand; fab excluded from growth base)
+    
+    Formula: ODC + Terr growth-slice demand-buildable CapEx (feeds CAE R66).
 
     """
     a = inputs.assumptions
@@ -215,6 +219,8 @@ def compute_maintenance_claim(inputs: CapBaseInputs) -> YearVector:
     Excel label:       "Maintenance / refresh CapEx ($mm)"
     Architecture ref:  §5.1 bucket-3
     Principle:         4 (senior claim before IRR queue)
+    
+    Formula: Bucket-3 maintenance / refresh — predetermined senior queue-gate claim.
 
     """
     a = inputs.assumptions
@@ -239,6 +245,8 @@ def compute_enabling_infra_equity_claim(
     Excel label:       "Total facility CapEx ($mm)" ex chip-fab
     Architecture ref:  §5.1 bucket-2
     Principle:         3 (enabling infra out of IRR growth base)
+    
+    Formula: Bucket-2 enabling-infra equity portion — Terafab lump funded via project debt (U3).
 
     """
     if facilities_build is None:
@@ -260,6 +268,8 @@ def compute_growth_caps(inputs: CapBaseInputs, chip_at_cost: YearVector) -> Modu
     Excel label:       "Cap: Starlink max deployable ($mm)" … "Cap: AI-Compute max deployable ($mm)"
     Architecture ref:  PRD U1 / F1 cap-base reconciliation
     Principle:         4 (growth allocation capped at absorbable demand)
+    
+    Formula: CAE R64/R65/R66 — growth-slice max deployable caps.
 
     """
     headroom = _starlink_headroom_sats(inputs)
@@ -287,6 +297,8 @@ def compute_cap_base(inputs: CapBaseInputs) -> CapBaseResult:
     Excel label:       "▸ CAPACITY-PRIORITY ALLOCATION"
     Architecture ref:  PRD §5.1 three-bucket taxonomy
     Principle:         4 (growth slice only in IRR queue)
+    
+    Formula: Full three-bucket split for allocator spine (U1).
 
     """
     chip = compute_chip_at_cost_per_sat(inputs.assumptions, inputs.facilities_build)

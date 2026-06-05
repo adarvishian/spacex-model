@@ -9,14 +9,11 @@ from collections.abc import Iterator
 from dataclasses import dataclass
 from pathlib import Path
 
-from spacex_model.linters.docstrings import CALC_ROOT, iter_calc_sources
-
-_TAG_PATTERNS = {
-    "excel_cell": re.compile(r"Excel cell:\s*(.+)", re.MULTILINE),
-    "excel_label": re.compile(r'Excel label:\s*["\']?(.+?)["\']?\s*$', re.MULTILINE),
-    "architecture_ref": re.compile(r"Architecture ref:\s*(.+)", re.MULTILINE),
-    "principle": re.compile(r"Principle:\s*(.+)", re.MULTILINE),
-}
+from spacex_model.linters.docstrings import (
+    CALC_ROOT,
+    iter_calc_sources,
+    parse_docstring_tags as _parse_docstring_tags,
+)
 
 _SHEET_FROM_REF = re.compile(r"^([A-Za-z][\w ]+)!", re.MULTILINE)
 
@@ -30,15 +27,6 @@ class TranslationLogRow:
     module_path: str
     function: str
     docstring_section: str
-
-
-def _parse_docstring_tags(doc: str) -> dict[str, str]:
-    out: dict[str, str] = {}
-    for tag, pattern in _TAG_PATTERNS.items():
-        match = pattern.search(doc)
-        if match:
-            out[tag] = match.group(1).strip()
-    return out
 
 
 def _sheet_from_excel_cell(excel_cell: str) -> str:

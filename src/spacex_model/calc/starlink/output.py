@@ -32,6 +32,8 @@ def compute_output(
     Excel label:       "Starlink proposed allocation ($mm)"
     Architecture ref:  §8.1 / §20.2
     Principle:         12 (output bounded by cash; never feeds demand)
+    
+    Formula: Output = MIN(cash_alloc / unit_cost, kg_alloc / mass, demand cap).
 
     """
     units = np.zeros(HORIZON_YEARS, dtype=np.float64)

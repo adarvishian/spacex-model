@@ -23,6 +23,8 @@ def compute_output(demand: DemandResult, allocation: AllocatorAllocation) -> Out
     Excel label:       "AI Stack proposed allocation ($mm)"
     Architecture ref:  §12 AI Stack stub
     Principle:         12 (output never feeds demand)
+    
+    Formula: Zero deployment in v1.
 
     """
     _ = (demand, allocation)

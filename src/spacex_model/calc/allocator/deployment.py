@@ -26,6 +26,8 @@ def cap_cash_allocations_to_available(
     Excel label:       "Available cash for IRR queue ($mm)"
     Architecture ref:  §6.2 queue gate
     Principle:         4 (non-module claims reserved before IRR queue)
+    
+    Formula: Scale each year so Σ cash allocations ≤ available (Block A invariant).
 
     """
     fields = list(CashAllocations.zeros().__dataclass_fields__)
@@ -53,6 +55,8 @@ def apply_first_year_override(
     Excel label:       "Starlink V2 BB cash allocation ($mm)"
     Architecture ref:  §2.16 (first-year override convention)
     Principle:         12 (2025 locked; allocator drives 2026+ only)
+    
+    Formula: Replace 2025 allocator outputs with Mach33-anchored historical actuals.
 
     Keys match CashAllocations / KgAllocations field names (e.g. ``starlink_v2_bb``).
 

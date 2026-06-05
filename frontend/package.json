@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "prebuild": "python ../scripts/precompute_base_case.py",
+    "prebuild": "python ../scripts/precompute_base_case.py && python ../scripts/precompute_base_case_mc.py",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "check:bundle": "node scripts/check-bundle-budget.mjs",

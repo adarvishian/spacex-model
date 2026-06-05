@@ -40,6 +40,8 @@ def compute_implied_ev_multiple(
     Excel label:       "Implied EV (10× rev cross-check)"
     Architecture ref:  §14.3 SoTP multiples / PRD §5.5 calibration
     Principle:         3 (canonical valuation cross-check)
+    
+    Formula: Implied EV = revenue multiple × Group Revenue net of eliminations.
 
     """
     return YearVector(multiple * group_revenue_net.values)
@@ -52,6 +54,8 @@ def compute_valuation(inputs: ValuationInputs) -> ValuationResult:
     Excel label:       "VALUATION -- DCF off Group FCF + Sum-of-parts ..."
     Architecture ref:  §14 Valuation tab (stub)
     Principle:         3 (EV cross-check against group revenue)
+    
+    Formula: Valuation stub — implied EV 2025 = 10× Group Revenue ($146.5B target).
 
     Full Group DCF, SoTP, comparables, and sensitivity land in Phase D after
     Allocator closes the iterative loop.

@@ -53,6 +53,37 @@ test("A6: custom mars_pct validation", async ({ page }) => {
   await expect(page.locator(".client-field-warn")).toHaveCount(0);
 });
 
+/** Sprint 6 — base-case MC distribution renders instantly from precache. */
+test("MC1: base case shows distribution without wait", async ({ page }) => {
+  await installMockApi(page);
+  await page.goto("/client");
+  await expect(page.getByTestId("client-app")).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByTestId("mc-panel")).toBeVisible();
+  await expect(page.getByTestId("mc-ev-distribution")).toBeVisible({ timeout: 5_000 });
+  await expect(page.getByTestId("mc-progress")).toHaveCount(0);
+  await expect(page.getByTestId("mc-provenance")).toContainText(/precomputed/i);
+  await expect(page.getByTestId("mc-p5")).toHaveText("$220B");
+  await expect(page.getByTestId("mc-p50")).toHaveText("$278B");
+  await expect(page.getByTestId("mc-p95")).toHaveText("$340B");
+  await expect(page.getByTestId("mc-fcf-fan")).toBeVisible();
+});
+
+/** Sprint 6 — non-base run shows progress then matching percentiles. */
+test("MC2: bear scenario MC shows progress then percentiles", async ({ page }) => {
+  await installMockApi(page);
+  await page.goto("/client");
+  await expect(page.getByTestId("client-app")).toBeVisible({ timeout: 30_000 });
+  await page.locator('.client-scenario-card:has(input[value="bear"])').click();
+  await expect(page.getByTestId("mc-ev-distribution")).toHaveCount(0);
+  await page.getByTestId("mc-run-btn").click();
+  await expect(page.getByTestId("mc-progress")).toBeVisible({ timeout: 5_000 });
+  await expect(page.getByTestId("mc-ev-distribution")).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByTestId("mc-p5")).toHaveText("$220B");
+  await expect(page.getByTestId("mc-p50")).toHaveText("$278B");
+  await expect(page.getByTestId("mc-p95")).toHaveText("$340B");
+  await expect(page.getByTestId("tornado-chart")).toBeVisible();
+});
+
 /** FRONTEND_PRD A10 — share link round-trip. */
 test("A10: share link restores custom overrides", async ({ page }) => {
   await installMockApi(page);

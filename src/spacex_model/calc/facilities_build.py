@@ -88,6 +88,8 @@ def compute_facilities_build(inputs: FacilitiesBuildInputs) -> FacilitiesBuildRe
     Excel label:       "Total facility CapEx ($mm) = sat-mfg + launch/vehicle + terminal + HQ"
     Architecture ref:  §5.1 bucket-2 enabling infrastructure
     Principle:         3 (supply-side tab; at-cost transfer out)
+    
+    Formula: Capacity-step facility CapEx engine — V4.113 Facilities Build tab.
 
     """
     a = inputs.assumptions
@@ -314,6 +316,8 @@ def facilities_conservation_ok(result: FacilitiesBuildResult) -> bool:
     Excel label:       "Conservation: max bucket (cum D&A − cum CapEx): must be ≤ 0"
     Architecture ref:  §15 conservation
     Principle:         19 (enabling-infra D&A never exceeds cum CapEx)
+    
+    Formula: FB R44: max bucket (cum D&A − cum CapEx) must be ≤ 0 every year.
 
     """
     return bool(

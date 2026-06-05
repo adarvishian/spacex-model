@@ -13,6 +13,248 @@ Override source of truth for disclosed inputs: `src/spacex_model/inputs/s1_overr
 
 ---
 
+## 2026-06-05 — Lineage Trust Sprint 7: MC in Audit Mode + legacy cleanup (M1 frontend)
+
+**Trigger:** `docs/PRD_Lineage_Trust_and_Monte_Carlo_2026-06-05.md` §10 Sprint 7 — per-output MC panel from headline cells; derivation ↔ distribution toggle; retire `/explorer` MC path.
+
+### Shipped
+
+| Area | Change | Primary files |
+|------|--------|---------------|
+| Headline detection | `resolveMcOutputKind()` — Group EV, Group FCF, `module.*.module_fcf` | `frontend/src/shared/mc-headline.ts` |
+| Audit MC panel | Precache instant (5,000-trial default, 200 serverless); histogram + percentile table + FCF fan/year band + tornado + provenance (`n_trials`/`n_converged`/`base_seed`/`convergence_status`); `?mc=` deep-link | `frontend/src/audit/McAuditPanel.tsx` |
+| Audit rail toggle | Derivation ↔ Distribution tabs on headline cells; `?mc=` auto-opens distribution view | `frontend/src/app/AuditApp.tsx`, `frontend/src/styles.css` |
+| Legacy cleanup | `/explorer` redirects to `/audit/starlink`; `App.tsx` thin redirect (no duplicate MC UI) | `frontend/src/app/ModeRouter.tsx`, `frontend/src/App.tsx` |
+| Types | Optional `tornado` on `BaseCaseMcArtifact` | `frontend/src/shared/types.ts` |
+| E2E Sprint 7 | MC3 module FCF → distribution + tornado + provenance + toggle; MC4 `?mc=precache` reproduces P5/P50/P95 | `frontend/e2e/audit-mode.spec.ts`, `frontend/e2e/mock-api.ts` |
+
+### Sprint 7 gate status
+
+**Passing:** `npx tsc -b && npx vite build` green. `npm run check:bundle` — Client initial **76.8 KB** gzip (budget 400 KB); all JS **466.4 KB** (budget 520 KB). Playwright audit-mode **26/26** (incl. MC3/MC4); client-mode **5/5**. `pytest -q tests/mc/test_mc_distribution_payload.py tests/reconciliation/test_no_model_drift.py` — 5/5. `outputs_hash` unchanged.
+
+**UX contract:** Headline cells (Group EV / Group FCF / Module FCF) show Derivation \| Distribution toggle. Base case hydrates precached MC via `fetchMcJob(precache)` for full aggregation + tornado. Audit provenance shows trials/seed/convergence explicitly (unlike Client copy). `/explorer` retired — single MC code path in Client + Audit.
+
+### Lineage Trust PRD complete
+
+Sprints 0–7 shipped. Monte Carlo surfaced in Client (Sprint 6) and Audit (Sprint 7); lineage trust L1–L4 + change history L3 complete.
+
+### Next agent actions
+
+1. Open PR for Lineage Trust work if not yet merged; attach Playwright screenshots for MC panels.
+2. Optional: include `tornado` in `scripts/precompute_base_case_mc.py` artifact so Audit precache does not require a follow-up `fetchMcJob`.
+3. Full `npm run prebuild` at deploy uses 2,000-trial precache; CI smoke remains `SPACEX_MODEL_MC_PRECOMPUTE_TRIALS=64`.
+
+---
+
+## 2026-06-05 — Lineage Trust Sprint 6: MC in Client Mode (M1 frontend)
+
+**Trigger:** `docs/PRD_Lineage_Trust_and_Monte_Carlo_2026-06-05.md` §10 Sprint 6 — instant precached base-case distribution; Run MC for non-base scenarios; Group EV histogram + FCF fan + tornado; progress/ETA; shareable run id.
+
+### Shipped
+
+| Area | Change | Primary files |
+|------|--------|---------------|
+| MC types | `McAggregationPayload`, histogram/fan/metric summaries, `BaseCaseMcArtifact`, `McJobStatus` | `frontend/src/shared/types.ts` |
+| Precache loader | Load `/data/base_case_mc.json` on mount; hydrate when `base_case` + no overrides + matching `git_sha` | `frontend/src/shared/base-case-mc-artifact.ts` |
+| API extensions | `submitMc` accepts `scenario`/`base_seed`; `fetchMcJob` full payload; `fetchMcDistribution` | `frontend/src/api.ts` |
+| Monte Carlo panel | Precache instant on open; trial control (default 2,000, capped 200 serverless); progress + ETA poll; `?mc=` deep-link; CVaR readout | `frontend/src/client/MonteCarloPanel.tsx` |
+| Group EV chart | Histogram + P5/P50/P95 + base-case markers | `frontend/src/client/EvDistributionChart.tsx` |
+| Group FCF fan | Percentile bands by year (P5–P95, P25–P75, P50, base case) | `frontend/src/client/FcfFanChart.tsx` |
+| Tornado shared | Relocated to `shared/TornadoChart.tsx`; thin re-export in `components/` | `frontend/src/shared/TornadoChart.tsx`, `frontend/src/components/TornadoChart.tsx` |
+| Client shell | `MonteCarloPanel` wired below Headline in primary column | `frontend/src/app/ClientApp.tsx`, `frontend/src/styles.css` |
+| E2E Sprint 6 | MC1 instant precache (no progress); MC2 bear run shows progress then P5/P50/P95 matching API | `frontend/e2e/client-mode.spec.ts`, `frontend/e2e/mock-api.ts` |
+
+### Sprint 6 gate status
+
+**Passing:** `npx tsc -b && npx vite build` green. `npm run check:bundle` — Client initial **78.1 KB** gzip (budget 400 KB); all JS **466.9 KB** (budget 520 KB). Playwright client-mode **5/5** (incl. MC1/MC2). Provenance copy avoids forbidden audit token `converged` in Client DOM (A5 still passes).
+
+**UX contract:** Base case + no overrides → precached histogram/fan/tornado render with `precomputed` badge and zero poll wait. Bear/custom/overrides → distribution hidden until user clicks Run Monte Carlo; poll shows trials done + ETA; completed run addressable via `?mc={job_id}`. UI percentiles read directly from API `aggregation.metrics.group_ev_2025_b` (no client-side invention).
+
+### Next agent actions
+
+1. **Sprint 7 — M1 frontend Audit Mode + legacy cleanup:** `McAuditPanel.tsx`; open MC from headline cells; retire `/explorer` MC path in `App.tsx`.
+2. Re-run `pytest -q tests/mc/test_mc_distribution_payload.py` and `pytest -q tests/reconciliation/test_no_model_drift.py` after Sprint 7.
+3. Full `npm run prebuild` at deploy uses 2,000-trial precache; CI smoke remains `SPACEX_MODEL_MC_PRECOMPUTE_TRIALS=64`.
+
+---
+
+## 2026-06-05 — Lineage Trust Sprint 5: MC distribution payloads + base-case precache (M1 backend)
+
+**Trigger:** `docs/PRD_Lineage_Trust_and_Monte_Carlo_2026-06-05.md` §10 Sprint 5 — histogram + FCF fan aggregation; provenance fields; base-case MC precache (2,000 trials, seed 42).
+
+### Shipped
+
+| Area | Change | Primary files |
+|------|--------|---------------|
+| Per-year FCF trials | `group_fcf_{year}_mm` columns (2025–2040) on every trial row for fan aggregation | `mc/results.py` |
+| V4.113 module keys | Legacy `odc` / `ai_stack` metric keys resolve to `ai_compute` module output | `mc/results.py` |
+| Group EV histogram | 30-bin histogram from converged trials (no engine recompute) | `mc/aggregator.py` |
+| Group FCF fan | p5/p25/p50/p75/p95 + base-case marker per forecast year | `mc/aggregator.py` |
+| Provenance | `base_seed`, `convergence_status` (`converged` / `partial` / `failed`) on `McAggregation` and job result payload | `mc/aggregator.py`, `service/jobs.py`, `service/mc_store.py` |
+| Distribution API | `GET /runs/mc/{job_id}/distribution` — histogram, fan, metrics, provenance from completed job | `service/api.py` |
+| Base-case precache | `scripts/precompute_base_case_mc.py` → `frontend/public/data/base_case_mc.json`; wired in `npm run prebuild` | `scripts/precompute_base_case_mc.py`, `frontend/package.json` |
+| CI smoke | `SPACEX_MODEL_MC_PRECOMPUTE_TRIALS=64` in GitHub frontend build (full 2,000 at production deploy) | `.github/workflows/ci.yml` |
+| Acceptance tests | Payload shape + histogram/fan values match `MetricSummary`/manual percentiles; precache artifact contract | `tests/mc/test_mc_distribution_payload.py` |
+
+### Sprint 5 gate status
+
+**Passing:** `pytest -q tests/mc/test_mc_distribution_payload.py tests/reconciliation/test_no_model_drift.py tests/service/test_lineage_history.py` — 8/8. `python scripts/audit_stub_cells.py` — bucket (b) **0**. `outputs_hash` unchanged: `b35d29d7ff1111e81dca37047071a396e77c72eee85a03b23bf2a0738c0718eb`. `SPACEX_MODEL_MC_PRECOMPUTE_TRIALS=32 python scripts/precompute_base_case_mc.py` — artifact written with histogram + fan + provenance.
+
+**Payload contract:** `serialize_mc_aggregation` now includes `group_ev_histogram`, `group_fcf_fan`, `base_seed`, `convergence_status`. Job `result` duplicates top-level provenance (`n_trials`, `n_converged`, `base_seed`, `convergence_status`) for Audit panel consumption. Serverless batching unchanged (`execution: batched`).
+
+### Next agent actions
+
+1. **Sprint 6 — M1 frontend Client Mode:** `MonteCarloPanel.tsx`, load `/data/base_case_mc.json` instantly; Run MC control for non-base scenarios.
+2. **Sprint 7 — M1 frontend Audit Mode + legacy cleanup:** `McAuditPanel.tsx`; retire `/explorer` MC path.
+3. Re-run `pytest -q tests/mc/test_mc_distribution_payload.py` and `pytest -q tests/reconciliation/test_no_model_drift.py` after MC frontend sprints.
+
+---
+
+## 2026-06-05 — Lineage Trust Sprint 4: Per-cell change tracking on ingest (L3)
+
+**Trigger:** `docs/PRD_Lineage_Trust_and_Monte_Carlo_2026-06-05.md` §10 Sprint 4 — ingest-time per-cell diff store; rewrite `fetch_change_history`; populate `effect_on_cell`; Playwright Effect line acceptance.
+
+### Shipped
+
+| Area | Change | Primary files |
+|------|--------|---------------|
+| Per-cell diff store | On every `ingest_workbook`, diff year-column cells vs prior snapshot; persist `{cell_key, lineage_key, prior/new value, delta, model_version, timestamp, change_kind}` to parquet; fingerprint dedup skips identical re-ingest | `io/snapshot_store.py`, `io/excel_ingest.py` |
+| Change classification | `initial` on first sight; `formula` / `input` (Assumptions) / `anchor` (S-1 anchors) / `value` from actual diff — no `_infer_kind` prose guessing | `io/snapshot_store.py` |
+| History API rewrite | `fetch_change_history` reads parquet only; removed `_git_log_for_file`, `_dev_log_entries`, fabricated 2026-05-12 fallback; optional `year` query param scopes mapped lineage keys | `service/lineage_history.py`, `service/api.py` |
+| `effect_on_cell` | `{before, after, delta}` populated from diff; `initial` records carry `after` only | `service/lineage_history.py` |
+| Frontend | `ChangeHistoryList` passes active-cell `year`; `value` change_kind label; Effect line renders before→after | `frontend/src/audit/ChangeHistoryList.tsx`, `shared/types.ts`, `api.ts`, `AuditApp.tsx` |
+| Acceptance tests | Two-version synthetic diff: changed cell gets correct before/after/delta; unchanged cell gets single `initial`; Assumptions → `input`; re-ingest fingerprint dedup | `tests/service/test_lineage_history.py` |
+| E2E L3 | Mock history with `effect_on_cell`; Playwright asserts Effect line + VALUE kind | `frontend/e2e/audit-mode.spec.ts`, `mock-api.ts` |
+| Runtime store | `data/cell_history/` (parquet + metadata); gitignored; override via `SPACEX_MODEL_CELL_HISTORY_DIR` | `.gitignore` |
+
+### Sprint 4 gate status
+
+**Passing:** `pytest -q tests/service/test_lineage_history.py tests/service/test_lineage_display.py tests/service/test_no_false_stubs.py tests/service/test_methodology_registry.py tests/reconciliation/test_no_model_drift.py` — 13/13. `python scripts/audit_stub_cells.py` — bucket (b) **0**. `outputs_hash` unchanged: `b35d29d7ff1111e81dca37047071a396e77c72eee85a03b23bf2a0738c0718eb`. `npm run build` green; Playwright audit **24/24** (incl. new L3 test).
+
+**Store mechanics:** Storage key is always `grid.{slug}.R{row}.{year}`; mapped lineage keys (e.g. `group.group_revenue_net`) stored alongside for API lookup. First ingest of V4.113 seeds `initial` records for all year-column cells; subsequent ingests append only on value/formula change. Re-ingest with identical fingerprint is a no-op.
+
+### Next agent actions
+
+1. **Sprint 5 — M1 backend:** MC distribution payloads (histogram + FCF fan) + base-case MC precache.
+2. Re-run `python scripts/audit_stub_cells.py` and `pytest -q tests/reconciliation/test_no_model_drift.py` after every lineage/MC sprint.
+3. MC sprints (5–7) may proceed in parallel; critical path lineage sprints 0–4 are complete.
+
+---
+
+## 2026-06-05 — Lineage Trust Sprint 3: Formula display & Sources panel (L2 + L4)
+
+**Trigger:** `docs/PRD_Lineage_Trust_and_Monte_Carlo_2026-06-05.md` §10 Sprint 3 — wire Sprint 2 registry into `lineage_enrich.py`; remove hand-maintained formulas and code paths from Sources; Playwright Formula/Sources acceptance.
+
+### Shipped
+
+| Area | Change | Primary files |
+|------|--------|---------------|
+| Formula from registry | Removed `_FORMULA_EXPRESSIONS` dict; `formula_expression` via `lookup_methodology()`; "see Architecture" placeholder only for stub-registry cells | `service/lineage_enrich.py` |
+| Architecture section map | `_architecture_section_for_methodology()` — sheet→§N mapping so Excel row-group banners never leak into `spec_section` | `service/lineage_enrich.py` |
+| Sources panel payload | Dropped `module` code path; added `method_statement`; distinct `principle`/`rule` from registry; S-1 ingest anchor provenance via `S1_INGEST_ANCHORS_2025` | `service/lineage_enrich.py` |
+| Registry inference | Default inferred formulas use `=` form; patterns for payload/CapEx/OpEx/D&A rows | `service/methodology_registry.py` |
+| Frontend Sources | Separate Principle / Rule rows; show `method_statement`; no Python module path | `frontend/src/audit/SourcesPanel.tsx`, `shared/types.ts` |
+| Acceptance tests | Sources never contain `spacex_model.`; per-sheet derived formula + sources checks; stub placeholder allowed | `tests/service/test_lineage_display.py` |
+| E2E L2/L4 | Derived Group Revenue: real formula (no "see Architecture"); Sources has § section, distinct Rule, no code paths | `frontend/e2e/audit-mode.spec.ts`, `mock-api.ts` |
+
+### Sprint 3 gate status
+
+**Passing:** `pytest -q tests/service/test_lineage_display.py tests/service/test_no_false_stubs.py tests/service/test_methodology_registry.py tests/reconciliation/test_no_model_drift.py` — 10/10. `python scripts/audit_stub_cells.py` — bucket (b) **0**. `mypy --strict` on changed modules green. `outputs_hash` unchanged: `b35d29d7ff1111e81dca37047071a396e77c72eee85a03b23bf2a0738c0718eb`. `npm run build` green; Playwright audit **23/23** (incl. new L2/L4 test).
+
+**Panel contract:** Formula and Sources both read from the same `lookup_methodology()` record; stub cells retain Architecture placeholder; input cells show exogenous-input copy; 2025 Assumptions rows surface S-1/V4.113 anchor provenance when label matches `S1_INGEST_ANCHORS_2025`.
+
+### Next agent actions
+
+1. **Sprint 4 — L3 change history:** per-cell ingest diff store; rewrite `fetch_change_history`; populate `effect_on_cell`.
+2. Re-run `python scripts/audit_stub_cells.py` and `pytest -q tests/reconciliation/test_no_model_drift.py` after every lineage sprint.
+3. MC sprints (5–7) may proceed in parallel on a separate branch.
+
+---
+
+## 2026-06-05 — Lineage Trust Sprint 2: Methodology & formula registry (§6)
+
+**Trigger:** `docs/PRD_Lineage_Trust_and_Monte_Carlo_2026-06-05.md` §10 Sprint 2 — shared registry for L2 (formula) + L4 (sources); extract four-tag docstrings + `Formula:`; curated overlay for display polish.
+
+### Shipped
+
+| Area | Change | Primary files |
+|------|--------|---------------|
+| Docstring parser | `parse_docstring_tags()` extracts four-tag block + `Formula:`; `find_missing_formula_tags()` coverage gate | `linters/docstrings.py` |
+| Formula backfill | `Formula:` inserted into all 196 public `calc/` functions (inferred from label/summary where absent) | `scripts/add_formula_tags.py`, `calc/**/*.py` |
+| Methodology registry | Lookup by lineage key, `(sheet, label)`, or label inference; overlay wins for `method_statement` / `rule` | `service/methodology_registry.py` |
+| Display overlay | Section→execution-rule map; lineage + label polish for headline rows | `docs/methodology_overlay.toml` |
+| Acceptance tests | Non-stub derived rows resolve `formula_expression`, `principle`, `rule` with `principle != rule`; formula linter green | `tests/service/test_methodology_registry.py` |
+| Shared parser | Translation log reuses `parse_docstring_tags` | `audit/translation_log.py` |
+
+### Sprint 2 gate status
+
+**Passing:** `pytest -q tests/service/test_methodology_registry.py` — 726 derived non-stub rows resolve methodology; 0 missing `Formula:` tags on public calc functions. `pytest -q tests/service/test_no_false_stubs.py tests/reconciliation/test_no_model_drift.py tests/linters/test_docstring_tags.py` green. `ruff check` + `mypy --strict` on new modules green. `outputs_hash` unchanged: `b35d29d7ff1111e81dca37047071a396e77c72eee85a03b23bf2a0738c0718eb`.
+
+**Registry mechanics:** Docstrings are source of truth for `formula_expression`, `architecture_section`, `principle`; overlay supplies distinct `rule` (Model Execution Rules) and plain-language `method_statement`. Label inference covers grid rows without a direct calc-function label match (~697 rows).
+
+### Next agent actions
+
+1. **Sprint 3 — L2 + L4 display:** wire `lineage_enrich.py` to `lookup_methodology()`; remove `_FORMULA_EXPRESSIONS` + code paths from `_build_sources`; Playwright Formula/Sources acceptance.
+2. Re-run `python scripts/audit_stub_cells.py` and `pytest -q tests/reconciliation/test_no_model_drift.py` after every lineage sprint.
+3. Critical path: Sprint 2 → 3 (registry → panel display); MC sprints (5–7) may proceed in parallel.
+
+---
+
+## 2026-06-05 — Lineage Trust Sprint 1: Robust value resolution & truth-based stub classification (L1)
+
+**Trigger:** `docs/PRD_Lineage_Trust_and_Monte_Carlo_2026-06-05.md` §10 Sprint 1 — fix false stub misclassification; panel `computed_value` must equal grid display value (closes F6).
+
+### Shipped
+
+| Area | Change | Primary files |
+|------|--------|---------------|
+| Label normalization | `normalize_label` / `labels_match` / `find_label_row` — strip `($mm)`/`(%)`, `▸` markers, punctuation; tolerant row lookup | `engine/label_lookup.py` |
+| Grid value path | `resolve_cell_values()` — shared `(code, xlsx, display)` resolver; grid `_cell_kind` uses stub registry + display value, not lookup success alone | `service/grid.py` |
+| Stub registry | Explicit placeholder stubs (`ai_stack`, `valuation`, section headers); `stub_spec_section` for panel; row-range-aware `slug_for_sheet_row` (fixes ODC vs AI Stack slice) | `service/stub_registry.py` |
+| Lineage enrichment | `cell_kind` from registry (not `code_val is None`); `computed_value` = grid display; all-sheet label→grid-key resolver; optional `sheet_slug` param; resolver warning on non-stub null display | `service/lineage_enrich.py` |
+| Frontend | `isStubLineage` trusts `cell_kind` only (no implicit stub on null value); derivation panel **Planned — §X** state; `stub_spec_section` on `LineageEntry` | `frontend/src/shared/format.ts`, `audit/DerivationPanel.tsx`, `shared/types.ts` |
+| Acceptance tests | `test_no_false_stubs.py` — zero false stubs on finite display cells; per-sheet derived value == grid; audit script exits 1 if bucket (b) > 0 | `tests/service/test_no_false_stubs.py`, `scripts/audit_stub_cells.py` |
+| E2E | A2 stub → Planned copy; new L1 test — derived cells never show Planned state | `frontend/e2e/audit-mode.spec.ts`, `mock-api.ts` |
+
+### Sprint 1 gate status
+
+**Passing:** `python scripts/audit_stub_cells.py` — bucket (b) **0** (was 11,565); bucket (a) **3,675** (genuine `ai_stack` + `valuation` stubs). `pytest -q tests/service/test_no_false_stubs.py tests/reconciliation/test_no_model_drift.py` green. `outputs_hash` unchanged: `b35d29d7ff1111e81dca37047071a396e77c72eee85a03b23bf2a0738c0718eb`. `npm run build` green; Playwright **30/30**.
+
+**Root-cause fixes:** (1) four-sheet resolver → all 14 grid sheets with normalized labels; (2) `cell_kind` no longer inferred from `lookup_by_label` failure; (3) `computed_value` falls back to xlsx cached value same as grid render path; (4) `slug_for_sheet_row` row-range priority prevents ODC rows inheriting `ai_stack` stub classification.
+
+### Next agent actions
+
+1. **Sprint 2 — §6 methodology & formula registry:** extract four-tag docstrings; `methodology_overlay.toml`; docstring linter coverage gate.
+2. Re-run `python scripts/audit_stub_cells.py` and `pytest -q tests/reconciliation/test_no_model_drift.py` after every lineage sprint.
+3. Critical path: Sprint 1 → 2 → 3 (formula + sources display); MC sprints (5–7) may proceed in parallel.
+
+---
+
+## 2026-06-05 — Lineage Trust Sprint 0: Stub baseline + no-model-drift guardrail (L1.1)
+
+**Trigger:** `docs/PRD_Lineage_Trust_and_Monte_Carlo_2026-06-05.md` §10 Sprint 0 — quantify stub misclassification before touching resolution; lock model-output baseline for later lineage sprints.
+
+### Shipped
+
+| Area | Change | Primary files |
+|------|--------|---------------|
+| Stub audit script | Walks all 14 grid-renderable audit sheets; calls `enrich_lineage` per cell with a finite display value; partitions stubs into (a) placeholder tabs (`ai_stack`, `valuation`) vs (b) computed-but-unresolved | `scripts/audit_stub_cells.py`, `docs/stub_audit_2026-06-05.md` |
+| No-model-drift gate | Golden snapshot of Group revenue/EBITDA/FCF (2025–2040), per-module FCF series, implied EV 2025, and `outputs_hash` — fails if lineage/API work moves model numbers | `tests/reconciliation/test_no_model_drift.py`, `tests/reconciliation/no_model_drift_baseline.json` |
+
+### Sprint 0 gate status
+
+**Passing:** `python scripts/audit_stub_cells.py` emits `docs/stub_audit_2026-06-05.md`. Bucket (b) **11,565** cells (computed-but-unresolved — the L1 bug, quantified). Bucket (a) **3,643** (genuine placeholder-tab stubs). `pytest -q tests/reconciliation/test_no_model_drift.py` green; `ruff check` + `mypy --strict` on new test file green. `outputs_hash` baseline: `b35d29d7ff1111e81dca37047071a396e77c72eee85a03b23bf2a0738c0718eb`.
+
+**Top bucket (b) sheets:** `starlink` (2,211), `customer_launch` (1,648), `starlink_capacity` (1,424), `allocator` (1,408), `launch_capacity` (1,091), `group_pnl` (1,075).
+
+### Next agent actions
+
+1. **Sprint 1 — L1 robust resolution:** label normalization; all-sheet resolver; `stub_registry.py`; panel value == grid value; re-run audit → bucket (b) == 0.
+2. Re-run `python scripts/audit_stub_cells.py` and `pytest -q tests/reconciliation/test_no_model_drift.py` after every lineage sprint.
+3. Critical path: Sprint 0 → 1 → 2 → 3; MC sprints (5–7) may proceed in parallel.
+
+---
+
 ## 2026-06-05 — Frontend Sprint 5: Controls, layout, accessibility & test hardening (F14, F9, F10, §3.7)
 
 **Trigger:** `docs/FRONTEND_UX_PRD_2026-06-05.md` §6.5 — grid toolbar; single rail empty state; title bar `?` popover; axe in Playwright CI.
