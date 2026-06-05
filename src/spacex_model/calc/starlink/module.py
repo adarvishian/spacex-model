@@ -48,11 +48,9 @@ def _pools(inputs: StarlinkInputs) -> VehiclePoolsResult:
 
 def _dep_per_kg_year_for_life(assumptions: Assumptions, useful_life_years: float) -> np.ndarray:
     """$/kg/yr depreciation scaled from BB 5yr anchor — P1-2 DTC 3yr / BB 5yr split."""
-    bb_life = assumption_scalar(
-        assumptions, "Satellite useful life — V2 Mini (years)", default=5.0
-    )
-    base = assumption_scalar(assumptions, "Satellite Dep per kg — base year ($/kg/yr)", default=128.8)
-    decay = assumption_scalar(assumptions, "Satellite Dep per kg — annual decay rate", default=0.01)
+    bb_life = assumption_scalar(assumptions, cl.SATELLITE_USEFUL_LIFE_V2_MINI_YEARS, default=5.0)
+    base = assumption_scalar(assumptions, cl.SATELLITE_DEP_PER_KG_BASE_YEAR_KG_YR, default=128.8)
+    decay = assumption_scalar(assumptions, cl.SATELLITE_DEP_PER_KG_ANNUAL_DECAY_RATE, default=0.01)
     scale = bb_life / max(useful_life_years, 1.0)
     offsets = np.arange(HORIZON_YEARS, dtype=np.float64)
     return base * scale * np.power(1.0 - decay, offsets)
@@ -66,17 +64,17 @@ def _pool_fleet_mass_kg(
 
 
 def _active_mass_kg(pools: VehiclePoolsResult, assumptions: Assumptions) -> np.ndarray:
-    v2_mass = assumption_scalar(assumptions, "V2 Mini Mass (kg)", default=575.0)
-    v3_mass = assumption_scalar(assumptions, "V3 Mass (kg)", default=2000.0)
+    v2_mass = assumption_scalar(assumptions, cl.V2_BB_SAT_MASS_KG, default=575.0)
+    v3_mass = assumption_scalar(assumptions, cl.V3_BB_SAT_MASS_KG, default=2000.0)
     fleet_mass = (
         pools.v2_bb.active_fleet.values * v2_mass
         + pools.v2_dtc.active_fleet.values * v2_mass
         + pools.v3_bb.active_fleet.values * v3_mass
         + pools.v3_dtc.active_fleet.values * v3_mass
     )
-    legacy_life = assumption_scalar(assumptions, "Legacy V1/V1.5 D&A useful life (yrs)", default=4.0)
+    legacy_life = assumption_scalar(assumptions, cl.LEGACY_V1_V1_5_DA_USEFUL_LIFE_YRS, default=4.0)
     legacy_bw_2025 = assumption_scalar(
-        assumptions, "Legacy V1/V1.5 Bandwidth — end-2025 (Gbps)", default=71888.0
+        assumptions, cl.LEGACY_V1_V1_5_BANDWIDTH_END_2025_GBPS, default=71888.0
     )
     legacy_mass_equiv = legacy_bw_2025 / 96.0 * v2_mass if legacy_bw_2025 > 0 else 0.0
     legacy_mass = np.zeros(HORIZON_YEARS, dtype=np.float64)
@@ -97,14 +95,12 @@ def compute_constellation_da(inputs: StarlinkInputs) -> YearVector:
     """
     pools = _pools(inputs)
     a = inputs.assumptions
-    v2_mass = assumption_scalar(a, "V2 Mini Mass (kg)", default=575.0)
-    v3_mass = assumption_scalar(a, "V3 Mass (kg)", default=2000.0)
-    bb_life_v2 = assumption_scalar(a, "Satellite useful life — V2 Mini (years)", default=5.0)
-    bb_life_v3 = assumption_scalar(a, "Satellite useful life — V3 (years)", default=5.0)
-    dtc_life_v2 = assumption_scalar(
-        a, "Satellite useful life — V2 Mini DTC (years)", default=3.0
-    )
-    dtc_life_v3 = assumption_scalar(a, "Satellite useful life — V3 DTC (years)", default=3.0)
+    v2_mass = assumption_scalar(a, cl.V2_BB_SAT_MASS_KG, default=575.0)
+    v3_mass = assumption_scalar(a, cl.V3_BB_SAT_MASS_KG, default=2000.0)
+    bb_life_v2 = assumption_scalar(a, cl.SATELLITE_USEFUL_LIFE_V2_MINI_YEARS, default=5.0)
+    bb_life_v3 = assumption_scalar(a, cl.SATELLITE_USEFUL_LIFE_V3_YEARS, default=5.0)
+    dtc_life_v2 = assumption_scalar(a, cl.SATELLITE_USEFUL_LIFE_V2_DTC_YEARS, default=3.0)
+    dtc_life_v3 = assumption_scalar(a, cl.SATELLITE_USEFUL_LIFE_V3_DTC_YEARS, default=3.0)
 
     dep_v2_bb = _dep_per_kg_year_for_life(a, bb_life_v2)
     dep_v2_dtc = _dep_per_kg_year_for_life(a, dtc_life_v2)
@@ -119,10 +115,10 @@ def compute_constellation_da(inputs: StarlinkInputs) -> YearVector:
     ) / 1e6
 
     legacy_da_anchor = assumption_scalar(
-        inputs.assumptions, "Legacy V1/V1.5 D&A baseline ($mm, 2025 anchor)", default=130.0
+        inputs.assumptions, cl.LEGACY_V1_V1_5_DA_BASELINE_MM_2025, default=130.0
     )
     legacy_life = int(
-        assumption_scalar(inputs.assumptions, "Legacy V1/V1.5 D&A useful life (yrs)", default=4.0)
+        assumption_scalar(inputs.assumptions, cl.LEGACY_V1_V1_5_DA_USEFUL_LIFE_YRS, default=4.0)
     )
     legacy_da = np.zeros(HORIZON_YEARS, dtype=np.float64)
     annual_legacy = legacy_da_anchor / legacy_life if legacy_life > 0 else 0.0
@@ -155,7 +151,7 @@ def compute_starlink_capacity_result(inputs: StarlinkInputs) -> StarlinkCapacity
     )
     starshield = compute_starshield_revenue(inputs)
     subtotal = bb_rev.values + dtc_rev.values + starshield.values
-    ground_ops_pct = assumption_scalar(inputs.assumptions, "Starlink ground ops % of revenue", default=0.04)
+    ground_ops_pct = assumption_scalar(inputs.assumptions, cl.STARLINK_GROUND_OPS_PCT_REV, default=0.04)
     ground_ops = YearVector(subtotal * ground_ops_pct)
     spectrum = inputs.spectrum_amort_mm or YearVector.zeros()
     return compute_starlink_capacity(
@@ -199,9 +195,9 @@ def _capacity_from_pools(
 
 
 def _starshield_reserved_pct(assumptions: Assumptions) -> np.ndarray:
-    start = assumption_scalar(assumptions, "Starshield Reserved % — start", default=0.0257)
-    floor = assumption_scalar(assumptions, "Starshield Reserved % — floor", default=0.0001)
-    decay = assumption_scalar(assumptions, "Starshield Reserved % — decay rate", default=0.25)
+    start = assumption_scalar(assumptions, cl.STARSHIELD_RESERVED_PCT_START, default=0.0257)
+    floor = assumption_scalar(assumptions, cl.STARSHIELD_RESERVED_PCT_FLOOR, default=0.0001)
+    decay = assumption_scalar(assumptions, cl.STARSHIELD_RESERVED_PCT_DECAY_RATE, default=0.25)
     values = np.zeros(HORIZON_YEARS, dtype=np.float64)
     for t in range(HORIZON_YEARS):
         values[t] = max(floor, start * np.power(1.0 - decay, t))
@@ -209,8 +205,8 @@ def _starshield_reserved_pct(assumptions: Assumptions) -> np.ndarray:
 
 
 def _starshield_rev_per_gbps(assumptions: Assumptions) -> np.ndarray:
-    base = assumption_scalar(assumptions, "Starshield Rev per Gbps — base year ($/Gbps)", default=164699.0)
-    decay = assumption_scalar(assumptions, "Starshield Rev per Gbps — decay rate", default=0.05)
+    base = assumption_scalar(assumptions, cl.STARSHIELD_REV_PER_GBPS_BASE_YEAR, default=164699.0)
+    decay = assumption_scalar(assumptions, cl.STARSHIELD_REV_PER_GBPS_DECAY_RATE, default=0.05)
     offsets = np.arange(HORIZON_YEARS, dtype=np.float64)
     return base * np.power(1.0 - decay, offsets)
 
@@ -261,27 +257,21 @@ def compute_hardware_revenue(inputs: StarlinkInputs) -> YearVector:
 
     bb_arpu = assumption_year_vector(
         inputs.assumptions,
-        "Broadband ARPU ($/sub/mo, year-row)",
+        cl.BROADBAND_ARPU_SUB_MO_YEAR_ROW,
         default=float(broadband_arpu_sub_mo()[0]),
     )
     if bb_arpu.at(FIRST_YEAR) >= 99.0:
         bb_arpu = YearVector(broadband_arpu_sub_mo())
-    dtc_arpu = assumption_year_vector(inputs.assumptions, "DTC ARPU ($/sub/mo, year-row)", default=16.0)
+    dtc_arpu = assumption_year_vector(inputs.assumptions, cl.DTC_ARPU_SUB_MO_YEAR_ROW, default=16.0)
 
     bb_subs = np.where(bb_arpu.values > 0, bb_rev.values / (bb_arpu.values * 12.0), 0.0)
     dtc_subs = np.where(dtc_arpu.values > 0, dtc_rev.values / (dtc_arpu.values * 12.0), 0.0)
     total_subs = bb_subs + dtc_subs
 
-    boy_subs = assumption_scalar(
-        inputs.assumptions, "Starting BoY 2025 subscribers (millions)", default=5.0
-    )
-    subsidy_mix = assumption_scalar(
-        inputs.assumptions, "Subsidy mix (% of net adds subsidized)", default=0.5
-    )
-    price_sub = assumption_scalar(inputs.assumptions, "Terminal retail price ($, subsidized)", default=300.0)
-    price_full = assumption_scalar(
-        inputs.assumptions, "Terminal retail price ($, non-subsidized)", default=500.0
-    )
+    boy_subs = assumption_scalar(inputs.assumptions, cl.STARTING_BOY_2025_SUBSCRIBERS_MILLIONS, default=5.0)
+    subsidy_mix = assumption_scalar(inputs.assumptions, cl.SUBSIDY_MIX_PCT_NET_ADDS, default=0.5)
+    price_sub = assumption_scalar(inputs.assumptions, cl.TERMINAL_RETAIL_PRICE_SUBSIDIZED, default=300.0)
+    price_full = assumption_scalar(inputs.assumptions, cl.TERMINAL_RETAIL_PRICE_NON_SUBSIDIZED, default=500.0)
     blended_price = subsidy_mix * price_sub + (1.0 - subsidy_mix) * price_full
 
     net_adds = np.zeros(HORIZON_YEARS, dtype=np.float64)
@@ -377,20 +367,16 @@ def compute_cogs(inputs: StarlinkInputs | None = None) -> YearVector:
     revenue = compute_revenue(inputs)
     constellation_da = compute_constellation_da(inputs)
     launch_cost = compute_launch_services_cost(inputs)
-    ground_ops_pct = assumption_scalar(inputs.assumptions, "Starlink ground ops % of revenue", default=0.04)
-    insurance_pct = assumption_scalar(inputs.assumptions, "Starlink insurance % of revenue", default=0.01)
-    other_pct = assumption_scalar(inputs.assumptions, "Starlink other COGS % of revenue", default=0.02)
+    ground_ops_pct = assumption_scalar(inputs.assumptions, cl.STARLINK_GROUND_OPS_PCT_REV, default=0.04)
+    insurance_pct = assumption_scalar(inputs.assumptions, cl.STARLINK_INSURANCE_PCT_REV, default=0.01)
+    other_pct = assumption_scalar(inputs.assumptions, cl.STARLINK_OTHER_COGS_PCT_REV, default=0.02)
     spectrum = inputs.spectrum_amort_mm or YearVector.zeros()
 
     hardware = compute_hardware_revenue(inputs)
-    terminal_cogs_per = assumption_scalar(inputs.assumptions, "Terminal COGS per unit ($)", default=500.0)
-    subsidy_mix = assumption_scalar(
-        inputs.assumptions, "Subsidy mix (% of net adds subsidized)", default=0.5
-    )
-    price_sub = assumption_scalar(inputs.assumptions, "Terminal retail price ($, subsidized)", default=300.0)
-    price_full = assumption_scalar(
-        inputs.assumptions, "Terminal retail price ($, non-subsidized)", default=500.0
-    )
+    terminal_cogs_per = assumption_scalar(inputs.assumptions, cl.TERMINAL_COGS_PER_UNIT, default=500.0)
+    subsidy_mix = assumption_scalar(inputs.assumptions, cl.SUBSIDY_MIX_PCT_NET_ADDS, default=0.5)
+    price_sub = assumption_scalar(inputs.assumptions, cl.TERMINAL_RETAIL_PRICE_SUBSIDIZED, default=300.0)
+    price_full = assumption_scalar(inputs.assumptions, cl.TERMINAL_RETAIL_PRICE_NON_SUBSIDIZED, default=500.0)
     blended_retail = subsidy_mix * price_sub + (1.0 - subsidy_mix) * price_full
     terminal_cogs = YearVector(hardware.values * (terminal_cogs_per / max(blended_retail, 1.0)))
 
@@ -433,9 +419,9 @@ def compute_capex(inputs: StarlinkInputs | None = None) -> YearVector:
 
     pools = _pools(inputs)
     a = inputs.assumptions
-    v2_cost_kg = assumption_scalar(a, "V2 Mini cost per kg — base year ($/kg)", default=650.0)
-    v2_mass = assumption_scalar(a, "V2 Mini Mass (kg)", default=575.0)
-    v3_mass = assumption_scalar(a, "V3 Mass (kg)", default=2000.0)
+    v2_cost_kg = assumption_scalar(a, cl.V2_MINI_COST_PER_KG_BASE_YEAR, default=650.0)
+    v2_mass = assumption_scalar(a, cl.V2_BB_SAT_MASS_KG, default=575.0)
+    v3_mass = assumption_scalar(a, cl.V3_BB_SAT_MASS_KG, default=2000.0)
     v2_unit = v2_cost_kg * v2_mass / 1e6
     v3_unit = v2_cost_kg * v3_mass / 1e6
 

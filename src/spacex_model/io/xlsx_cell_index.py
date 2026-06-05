@@ -9,7 +9,7 @@ from spacex_model.config.settings import get_settings
 from spacex_model.io.excel_ingest import IngestResult, ingest_workbook
 
 
-def load_xlsx_cached_cells_v216(
+def load_xlsx_cached_cells(
     workbook_path: Path | None = None,
     *,
     ingest: IngestResult | None = None,
@@ -31,3 +31,12 @@ def load_xlsx_cached_cells_v216(
             continue
         cells.append((sheet, row, year))
     return sorted(cells)
+
+
+def load_xlsx_cached_cells_v216(
+    workbook_path: Path | None = None,
+    *,
+    ingest: IngestResult | None = None,
+) -> list[tuple[str, int, int]]:
+    """Deprecated alias — use load_xlsx_cached_cells."""
+    return load_xlsx_cached_cells(workbook_path, ingest=ingest)

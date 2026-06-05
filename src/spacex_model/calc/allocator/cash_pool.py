@@ -97,7 +97,7 @@ def compute_cash_boy(
 ) -> YearVector:
     """Year-chained Cash BoY with IPO and pre-IPO bridge inflows.
 
-    Excel cell:        Allocator!D8:AC8
+    Excel cell:        Cash Allocation Engine!D8:S8
     Excel label:       "Cash BoY ($mm)"
     Architecture ref:  §6.1 + §2.13 (pre-IPO debt facility)
     Principle:         4 (cash pool feeds queue gate)

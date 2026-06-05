@@ -170,7 +170,7 @@ class QueueSubBlockIrrs:
 
 @dataclass(frozen=True, slots=True)
 class AllocatorResult:
-    """Full Allocator brain outputs for downstream modules and Group P&L."""
+    """Full CAE allocator outputs for downstream modules and Group P&L."""
 
     cash: CashAllocations
     kg: KgAllocations
@@ -180,6 +180,14 @@ class AllocatorResult:
     vehicle_build_claim: YearVector
     non_module_claims: YearVector
     capacity_available_kg: YearVector
+    pool_after_gate: YearVector | None = None
+    remaining_pool: YearVector | None = None
+    allocated_final_starlink: YearVector | None = None
+    allocated_final_customer_launch: YearVector | None = None
+    allocated_final_ai_compute: YearVector | None = None
+    kg_binding_flag: YearVector | None = None
+    debt_odc_draw: YearVector | None = None
+    debt_terafab_draw: YearVector | None = None
 
     @classmethod
     def zeros(cls) -> AllocatorResult:
@@ -193,4 +201,12 @@ class AllocatorResult:
             vehicle_build_claim=z,
             non_module_claims=z,
             capacity_available_kg=z,
+            pool_after_gate=z,
+            remaining_pool=z,
+            allocated_final_starlink=z,
+            allocated_final_customer_launch=z,
+            allocated_final_ai_compute=z,
+            kg_binding_flag=z,
+            debt_odc_draw=z,
+            debt_terafab_draw=z,
         )

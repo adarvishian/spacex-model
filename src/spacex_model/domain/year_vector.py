@@ -1,4 +1,4 @@
-"""Length-26 year vector wrapper indexed [0..25] = years [2025..2050]."""
+"""Length-16 year vector wrapper indexed [0..15] = years [2025..2040]."""
 
 from __future__ import annotations
 

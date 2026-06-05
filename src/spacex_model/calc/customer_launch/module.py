@@ -64,7 +64,7 @@ def _f9_customer_launches(inputs: CustomerLaunchInputs) -> YearVector:
         return YearVector(vec)
     anchor = float(f9_customer_launches_per_year()[0])
     try:
-        cagr = assumption_scalar(a, "Total customer launch market CAGR (% growth/yr)")
+        cagr = assumption_scalar(a, cl.TOTAL_CUSTOMER_LAUNCH_MARKET_CAGR)
     except (KeyError, ValueError):
         cagr = 0.0
     if cagr <= 0.0:
@@ -294,7 +294,7 @@ def _compute_f9_irr(inputs: CustomerLaunchInputs) -> YearVector:
     margin_per_launch = f9_price - at_cost - f9_price * (insurance_pct + other_pct)
     annual_margin = margin_per_launch * f9_cadence
 
-    n = int(assumption_scalar(a, "Customer Launch depreciation useful life (years)", default=5.0))
+    n = int(assumption_scalar(a, cl.CUSTOMER_LAUNCH_DEPRECIATION_USEFUL_LIFE_YEARS, default=5.0))
     rev_vec = np.full(n, annual_margin)
     result = compute_irr_engine(cost_slug, rev_vec, forward_weight=0.7, horizon_n=n)
     blended = np.full(HORIZON_YEARS, result.blended)

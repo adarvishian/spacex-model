@@ -8,6 +8,7 @@ import numpy as np
 
 from spacex_model.calc._allocator_out import AllocatorOut
 from spacex_model.config import canonical_labels as cl
+from spacex_model.config import canonical_labels_supplement as cls
 from spacex_model.config.constants import CONSERVATION_RESIDUAL_TOLERANCE_MM, HORIZON_YEARS
 from spacex_model.domain.assumption_helpers import (
     assumption_scalar,
@@ -17,13 +18,13 @@ from spacex_model.domain.assumption_helpers import (
 from spacex_model.domain.year_vector import YearVector
 from spacex_model.inputs.assumptions import Assumptions
 
-_MODULE_KEYS = ("customer_launch", "starlink", "odc", "ai_stack", "lunar_mars")
+_MODULE_KEYS = ("customer_launch", "starlink", "ai_compute", "lunar_mars")
 
 _CORPORATE_LINES: tuple[tuple[str, str, str, float, float, float], ...] = (
     (
         cl.HQ_BUILDINGS_CAPEX_MM_YR_FLAT,
         cl.HQ_BUILDINGS_USEFUL_LIFE_YEARS,
-        "Corporate historical capital base ($mm)",
+        cls.CORPORATE_HISTORICAL_CAPITAL_BASE_MM,
         0.45,
         50.0,
         30.0,
@@ -31,7 +32,7 @@ _CORPORATE_LINES: tuple[tuple[str, str, str, float, float, float], ...] = (
     (
         cl.CORPORATE_IT_CAPEX_MM_YR_FLAT,
         cl.CORPORATE_IT_USEFUL_LIFE_YEARS,
-        "Corporate historical capital base ($mm)",
+        cls.CORPORATE_HISTORICAL_CAPITAL_BASE_MM,
         0.15,
         30.0,
         7.0,
@@ -39,7 +40,7 @@ _CORPORATE_LINES: tuple[tuple[str, str, str, float, float, float], ...] = (
     (
         cl.GENERAL_ENGINEERING_FACILITIES_CAPEX_MM_YR_FLAT,
         cl.GENERAL_ENGINEERING_FACILITIES_LIFE_YEARS,
-        "Corporate historical capital base ($mm)",
+        cls.CORPORATE_HISTORICAL_CAPITAL_BASE_MM,
         0.20,
         20.0,
         20.0,
@@ -47,7 +48,7 @@ _CORPORATE_LINES: tuple[tuple[str, str, str, float, float, float], ...] = (
     (
         cl.OTHER_CORPORATE_CAPEX_MM_YR_FLAT,
         cl.OTHER_CORPORATE_USEFUL_LIFE_YEARS,
-        "Corporate historical capital base ($mm)",
+        cls.CORPORATE_HISTORICAL_CAPITAL_BASE_MM,
         0.20,
         10.0,
         20.0,
@@ -71,8 +72,7 @@ class CapExResult:
 
     customer_launch_module_capex: YearVector
     starlink_module_capex: YearVector
-    odc_module_capex: YearVector
-    ai_stack_module_capex: YearVector
+    ai_compute_module_capex: YearVector
     lunar_mars_module_capex: YearVector
     total_module_capex: YearVector
     hq_capex: YearVector
@@ -113,8 +113,7 @@ def compute_module_capex(inputs: CapExInputs) -> dict[str, YearVector]:
     return {
         "customer_launch": _module_capex(out, "customer_launch"),
         "starlink": _module_capex(out, "starlink"),
-        "odc": _module_capex(out, "odc"),
-        "ai_stack": _module_capex(out, "ai_stack"),
+        "ai_compute": _module_capex(out, "ai_compute"),
         "lunar_mars": _module_capex(out, "lunar_mars"),
     }
 
@@ -162,7 +161,7 @@ def compute_corporate_da(inputs: CapExInputs) -> YearVector:
 
     """
     a = inputs.assumptions
-    hist_base = assumption_scalar(a, "Corporate historical capital base ($mm)", default=2000.0)
+    hist_base = assumption_scalar(a, cls.CORPORATE_HISTORICAL_CAPITAL_BASE_MM, default=2000.0)
     da_total = np.zeros(HORIZON_YEARS, dtype=np.float64)
 
     for capex_label, life_label, _, share, default_annual, default_life in _CORPORATE_LINES:
@@ -252,8 +251,7 @@ def compute_capex(inputs: CapExInputs) -> CapExResult:
     return CapExResult(
         customer_launch_module_capex=module_capex["customer_launch"],
         starlink_module_capex=module_capex["starlink"],
-        odc_module_capex=module_capex["odc"],
-        ai_stack_module_capex=module_capex["ai_stack"],
+        ai_compute_module_capex=module_capex["ai_compute"],
         lunar_mars_module_capex=module_capex["lunar_mars"],
         total_module_capex=total_module,
         hq_capex=hq,

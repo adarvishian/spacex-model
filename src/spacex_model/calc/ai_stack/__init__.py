@@ -1,5 +1,6 @@
-"""AI Stack — S-1 AI segment + Anthropic compute (P0-7/8)."""
+"""AI Stack — deprecated; use calc.ai_compute (V4.113 AI - Compute tab)."""
 
-from spacex_model.calc.ai_stack.module import AIStackInputs, compute_allocator_out
+from spacex_model.calc.ai_compute import AiComputeInputs as AIStackInputs
+from spacex_model.calc.ai_compute import compute_allocator_out
 
 __all__ = ["AIStackInputs", "compute_allocator_out"]

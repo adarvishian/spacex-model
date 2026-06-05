@@ -12,6 +12,7 @@ from spacex_model.calc._vending_machine import build_allocator_out
 from spacex_model.calc.lunar_mars.bv_engine import BvEngineResult, compute_bv_engine
 from spacex_model.calc.lunar_mars.carveout import compute_mars_carveout
 from spacex_model.calc.lunar_mars.deployment import DeploymentResult, compute_deployment
+from spacex_model.config import canonical_labels as cl
 from spacex_model.domain.assumption_helpers import assumption_scalar
 from spacex_model.domain.year_vector import YearVector
 from spacex_model.inputs.assumptions import Assumptions
@@ -65,8 +66,8 @@ def compute_cogs(inputs: LunarMarsInputs | None = None) -> YearVector:
     if inputs is None:
         return YearVector.zeros()
     dep = _deployment(inputs)
-    lunar_ops = assumption_scalar(inputs.assumptions, "Module operating cost — Lunar (% of Lunar CapEx)", default=0.05)
-    mars_ops = assumption_scalar(inputs.assumptions, "Module operating cost — Mars (% of Mars CapEx)", default=0.05)
+    lunar_ops = assumption_scalar(inputs.assumptions, cl.MODULE_OPERATING_COST_LUNAR_OF_LUNAR_CAPEX, default=0.05)
+    mars_ops = assumption_scalar(inputs.assumptions, cl.MODULE_OPERATING_COST_MARS_OF_MARS_CAPEX, default=0.05)
     mission_capex = dep.lunar_mission_capex_mm.values + dep.mars_mission_capex_mm.values
     cogs = dep.lunar_mission_capex_mm.values * lunar_ops + dep.mars_mission_capex_mm.values * mars_ops
     _ = mission_capex

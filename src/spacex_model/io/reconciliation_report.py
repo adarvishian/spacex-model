@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from pathlib import Path
 
-from spacex_model.config.constants import FIRST_YEAR
+from spacex_model.config.constants import FIRST_YEAR, LAST_YEAR, SOLVER_MAX_ITERATIONS, SOLVER_TOLERANCE
 from spacex_model.engine.conservation import check_allocation_bounds
 from spacex_model.engine.pipeline import ModelResult
 from spacex_model.io.divergence import DivergenceReport, TriageClass
@@ -33,21 +33,22 @@ def write_reconciliation_report(
         "",
         f"**Generated:** {now}  ",
         f"**Run ID:** `{result.run_id}`  ",
-        f"**Phase:** E (Reconciliation hardening + divergence report)",
+        f"**Phase:** R4 (V4.113 reconciliation + divergence triage)",
+        f"**Horizon:** {FIRST_YEAR}–{LAST_YEAR}",
         "",
         f"- Solver: **{result.solver_trace.iterations}** iterations, "
-        f"max residual **{result.solver_trace.max_residual:.6f}**, "
+        f"max residual **{result.solver_trace.max_residual:.2e}**, "
         f"converged **{result.solver_trace.converged}**",
         "",
         "## Block A — Structural invariants",
         "",
         "| Invariant | Status | Notes |",
         "|---|---|---|",
-        f"| R108 conservation (2025-2050) | {_status(result.conservation.all_ok)} | "
+        f"| Conservation ALL-OK ({FIRST_YEAR}–{LAST_YEAR}) | {_status(result.conservation.all_ok)} | "
         f"2025 = {result.conservation.r108_ok_by_year.get(y, 'N/A')} |",
         f"| Module allocation bounds | {_status(bounds.all_ok)} | Σ cash alloc ≤ available cash |",
         f"| Iterative solver convergence | {_status(result.solver_trace.converged)} | "
-        f"< 100 iter, < 0.001 residual |",
+        f"< {SOLVER_MAX_ITERATIONS} iter, < {SOLVER_TOLERANCE:g} residual |",
         "",
     ]
 
@@ -69,7 +70,7 @@ def write_reconciliation_report(
 
     lines.extend(
         [
-            "## Block B — External calibration anchors (Sprint §6.8 revised)",
+            "## Block B — External calibration anchors (V4.113 ingest + S-1 2025)",
             "",
             "| Anchor | Target | Actual | Status |",
             "|---|---:|---:|---|",
@@ -144,8 +145,8 @@ def write_reconciliation_report(
             "## Triage log",
             "",
             "- D4: Customer Launch F9 IRR high — expected disposition (type C)",
-            "- D6: ODC zero deployment — expected disposition (type C)",
-            "- D2: Sprint 11f Option A allocator demand/allocation — preregistered type (C)",
+            "- F1–F6: CAE allocator defects reproduced as-is — remediation U0–U4 (type C)",
+            "- V4.113 cached-value divergences: spec-first / first-principles (type C)",
             "",
         ]
     )

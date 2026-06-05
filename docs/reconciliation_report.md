@@ -1,28 +1,29 @@
 # Reconciliation Report
 
-**Generated:** 2026-05-28 18:39 UTC  
-**Run ID:** `d06cddda`  
-**Phase:** E (Reconciliation hardening + divergence report)
+**Generated:** 2026-06-05 04:01 UTC  
+**Run ID:** `fc9a9f22`  
+**Phase:** R4 (V4.113 reconciliation + divergence triage)
+**Horizon:** 2025–2040
 
-- Solver: **112** iterations, max residual **0.000982**, converged **True**
+- Solver: **444** iterations, max residual **9.87e-08**, converged **True**
 
 ## Block A — Structural invariants
 
 | Invariant | Status | Notes |
 |---|---|---|
-| R108 conservation (2025-2050) | PASS | 2025 = OK |
+| Conservation ALL-OK (2025–2040) | PASS | 2025 = OK |
 | Module allocation bounds | PASS | Σ cash alloc ≤ available cash |
-| Iterative solver convergence | PASS | < 100 iter, < 0.001 residual |
+| Iterative solver convergence | PASS | < 1000 iter, < 1e-07 residual |
 
-## Block B — External calibration anchors (Sprint §6.8 revised)
+## Block B — External calibration anchors (V4.113 ingest + S-1 2025)
 
 | Anchor | Target | Actual | Status |
 |---|---:|---:|---|
-| Group Revenue 2025 | $14,650M ±5% | $17,627 | see tests |
-| Group EBITDA 2025 | $4,904M ±5% | $4,172 | see tests |
-| Group FCF 2025 | −$2,569M ±10% | $-11,040 | see tests |
-| Total OpEx 2025 | $4,476M ±5% | $5,301 | see tests |
-| Total Group CapEx 2025 | $6,345M ±5% | $14,069 | see tests |
+| Group Revenue 2025 | $14,650M ±5% | $9,808 | see tests |
+| Group EBITDA 2025 | $4,904M ±5% | $-2,260 | see tests |
+| Group FCF 2025 | −$2,569M ±10% | $-16,630 | see tests |
+| Total OpEx 2025 | $4,476M ±5% | $5,758 | see tests |
+| Total Group CapEx 2025 | $6,345M ±5% | $14,078 | see tests |
 | Mars carve-out 2025 | $1,000M exact | $1,000 | see tests |
 
 ## Block C — Sense checks
@@ -42,16 +43,16 @@
 | Vending-machine framing (§2.1) | PASS |
 | Demand/output decoupling (§2.2) | PASS |
 
-- Inputs hash: `0bdaf067ff312ac8`
+- Inputs hash: `60988f6a8b74a227`
 
 ## Diagnostic divergence (xlsx vs code)
 
-- Cells compared: **2730**
-- Matching: **1171**
-- Diverging: **1559**
+- Cells compared: **435**
+- Matching: **41**
+- Diverging: **394**
 
 ## Triage log
 
 - D4: Customer Launch F9 IRR high — expected disposition (type C)
-- D6: ODC zero deployment — expected disposition (type C)
-- D2: Sprint 11f Option A allocator demand/allocation — preregistered type (C)
+- F1–F6: CAE allocator defects reproduced as-is — remediation U0–U4 (type C)
+- V4.113 cached-value divergences: spec-first / first-principles (type C)

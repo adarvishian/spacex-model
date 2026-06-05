@@ -6,6 +6,7 @@ from dataclasses import dataclass
 
 import numpy as np
 
+from spacex_model.config import canonical_labels as cl
 from spacex_model.config.constants import FIRST_YEAR, HORIZON_YEARS
 from spacex_model.domain.assumption_helpers import assumption_scalar, assumption_year_vector
 from spacex_model.domain.year_vector import YearVector
@@ -37,23 +38,27 @@ def compute_deployment(
     Principle:         22 (carve-out cash deployment)
 
     """
-    first_mission = int(assumption_scalar(assumptions, "First mission year (Lunar Mars)", default=2028.0))
+    first_mission = int(assumption_scalar(assumptions, cl.FIRST_MISSION_YEAR_LUNAR_MARS, default=2028.0))
     lunar_share = assumption_year_vector(
-        assumptions, "Lunar share of Mars/Moon carve-out cash — year-row", default=1.0
+        assumptions, cl.LUNAR_SHARE_OF_MARS_MOON_CARVE_OUT_CASH_YEAR_ROW, default=1.0
     )
     mars_share = assumption_year_vector(
-        assumptions, "Mars share of carve-out cash — year-row", default=0.0
+        assumptions, cl.MARS_SHARE_OF_CARVE_OUT_CASH_YEAR_ROW, default=0.0
     )
     lunar_payload = assumption_scalar(
-        assumptions, "Lunar payload per surface-landed Starship (kg)", default=50000.0
+        assumptions, cl.LUNAR_PAYLOAD_PER_SURFACE_LANDED_STARSHIP_KG, default=50000.0
     )
     mars_payload = assumption_scalar(
-        assumptions, "Mars payload per surface-landed Starship (kg)", default=100000.0
+        assumptions, cl.MARS_PAYLOAD_PER_SURFACE_LANDED_STARSHIP_KG, default=100000.0
     )
-    lunar_depot = assumption_scalar(assumptions, "Lunar fuel depot multiplier per outbound Starship", default=1.0)
-    mars_depot = assumption_scalar(assumptions, "Mars fuel depot multiplier per outbound Starship", default=5.0)
+    lunar_depot = assumption_scalar(
+        assumptions, cl.LUNAR_FUEL_DEPOT_MULTIPLIER_PER_OUTBOUND_STARSHIP, default=1.0
+    )
+    mars_depot = assumption_scalar(
+        assumptions, cl.MARS_FUEL_DEPOT_MULTIPLIER_PER_OUTBOUND_STARSHIP, default=5.0
+    )
     ship_cost = 100.0
-    leo_payload = assumption_scalar(assumptions, "Payload — fully reusable mode (kg-to-LEO)", default=100_000.0)
+    leo_payload = assumption_scalar(assumptions, cl.PAYLOAD_FULLY_REUSABLE_MODE_KG_TO_LEO, default=100_000.0)
 
     lunar_ships = np.zeros(HORIZON_YEARS, dtype=np.float64)
     mars_ships = np.zeros(HORIZON_YEARS, dtype=np.float64)

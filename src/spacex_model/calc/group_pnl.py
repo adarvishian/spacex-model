@@ -26,7 +26,7 @@ from spacex_model.engine.conservation import (
 )
 from spacex_model.inputs.assumptions import Assumptions
 
-_MODULE_KEYS = ("customer_launch", "starlink", "odc", "ai_stack", "lunar_mars")
+_MODULE_KEYS = ("customer_launch", "starlink", "ai_compute", "lunar_mars")
 
 __all__ = (
     "CashIdentityInputs",

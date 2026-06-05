@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import numpy as np
 
+from spacex_model.config import canonical_labels as cl
 from spacex_model.config.constants import HORIZON_YEARS
 from spacex_model.domain.assumption_helpers import assumption_scalar
 from spacex_model.domain.year_vector import YearVector
@@ -20,8 +21,8 @@ def tam_shift_vector(assumptions: Assumptions) -> np.ndarray:
     Principle:         12 (anchor-and-offset year exponent)
 
     """
-    inflation = assumption_scalar(assumptions, "TAM inflation rate (annual)", default=0.025)
-    gni = assumption_scalar(assumptions, "GNI per capita growth rate (annual)", default=0.03)
+    inflation = assumption_scalar(assumptions, cl.TAM_INFLATION_RATE_ANNUAL, default=0.025)
+    gni = assumption_scalar(assumptions, cl.GNI_PER_CAPITA_GROWTH_RATE_ANNUAL, default=0.03)
     offsets = np.arange(HORIZON_YEARS, dtype=np.float64)
     return np.power(1.0 + inflation, offsets) * np.power(1.0 + gni, offsets)
 

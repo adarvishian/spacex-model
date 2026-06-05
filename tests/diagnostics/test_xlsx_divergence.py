@@ -1,4 +1,4 @@
-"""xlsx diagnostic divergence harness — per-cell parametrize per PRD §7.6."""
+"""xlsx diagnostic divergence harness — V4.113 cached values vs Python (PRD §7.6)."""
 
 from __future__ import annotations
 
@@ -6,6 +6,7 @@ from pathlib import Path
 
 import pytest
 
+from spacex_model.config.settings import get_settings
 from spacex_model.engine.label_lookup import lookup_by_label
 from spacex_model.engine.pipeline import run_base_case
 from spacex_model.io.divergence import (
@@ -16,11 +17,11 @@ from spacex_model.io.divergence import (
 )
 
 REPO = Path(__file__).resolve().parents[2]
-WORKBOOK = REPO / "Pre Existing Model Package" / "01_Current_State" / "SpaceX Model V2.16.xlsx"
+WORKBOOK = get_settings().workbook_path
 
 _MAPPED_CELLS: list[tuple[str, int, int]] = []
 if WORKBOOK.exists():
-    _bootstrap_result = run_base_case(write_outputs=False)
+    _bootstrap_result = run_base_case(WORKBOOK, write_outputs=False)
     _bootstrap_report = finalize_triage(
         build_divergence_report(_bootstrap_result), _bootstrap_result
     )
@@ -32,10 +33,10 @@ if WORKBOOK.exists():
 @pytest.fixture(scope="module")
 def base_case_result():
     if not WORKBOOK.exists():
-        pytest.skip("V2.16 workbook not present")
+        pytest.skip("V4.113 workbook not present")
     if _MAPPED_CELLS:
         return _bootstrap_result
-    return run_base_case(write_outputs=False)
+    return run_base_case(WORKBOOK, write_outputs=False)
 
 
 @pytest.fixture(scope="module")
@@ -43,7 +44,7 @@ def divergence_report(base_case_result) -> DivergenceReport:
     return finalize_triage(build_divergence_report(base_case_result), base_case_result)
 
 
-@pytest.mark.skipif(not WORKBOOK.exists(), reason="V2.16 workbook not present")
+@pytest.mark.skipif(not WORKBOOK.exists(), reason="V4.113 workbook not present")
 def test_divergence_report_generated(divergence_report: DivergenceReport) -> None:
     assert divergence_report.mapped_count > 0
     assert (
@@ -52,8 +53,9 @@ def test_divergence_report_generated(divergence_report: DivergenceReport) -> Non
     )
 
 
-@pytest.mark.skipif(not WORKBOOK.exists(), reason="V2.16 workbook not present")
+@pytest.mark.skipif(not WORKBOOK.exists(), reason="V4.113 workbook not present")
 def test_zero_open_triage_a_or_d_after_finalize(divergence_report: DivergenceReport) -> None:
+    """R4 gate: every divergence beyond tolerance is triaged — no open A/D."""
     assert len(divergence_report.open_type_a) == 0
     assert len(divergence_report.open_type_d) == 0
 

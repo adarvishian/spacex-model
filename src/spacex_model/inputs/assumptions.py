@@ -24,7 +24,7 @@ class AssumptionInput(BaseModel):
     model_config = {"frozen": True}
 
     def as_year_vector(self) -> np.ndarray:
-        """Return length-26 float vector; missing years filled from base_case or 0."""
+        """Return length-16 float vector; missing years filled from base_case or 0."""
         vec = np.zeros(HORIZON_YEARS, dtype=np.float64)
         for year in range(FIRST_YEAR, FIRST_YEAR + HORIZON_YEARS):
             idx = year - FIRST_YEAR
@@ -68,10 +68,23 @@ class AssumptionsSection(BaseModel):
         return value
 
 
+# V4.113 Assumptions uses ALL-CAPS section banners (not §N headers).
+_V4_113_SECTION_MAP: dict[str, str] = {
+    "GLOBAL": "section_1",
+    "ALLOCATOR": "section_2",
+    "CUSTOMER LAUNCH": "section_4",
+    "STARLINK": "section_5",
+    "VALUATION": "section_11",
+}
+
+
 def _section_key(raw: str) -> str:
     if raw.startswith("§"):
         token = raw.split(maxsplit=1)[0]  # e.g. "§1", "§2"
         return token.lower().replace("§", "section_")
+    mapped = _V4_113_SECTION_MAP.get(raw.strip().upper())
+    if mapped:
+        return mapped
     return "section_unassigned"
 
 
@@ -202,7 +215,10 @@ def _rows_to_sections(rows: list[AssumptionRowRecord]) -> dict[str, dict[str, As
             current_section = _section_key(row.label)
             buckets.setdefault(current_section, {})
             continue
-        section_id = _section_key(row.section) if row.section.startswith("§") else current_section
+        section_from_banner = _section_key(row.section)
+        if section_from_banner != "section_unassigned":
+            current_section = section_from_banner
+        section_id = current_section
         inp = AssumptionInput(
             label=row.label,
             section=row.section,

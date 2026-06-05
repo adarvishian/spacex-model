@@ -68,11 +68,9 @@ def s1_adherence_override_map() -> dict[str, Any]:
         cl.BROADBAND_ARPU_SUB_MO_YEAR_ROW: _year_dict(broadband_arpu_sub_mo()),
         cl.ECHOSTAR_MID_BAND_CAPEX_MM_YEAR_ROW: _year_dict(echostar_spectrum_capex_mm()),
         cl.F9_CUSTOMER_LAUNCHES_PER_YEAR: _year_dict(f9_customer_launches_per_year()),
-        "S-1 AI segment revenue ($mm) — year-row": _year_dict(s1_ai_segment_revenue_mm()),
-        "Anthropic compute services revenue ($mm) — year-row": _year_dict(
-            anthropic_compute_revenue_mm()
-        ),
-        "Terrestrial AI data-center CapEx ($mm) — year-row": _year_dict(terrestrial_ai_capex_mm()),
+        cl.S1_AI_SEGMENT_REVENUE_YEAR_ROW: _year_dict(s1_ai_segment_revenue_mm()),
+        cl.ANTHROPIC_COMPUTE_REVENUE_YEAR_ROW: _year_dict(anthropic_compute_revenue_mm()),
+        cl.TERRESTRIAL_AI_CAPEX_YEAR_ROW: _year_dict(terrestrial_ai_capex_mm()),
         cl.PRE_IPO_BRIDGE_DRAWDOWN_YEAR: float(BRIDGE_DRAWDOWN_YEAR),
         cl.SATELLITE_USEFUL_LIFE_V2_DTC_YEARS: 3.0,
         cl.SATELLITE_USEFUL_LIFE_V3_DTC_YEARS: 3.0,
@@ -91,18 +89,12 @@ def s1_adherence_override_map() -> dict[str, Any]:
 
 
 _P1_INJECTION_SPECS: tuple[tuple[str, str, object], ...] = (
+    (cl.BROADBAND_ARPU_SUB_MO_YEAR_ROW, "§3 Starlink", broadband_arpu_sub_mo()),
     (cl.F9_CUSTOMER_LAUNCHES_PER_YEAR, "§4 Customer Launch", f9_customer_launches_per_year()),
-    ("S-1 AI segment revenue ($mm) — year-row", "§7 AI Stack", s1_ai_segment_revenue_mm()),
-    (
-        "Anthropic compute services revenue ($mm) — year-row",
-        "§7 AI Stack",
-        anthropic_compute_revenue_mm(),
-    ),
-    (
-        "Terrestrial AI data-center CapEx ($mm) — year-row",
-        "§10 CapEx",
-        terrestrial_ai_capex_mm(),
-    ),
+    (cl.S1_AI_SEGMENT_REVENUE_YEAR_ROW, "§7 AI - Compute", s1_ai_segment_revenue_mm()),
+    (cl.ANTHROPIC_COMPUTE_REVENUE_YEAR_ROW, "§7 AI - Compute", anthropic_compute_revenue_mm()),
+    (cl.TERRESTRIAL_AI_CAPEX_YEAR_ROW, "§10 CapEx", terrestrial_ai_capex_mm()),
+    (cl.ECHOSTAR_MID_BAND_CAPEX_MM_YEAR_ROW, "§10 CapEx", echostar_spectrum_capex_mm()),
     (cl.STARSHIP_PRECOMMERCIAL_RD_MM_YEAR_ROW, "§12 OpEx", starship_precommercial_rd_mm()),
     (cl.STARSHIP_CUSTOMER_LAUNCHES_PER_YEAR, "§4 Customer Launch", starship_customer_launches_per_year()),
     (

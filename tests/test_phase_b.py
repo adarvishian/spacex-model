@@ -2,17 +2,18 @@
 
 from __future__ import annotations
 
+import pytest
+
 from spacex_model.calc._allocator_out import AllocatorOut
-from spacex_model.calc.ai_stack import compute_allocator_out as ai_stack_out
+from spacex_model.calc.ai_compute import compute_allocator_out as ai_compute_out
 from spacex_model.calc.lunar_mars import compute_allocator_out as lunar_mars_out
-from spacex_model.calc.odc import compute_allocator_out as odc_out
 from spacex_model.calc.starlink import compute_allocator_out as sl_out
 from spacex_model.config.constants import HORIZON_YEARS
 from spacex_model.engine.pipeline import run_base_case
 
 
 def test_allocator_out_contract_stubs_zero() -> None:
-    for out in (odc_out(), ai_stack_out(), lunar_mars_out()):
+    for out in (ai_compute_out(), lunar_mars_out()):
         assert isinstance(out, AllocatorOut)
         assert out.total_revenue.values.sum() == 0.0
         assert out.module_fcf.values.sum() == 0.0
@@ -32,5 +33,6 @@ def test_base_case_pipeline_phase_e() -> None:
     result = run_base_case(write_outputs=False)
     assert result.audit.get("phase") == "E"
     assert result.solver_trace.converged
-    assert len(result.module_outputs) == 5
+    assert len(result.module_outputs) == 4
+    assert "ai_compute" in result.module_outputs
     assert result.module_outputs["starlink"].total_revenue.at(2025) > 0.0

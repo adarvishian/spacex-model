@@ -97,9 +97,14 @@ def build_revenue_bases(
     """
     starlink = _module_out(module_outputs, "starlink").total_revenue
     customer_launch = _module_out(module_outputs, "customer_launch").total_revenue
-    odc = _module_out(module_outputs, "odc").total_revenue
-    ai_stack = _module_out(module_outputs, "ai_stack").total_revenue
     lunar_mars = _module_out(module_outputs, "lunar_mars").total_revenue
+    if "ai_compute" in module_outputs:
+        ai_total = _module_out(module_outputs, "ai_compute").total_revenue
+        odc = YearVector.zeros()
+        ai_stack = ai_total
+    else:
+        odc = _module_out(module_outputs, "odc").total_revenue
+        ai_stack = _module_out(module_outputs, "ai_stack").total_revenue
 
     cl_external = customer_launch_external_revenue or customer_launch
     subscription = starlink_subscription_revenue or starlink

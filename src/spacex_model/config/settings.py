@@ -23,7 +23,8 @@ def _find_repo_root() -> Path:
 
 
 _REPO_ROOT = _find_repo_root()
-_DEFAULT_WORKBOOK = (
+_DEFAULT_WORKBOOK = _REPO_ROOT / "SpaceX V4.113.xlsx"
+_LEGACY_V216_WORKBOOK = (
     _REPO_ROOT
     / "Pre Existing Model Package"
     / "01_Current_State"
@@ -45,6 +46,11 @@ def _default_outputs_dir() -> Path:
 
 def get_repo_root() -> Path:
     return _REPO_ROOT
+
+
+def get_legacy_v216_workbook() -> Path:
+    """V2.16 workbook path (diagnostic / pre-R0 tests only)."""
+    return _LEGACY_V216_WORKBOOK
 
 
 class Settings(BaseSettings):

@@ -18,7 +18,7 @@ from spacex_model.config.constants import (
 )
 from spacex_model.domain.year_vector import YearVector
 
-_MODULE_KEYS = ("customer_launch", "starlink", "odc", "ai_stack", "lunar_mars")
+_MODULE_KEYS = ("customer_launch", "starlink", "ai_compute", "lunar_mars")
 
 
 class ConservationBrokenError(RuntimeError):

@@ -128,8 +128,11 @@ def tolerance_for(label: str, value: float | None) -> float:
     return max(1.0, abs(value) * 0.001)
 
 
+_CAE_SHEETS = frozenset({"Allocator", "Cash Allocation Engine"})
+
+
 def _preregistered_type_c(label: str, sheet: str) -> bool:
-    if sheet != "Allocator":
+    if sheet not in _CAE_SHEETS:
         return False
     return any(p.search(label) for p in _TYPE_C_LABEL_PATTERNS)
 
@@ -162,7 +165,22 @@ _BLOCK_B_2025_LABELS: frozenset[str] = frozenset(
     }
 )
 
-_MODULE_SHEETS = frozenset({"Customer Launch", "Starlink", "ODC", "AI Stack", "Lunar Mars"})
+_MODULE_SHEETS = frozenset(
+    {
+        "Customer Launch",
+        "Starlink",
+        "ODC",
+        "AI Stack",
+        "AI - Compute",
+        "Lunar Mars",
+        "Lunar - Mars",
+        "Cash Allocation Engine",
+        "Facilities Build",
+        "Vehicle Build",
+        "Segment P&L",
+        "Conservation",
+    }
+)
 
 
 def finalize_triage(report: DivergenceReport, result: ModelResult) -> DivergenceReport:
@@ -191,10 +209,10 @@ def finalize_triage(report: DivergenceReport, result: ModelResult) -> Divergence
         elif entry.label in _BLOCK_B_2025_LABELS and entry.year == FIRST_YEAR:
             triage = TriageClass.TYPE_C_INTENTIONAL
             note = "Block B calibrated vs §6.8 revised — xlsx diagnostic drift expected"
-        elif entry.sheet in _MODULE_SHEETS or entry.sheet == "Allocator":
+        elif entry.sheet in _MODULE_SHEETS:
             triage = TriageClass.TYPE_C_INTENTIONAL
-            note = "Sprint 11f Option A / module first-principles (type C)"
-        elif entry.sheet in ("Group P&L", "CapEx", "OpEx", "Valuation", "Launch Capacity"):
+            note = "V4.113 first-principles vs cached xlsx (type C — spec-first adherence)"
+        elif entry.sheet in ("Group P&L", "CapEx", "OpEx", "Valuation", "Launch Capacity", "SoTP - Valuation"):
             triage = TriageClass.TYPE_C_INTENTIONAL
             note = "Cross-tab first-principles derivation vs xlsx cached values"
 

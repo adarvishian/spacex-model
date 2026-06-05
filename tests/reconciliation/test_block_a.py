@@ -6,16 +6,22 @@ import pytest
 
 from spacex_model.calc.allocator.sigmoid_cash import compute_sigmoid_cash_allocations
 from spacex_model.calc.allocator.types import QueueSubBlockDemands, QueueSubBlockIrrs
-from spacex_model.config.constants import FIRST_YEAR, LAST_YEAR
+from spacex_model.config.constants import (
+    FIRST_YEAR,
+    LAST_YEAR,
+    SOLVER_MAX_ITERATIONS,
+    SOLVER_TOLERANCE,
+)
 from spacex_model.domain.year_vector import YearVector
 from spacex_model.engine.conservation import check_allocation_bounds, check_kg_allocation_bounds
 from spacex_model.engine.pipeline import ModelResult
 
 
 def test_solver_converges(model_result: ModelResult) -> None:
+    """V4.113 contract: queue gate converges within 1000 iter @ 1e-7 (PRD §2.2)."""
     assert model_result.solver_trace.converged
-    assert model_result.solver_trace.iterations < 115
-    assert model_result.solver_trace.max_residual < 0.001
+    assert model_result.solver_trace.iterations < SOLVER_MAX_ITERATIONS
+    assert model_result.solver_trace.max_residual < SOLVER_TOLERANCE
 
 
 def test_allocation_bounds(model_result: ModelResult) -> None:
@@ -48,7 +54,8 @@ def test_mars_carveout_floor_2025(model_result: ModelResult) -> None:
     assert model_result.group_pnl.mars_carveout.at(FIRST_YEAR) == pytest.approx(1000.0)
 
 
-def test_conservation_r108_ok_all_years(model_result: ModelResult) -> None:
+def test_conservation_all_ok_all_years(model_result: ModelResult) -> None:
+    """Conservation tab ALL-OK equivalent every year 2025–2040."""
     assert model_result.conservation.all_ok
     for year in range(FIRST_YEAR, LAST_YEAR + 1):
         assert model_result.conservation.r108_ok_by_year[year] == "OK"

@@ -5,18 +5,22 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Callable
 
 from spacex_model.calc._allocator_out import AllocatorOut
+from spacex_model.config import canonical_labels as cl
 from spacex_model.config.constants import FIRST_YEAR, LAST_YEAR
 from spacex_model.domain.year_vector import YearVector
 
 if TYPE_CHECKING:
     from spacex_model.engine.pipeline import ModelResult
 
+# V4.113 tab names (legacy V2.16 aliases retained for diagnostic compat)
 _MODULE_SHEETS: dict[str, str] = {
     "Customer Launch": "customer_launch",
     "Starlink": "starlink",
-    "ODC": "odc",
-    "AI Stack": "ai_stack",
+    "ODC": "ai_compute",
+    "AI Stack": "ai_compute",
+    "AI - Compute": "ai_compute",
     "Lunar Mars": "lunar_mars",
+    "Lunar - Mars": "lunar_mars",
 }
 
 _ALLOCATOR_OUT_FIELDS: dict[str, str] = {
@@ -56,12 +60,21 @@ _LAUNCH_CAPACITY_FIELDS: dict[str, str] = {
     "At-cost launch services rate ($mm/launch)": "starship_at_cost_rate",
 }
 
+_ALLOCATOR_SHEETS = frozenset({"Allocator", "Cash Allocation Engine"})
+
 _ALLOCATOR_FIELDS: dict[str, str] = {
-    "Cash BoY ($mm)": "cash_boy",
+    cl.CASH_BOY_MM: "cash_boy",
     "Available cash for IRR queue ($mm)": "available_cash",
+    cl.CASH_AVAILABLE_FOR_YEAR_MM: "available_cash",
     "Mars/Moon strategic carve-out ($mm/yr)": "mars_carveout",
     "Vehicle build claim ($mm)": "vehicle_build_claim",
     "Year-N non-module claims ($mm)": "non_module_claims",
+    cl.POOL_AFTER_QUEUE_GATE_MM: "pool_after_gate",
+    cl.REMAINING_POOL_FOR_IRR_WEIGHTED_ALLOCATION_MM_GATED_TO_0_IN_THE_2025_ANCHOR_YEAR_ALLOCATION_OPERATIVE_2026_ONWARD: "remaining_pool",
+    cl.ALLOCATED_CASH_TO_STARLINK_MM: "allocated_final_starlink",
+    cl.ALLOCATED_CASH_TO_CUSTOMER_LAUNCH_MM: "allocated_final_customer_launch",
+    cl.ALLOCATED_CASH_TO_AI_COMPUTE_MM: "allocated_final_ai_compute",
+    cl.KG_BINDING_FLAG_1_CAPACITY_BINDS: "kg_binding_flag",
 }
 
 _CASH_ALLOC_LABELS: dict[str, str] = {
@@ -82,14 +95,24 @@ _KG_ALLOC_LABELS: dict[str, str] = {
     "AI Stack kg allocation": "ai_stack",
 }
 
+_CAE_SPOT_IRR: dict[str, tuple[str, str]] = {
+    cl.SPOT_IRR_STARLINK: ("starlink", "spot_irr"),
+    cl.SPOT_IRR_CUSTOMER_LAUNCH: ("customer_launch", "spot_irr"),
+    cl.SPOT_IRR_AI_COMPUTE: ("ai_compute", "spot_irr"),
+    cl.SPOT_IRR_ODC_PRIOR_YR: ("ai_compute", "spot_irr"),
+    cl.SPOT_IRR_TERRESTRIAL_PRIOR_YR: ("ai_compute", "spot_irr"),
+}
 
-def _year_value(vec: YearVector, year: int) -> float:
+
+def _year_value(vec: YearVector | None, year: int) -> float | None:
+    if vec is None:
+        return None
     return float(vec.at(year))
 
 
 def _module_field(result: ModelResult, module_key: str, field: str, year: int) -> float:
     mod: AllocatorOut = result.module_outputs[module_key]
-    return _year_value(getattr(mod, field), year)
+    return _year_value(getattr(mod, field), year)  # type: ignore[arg-type]
 
 
 def lookup_by_label(result: ModelResult, sheet: str, label: str, year: int) -> float | None:
@@ -107,7 +130,7 @@ def lookup_by_label(result: ModelResult, sheet: str, label: str, year: int) -> f
     if sheet == "Launch Capacity" and label in _LAUNCH_CAPACITY_FIELDS:
         return _year_value(getattr(result.launch_capacity, _LAUNCH_CAPACITY_FIELDS[label]), year)
 
-    if sheet == "Allocator":
+    if sheet in _ALLOCATOR_SHEETS:
         if label in _ALLOCATOR_FIELDS:
             return _year_value(getattr(result.allocator, _ALLOCATOR_FIELDS[label]), year)
         if label in _CASH_ALLOC_LABELS:
@@ -116,14 +139,17 @@ def lookup_by_label(result: ModelResult, sheet: str, label: str, year: int) -> f
         if label in _KG_ALLOC_LABELS:
             field = _KG_ALLOC_LABELS[label]
             return _year_value(getattr(result.allocator.kg, field), year)
+        if label in _CAE_SPOT_IRR:
+            mod_key, attr = _CAE_SPOT_IRR[label]
+            return _module_field(result, mod_key, attr, year)
 
-    # Cross-sheet module IRR labels on Allocator tab
+    # Cross-sheet module IRR labels on legacy Allocator tab
     _module_irr_labels = {
         "Customer Launch Blended IRR": ("customer_launch", "blended_irr"),
-        "ODC Blended IRR": ("odc", "blended_irr"),
-        "AI Stack Blended IRR": ("ai_stack", "blended_irr"),
+        "ODC Blended IRR": ("ai_compute", "blended_irr"),
+        "AI Stack Blended IRR": ("ai_compute", "blended_irr"),
     }
-    if sheet == "Allocator" and label in _module_irr_labels:
+    if sheet in _ALLOCATOR_SHEETS and label in _module_irr_labels:
         mod_key, attr = _module_irr_labels[label]
         return _module_field(result, mod_key, attr, year)
 
@@ -139,7 +165,14 @@ def mapped_label_count() -> int:
         + len(_ALLOCATOR_FIELDS)
         + len(_CASH_ALLOC_LABELS)
         + len(_KG_ALLOC_LABELS)
-        + 3
+        + len(_CAE_SPOT_IRR)
+        + len(
+            {
+                "Customer Launch Blended IRR",
+                "ODC Blended IRR",
+                "AI Stack Blended IRR",
+            }
+        )
     )
 
 

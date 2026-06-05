@@ -102,8 +102,12 @@ def _detect_year_columns(ws: Worksheet, scan_rows: int = 6) -> dict[int, int]:
 
 
 def _current_section(label: str, section: str) -> str:
-    if label.startswith("§"):
-        return label.strip()
+    text = label.strip()
+    if text.startswith("§"):
+        return text
+    # V4.113 ALL-CAPS section banners (GLOBAL, ALLOCATOR, …)
+    if text.isupper() and len(text) > 3 and "▸" not in text:
+        return text
     return section
 
 
@@ -123,9 +127,15 @@ def _coerce_number(value: Any) -> float | str | None:
     return str(value)
 
 
-def _extract_labels(ws: Worksheet, max_row: int = 400) -> dict[int, str]:
+def _label_scan_max_row(ws: Worksheet) -> int:
+    """Scan full sheet — Assumptions exceeds 400 rows in V4.113."""
+    return max(ws.max_row, 400)
+
+
+def _extract_labels(ws: Worksheet, max_row: int | None = None) -> dict[int, str]:
+    limit = max_row if max_row is not None else _label_scan_max_row(ws)
     labels: dict[int, str] = {}
-    for row_idx in range(1, max_row + 1):
+    for row_idx in range(1, limit + 1):
         value = ws.cell(row_idx, 1).value
         if value and isinstance(value, str) and len(value.strip()) > 1:
             labels[row_idx] = value.strip()

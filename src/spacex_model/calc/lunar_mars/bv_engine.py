@@ -6,6 +6,7 @@ from dataclasses import dataclass
 
 import numpy as np
 
+from spacex_model.config import canonical_labels as cl
 from spacex_model.config.constants import HORIZON_YEARS
 from spacex_model.domain.assumption_helpers import assumption_scalar, assumption_year_vector
 from spacex_model.domain.year_vector import YearVector
@@ -40,7 +41,7 @@ def compute_bv_engine(
 
     """
     capital_life = assumption_scalar(
-        assumptions, "Capital lifetime — book value straight-line depreciation (years)", default=10.0
+        assumptions, cl.CAPITAL_LIFETIME_BV_STRAIGHT_LINE_DEPRECIATION_YEARS, default=10.0
     )
     labour_mass = assumption_scalar(assumptions, "Labour unit mass (kg)", default=60.0)
     labour_output = assumption_scalar(
@@ -53,10 +54,10 @@ def compute_bv_engine(
         assumptions, "Hardware replacement cost factor ($/kg landed) — declining", default=1000.0
     )
     lunar_labour_share = assumption_year_vector(
-        assumptions, "Lunar labour share of surface payload — year-row", default=0.3
+        assumptions, cl.LUNAR_LABOUR_SHARE_SURFACE_PAYLOAD_YEAR_ROW, default=0.3
     )
     mars_labour_share = assumption_year_vector(
-        assumptions, "Mars labour share of surface payload — year-row", default=0.3
+        assumptions, cl.MARS_LABOUR_SHARE_SURFACE_PAYLOAD_YEAR_ROW, default=0.3
     )
 
     lunar_bv = np.zeros(HORIZON_YEARS, dtype=np.float64)

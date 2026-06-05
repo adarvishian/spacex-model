@@ -8,8 +8,7 @@ from pathlib import Path
 PNL_MODULE_PACKAGES: dict[str, Path] = {
     "customer_launch": Path("customer_launch") / "module.py",
     "starlink": Path("starlink") / "module.py",
-    "odc": Path("odc") / "module.py",
-    "ai_stack": Path("ai_stack") / "module.py",
+    "ai_compute": Path("ai_compute") / "module.py",
     "lunar_mars": Path("lunar_mars") / "module.py",
 }
 

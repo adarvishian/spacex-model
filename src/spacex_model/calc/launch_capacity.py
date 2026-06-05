@@ -1,6 +1,7 @@
-"""Launch Capacity — supply-side tab (Phase C).
+"""Launch Capacity — supply-side capacity tab (V2.16 legacy).
 
-Architecture §4 Launch Capacity / PRD §4.1. Not a P&L module.
+V4.113 replaces this tab with Vehicle Build + Facilities Build (Gigabay R19).
+Retained for allocator vehicle-build claim sizing until R3 CAE rebuild wires VB↔FB.
 """
 
 from __future__ import annotations
@@ -9,6 +10,7 @@ from dataclasses import dataclass
 
 import numpy as np
 
+from spacex_model.config import canonical_labels as cl
 from spacex_model.config.constants import FIRST_YEAR, HORIZON_YEARS
 from spacex_model.domain.assumption_helpers import (
     assumption_scalar,
@@ -68,21 +70,30 @@ def compute_launch_capacity(inputs: LaunchCapacityInputs) -> LaunchCapacityResul
     a = inputs.assumptions
     cap = a.capacity
 
-    # --- Assumption scalars (§3 Capacity) ---
-    sh_mfg_base = assumption_scalar(a, "Super Heavy manufacturing cost ($mm/unit, base year)")
-    ship_mfg_base = assumption_scalar(a, "Starship 2nd-stage manufacturing cost ($mm/unit, base)")
-    payload_booster_only = assumption_scalar(a, "Payload — booster-only mode (kg-to-LEO)")
-    payload_fully_reusable = assumption_scalar(
-        a, "Starship payload — 2025 baseline (kg-to-LEO, fully reusable mode)", default=100_000.0
+    # --- Assumption scalars (§3 Capacity; V4.113 defaults where labels absent) ---
+    sh_mfg_base = assumption_scalar(
+        a, "Super Heavy manufacturing cost ($mm/unit, base year)", default=54.0
     )
-    if payload_fully_reusable == 100_000.0:
-        alt = a.lookup("Payload — fully reusable mode (kg-to-LEO)")
-        if alt and alt.scalar() is not None:
-            payload_fully_reusable = float(alt.scalar())
+    ship_mfg_base = assumption_scalar(
+        a, cl.STARSHIP_2ND_STAGE_MANUFACTURING_COST_MM_UNIT_BASE, default=36.0
+    )
+    payload_booster_only = assumption_scalar(
+        a, cl.PAYLOAD_BOOSTER_ONLY_MODE_KG_TO_LEO, default=0.0
+    )
+    payload_fully_reusable = assumption_scalar(
+        a, cl.STARSHIP_PAYLOAD_2025_BASELINE_KG_TO_LEO_FULLY_REUSABLE_MODE, default=100_000.0
+    )
+    alt = a.lookup(cl.PAYLOAD_FULLY_REUSABLE_MODE_KG_TO_LEO)
+    if alt and alt.scalar() is not None:
+        payload_fully_reusable = float(alt.scalar())
 
-    cadence_ceiling = assumption_scalar(a, "Cadence ceiling (flights/booster/year)")
-    wl_turnaround = assumption_scalar(a, "WL learning rate — turnaround vs cum upmass doubling")
-    base_turnaround = assumption_scalar(a, "Base turnaround time per booster (years/flight)", default=1.0)
+    cadence_ceiling = assumption_scalar(a, "Cadence ceiling (flights/booster/year)", default=24.0)
+    wl_turnaround = assumption_scalar(
+        a, cl.WL_LEARNING_RATE_TURNAROUND_VS_CUM_UPMASS_DOUBLING, default=0.15
+    )
+    base_turnaround = assumption_scalar(
+        a, cl.BASE_TURNAROUND_TIME_PER_BOOSTER_YEARS_FLIGHT, default=1.0
+    )
 
     f9_booster_cost = assumption_scalar(a, "F9 booster (1st stage) mfg cost ($mm/unit)")
     f9_2nd_stage = assumption_scalar(a, "F9 2nd stage mfg cost ($mm/unit)")
@@ -93,10 +104,12 @@ def compute_launch_capacity(inputs: LaunchCapacityInputs) -> LaunchCapacityResul
     f9_lifetime_reuses = assumption_scalar(a, "F9 lifetime reuses per booster")
     f9_cadence = assumption_scalar(a, "F9 cadence per booster (flights/year, flat)")
     f9_base_build_rate = assumption_scalar(a, "F9 base booster build rate (boosters/year, pre-V3-trigger)")
-    v3_trigger_year = int(assumption_scalar(a, "V3 Starlink launch trigger year"))
+    v3_trigger_year = int(assumption_scalar(a, cl.V3_STARLINK_LAUNCH_TRIGGER_YEAR, default=2027.0))
     f9_decay_window = assumption_scalar(a, "F9 build-rate decay window (years)")
     f9_starting_fleet = assumption_scalar(a, "F9 starting fleet at 2025 SoY (boosters)")
-    f9_retirement_rate = assumption_scalar(a, "F9 retirement rate (% of launches/year)", default=0.01)
+    f9_retirement_rate = assumption_scalar(
+        a, "F9 retirement rate (% of launches/year)", default=0.01
+    )
 
     starship_mfg_anchor = assumption_scalar(
         a, "Starship manufacturing cost anchor ($mm/stack, 2024 baseline)", default=90.0
@@ -105,10 +118,10 @@ def compute_launch_capacity(inputs: LaunchCapacityInputs) -> LaunchCapacityResul
         a, "Starship manufacturing WL learning rate (% reduction per doubling cum stacks)", default=0.15
     )
     starship_ops_anchor = assumption_scalar(
-        a, "Starship ops + fuel + refurb cost anchor ($mm/launch, 2024 baseline)", default=12.0
+        a, "Starship ops + fuel cost anchor ($mm/launch, 2024 baseline)", default=12.0
     )
     starship_ops_wl = assumption_scalar(
-        a, "Starship ops + fuel + refurb WL learning rate (% reduction per doubling cum stacks)",
+        a, "Starship ops/refurb WL learning rate (% reduction per doubling cum stacks)",
         default=0.1,
     )
     starship_wl_anchor_cum = assumption_scalar(
@@ -119,7 +132,9 @@ def compute_launch_capacity(inputs: LaunchCapacityInputs) -> LaunchCapacityResul
     )
     lifetime_reuses_ship = assumption_scalar(a, "Lifetime reuses per ship (cap)", default=30.0)
 
-    variant_mix = assumption_year_vector(a, "Variant mix (% fully reusable)").values
+    variant_mix = assumption_year_vector(
+        a, "Variant mix (% fully reusable)", default=1.0
+    ).values
     lifetime_reuses_booster = assumption_year_vector(a, "Lifetime reuses per booster (year cap)").values
 
     vehicle_build = (

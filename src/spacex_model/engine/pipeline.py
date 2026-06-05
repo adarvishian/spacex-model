@@ -16,8 +16,16 @@ import numpy as np
 from spacex_model.calc._allocator_allocation import AllocatorAllocation
 from spacex_model.calc._allocator_out import AllocatorOut
 from spacex_model.calc._vehicle_allocations import VehicleAllocations
-from spacex_model.calc.ai_stack import AIStackInputs, compute_allocator_out as ai_stack_out
+from spacex_model.calc.ai_compute import (
+    AiComputeInputs,
+    DemandInputs as AiComputeDemandInputs,
+    compute_allocator_out as ai_compute_out,
+    compute_demand as ai_compute_demand,
+    compute_output as ai_compute_output,
+    odc_bandwidth_claim,
+)
 from spacex_model.calc.allocator.brain import AllocatorInputs, compute_allocator
+from spacex_model.calc.facilities_build import FacilitiesBuildInputs, compute_facilities_build
 from spacex_model.calc.allocator.demand_builders import compute_exogenous_demands
 from spacex_model.calc.allocator.types import CashAllocations, KgAllocations
 from spacex_model.calc.capex import CapExInputs, compute_capex
@@ -48,11 +56,7 @@ from spacex_model.calc.lunar_mars.bv_engine import compute_bv_engine
 from spacex_model.calc.lunar_mars.carveout import compute_mars_carveout
 from spacex_model.calc.lunar_mars.deployment import compute_deployment
 from spacex_model.calc.lunar_mars.module import LunarMarsInputs
-from spacex_model.calc.odc import compute_allocator_out as odc_out
-from spacex_model.calc.odc.demand import DemandInputs as OdcDemandInputs
-from spacex_model.calc.odc.demand import compute_demand as odc_compute_demand
-from spacex_model.calc.odc.module import OdcInputs, odc_bandwidth_claim
-from spacex_model.calc.odc.output import compute_output as odc_compute_output
+from spacex_model.calc.segment_pnl import SegmentPnlInputs, compute_segment_pnl
 from spacex_model.calc.opex import OpExInputs, build_revenue_bases, compute_opex
 from spacex_model.calc.starlink import compute_allocator_out as starlink_out
 from spacex_model.calc.starlink.module import (
@@ -64,7 +68,8 @@ from spacex_model.calc.starlink.module import (
 from spacex_model.calc.starlink.vehicle_pools import VehiclePoolsResult, compute_vehicle_pools
 from spacex_model.calc.starlink_capacity import OdcBandwidthClaim
 from spacex_model.calc.valuation import ValuationInputs, ValuationResult, compute_valuation
-from spacex_model.config.constants import FIRST_YEAR, HORIZON_YEARS
+from spacex_model.config import canonical_labels as cl
+from spacex_model.config.constants import FIRST_YEAR, HORIZON_YEARS, LAST_YEAR
 from spacex_model.config.settings import get_settings
 from spacex_model.domain.assumption_helpers import assumption_scalar, assumption_year_vector
 from spacex_model.domain.year_vector import YearVector
@@ -75,7 +80,7 @@ from spacex_model.inputs.demand_curves import DemandCurves, demand_curves_from_i
 from spacex_model.io.excel_ingest import IngestResult, ingest_workbook
 from spacex_model.io.snapshot_store import write_diagnostic_snapshot
 
-_MODULE_KEYS = ("customer_launch", "starlink", "odc", "ai_stack", "lunar_mars")
+_MODULE_KEYS = ("customer_launch", "starlink", "ai_compute", "lunar_mars")
 
 
 @dataclass
@@ -132,15 +137,18 @@ class ModelResult:
         if name == "Connectivity segment revenue 2025":
             return self.module_outputs["starlink"].total_revenue.at(year)
         if name == "AI segment revenue 2025":
-            return self.module_outputs["ai_stack"].total_revenue.at(year)
+            return self.module_outputs["ai_compute"].total_revenue.at(year)
         if name == "Cash EoY 2025":
             return self.allocator.cash_boy.at(year) + self.group_pnl.group_fcf.at(year)
         if name == "Starlink BB+DTC revenue 2025":
             return self.module_outputs["starlink"].total_revenue.at(year)
         if name == "ODC revenue 2025":
-            return self.module_outputs["odc"].total_revenue.at(year)
+            from spacex_model.calc.ai_compute.module import compute_orbital_dc_revenue
+
+            ai_in = AiComputeInputs(assumptions=self.assumptions)
+            return compute_orbital_dc_revenue(ai_in).at(year)
         if name == "AI Stack revenue 2025":
-            return self.module_outputs["ai_stack"].total_revenue.at(year)
+            return self.module_outputs["ai_compute"].total_revenue.at(year)
         if name == "Adjusted EBITDA 2025":
             return self.group_pnl.adjusted_ebitda.at(year)
         if name == "Starting cash EoY 2024":
@@ -189,7 +197,7 @@ class ModelResult:
             demand_curves=self.demand_curves,
         )
         dtc_arpu = assumption_year_vector(
-            self.assumptions, "DTC ARPU ($/sub/mo, year-row)", default=16.0
+            self.assumptions, cl.DTC_ARPU_SUB_MO_YEAR_ROW, default=16.0
         )
         idx = year - FIRST_YEAR
         arpu = dtc_arpu.values[idx]
@@ -200,7 +208,7 @@ class ModelResult:
     def starlink_sat_cost_per_kg(self) -> np.ndarray:
         return assumption_year_vector(
             self.assumptions,
-            "V2 Mini cost per kg — base year ($/kg)",
+            cl.V2_MINI_COST_PER_KG_BASE_YEAR,
             default=650.0,
         ).values
 
@@ -228,9 +236,9 @@ def _inputs_hash(assumptions: Assumptions) -> str:
 def _outputs_hash(result: ModelResult) -> str:
     """SHA256 of Group + per-module FCFs + EV per PRD §11.4."""
     payload: dict[str, Any] = {
-        "group_fcf": {str(y): result.group_pnl.group_fcf.at(y) for y in range(2025, 2051)},
+        "group_fcf": {str(y): result.group_pnl.group_fcf.at(y) for y in range(FIRST_YEAR, LAST_YEAR + 1)},
         "module_fcf": {
-            mod: {str(y): result.module_outputs[mod].module_fcf.at(y) for y in range(2025, 2051)}
+            mod: {str(y): result.module_outputs[mod].module_fcf.at(y) for y in range(FIRST_YEAR, LAST_YEAR + 1)}
             for mod in _MODULE_KEYS
         },
         "implied_ev_2025_b": result.valuation.implied_ev_2025_billions,
@@ -250,25 +258,25 @@ def _customer_launch_external_revenue(cl_inputs: CustomerLaunchInputs) -> YearVe
 def _build_internal_eliminations(
     cl_inputs: CustomerLaunchInputs,
     starlink_inputs: StarlinkInputs,
-    odc_inputs: OdcInputs,
+    ai_inputs: AiComputeInputs,
 ) -> InternalEliminations:
     f9_int = cl_inputs.f9_internal_launches or YearVector.zeros()
     ship_int = cl_inputs.starship_internal_launches or YearVector.zeros()
     cap = compute_starlink_capacity_result(starlink_inputs)
-    bb_claim, dtc_claim = odc_bandwidth_claim(odc_inputs)
+    bb_claim, dtc_claim = odc_bandwidth_claim(ai_inputs)
     return InternalEliminations(
         launch_services=internal_transfer_revenue(f9_int, ship_int, cl_inputs.launch_capacity),
         bandwidth=bandwidth_flow.internal_transfer_revenue(bb_claim, dtc_claim, cap),
-        compute=compute_flow.internal_transfer_revenue(odc_inputs),
+        compute=compute_flow.internal_transfer_revenue(ai_inputs),
     )
 
 
 def _build_internal_flows(
     starlink_inputs: StarlinkInputs,
-    odc_inputs: OdcInputs,
+    ai_inputs: AiComputeInputs,
 ) -> InternalFlowConservationInputs:
     cap = compute_starlink_capacity_result(starlink_inputs)
-    bb_claim, dtc_claim = odc_bandwidth_claim(odc_inputs)
+    bb_claim, dtc_claim = odc_bandwidth_claim(ai_inputs)
     odc_bw_cost = YearVector(
         bb_claim.values * cap.bb_at_cost_rate_per_gbps.values / 1e6
         + dtc_claim.values * cap.dtc_at_cost_rate_per_gbps.values / 1e6
@@ -315,18 +323,17 @@ def _module_da_in_cogs(
     return {
         "starlink": compute_constellation_da(starlink_inputs),
         "customer_launch": cl_da,
-        "odc": YearVector.zeros(),
-        "ai_stack": YearVector.zeros(),
+        "ai_compute": YearVector.zeros(),
         "lunar_mars": bv.module_da_mm,
     }
 
 
 def _historical_2025_overrides(assumptions: Assumptions) -> dict[str, float]:
-    v2_mass = assumption_scalar(assumptions, "V2 Mini Mass (kg)", default=575.0)
-    v2_cost_kg = assumption_scalar(assumptions, "V2 Mini cost per kg — base year ($/kg)", default=650.0)
+    v2_mass = assumption_scalar(assumptions, cl.V2_BB_SAT_MASS_KG, default=575.0)
+    v2_cost_kg = assumption_scalar(assumptions, cl.V2_MINI_COST_PER_KG_BASE_YEAR, default=650.0)
     v2_unit = v2_cost_kg * v2_mass / 1e6
-    bb_anchor = assumption_scalar(assumptions, "V2 Mini BB Sats Launched 2025", default=2987.0)
-    dtc_anchor = assumption_scalar(assumptions, "V2 Mini DTC Sats Launched 2025", default=182.0)
+    bb_anchor = assumption_scalar(assumptions, cl.V2_MINI_BB_SATS_LAUNCHED_2025, default=2987.0)
+    dtc_anchor = assumption_scalar(assumptions, cl.V2_MINI_DTC_SATS_LAUNCHED_2025, default=182.0)
     return {
         "starlink_v2_bb": bb_anchor * v2_unit,
         "starlink_v2_dtc": dtc_anchor * v2_unit,
@@ -426,28 +433,30 @@ def _single_pass(state_dict: dict[str, Any]) -> dict[str, Any]:
 
     exogenous = compute_exogenous_demands(assumptions)
     odc_alloc = AllocatorAllocation(cash_mm=cash.odc, kg_to_leo=kg.odc)
-    odc_demand = odc_compute_demand(
-        OdcDemandInputs(cash_demand_mm=exogenous.odc_cash, kg_demand_kg=exogenous.odc_kg)
+    odc_demand = ai_compute_demand(
+        AiComputeDemandInputs(cash_demand_mm=exogenous.odc_cash, kg_demand_kg=exogenous.odc_kg)
     )
-    odc_sats = odc_compute_output(odc_demand, odc_alloc).sats_deployed
+    odc_sats = ai_compute_output(odc_demand, odc_alloc, assumptions).sats_deployed
 
     starlink_inputs = StarlinkInputs(
         assumptions=assumptions,
         demand_curves=demand,
         launch_capacity=lc,
         vehicle_pools=pools,
-        odc_bandwidth_claim=OdcBandwidthClaim(*odc_bandwidth_claim(OdcInputs(assumptions=assumptions, sats_deployed=odc_sats))),
+        odc_bandwidth_claim=OdcBandwidthClaim(
+            *odc_bandwidth_claim(AiComputeInputs(assumptions=assumptions, sats_deployed=odc_sats))
+        ),
     )
 
     lm_inputs = LunarMarsInputs(assumptions=assumptions, prior_year_group_fcf=prior_fcf)
 
     sl_capacity = compute_starlink_capacity_result(starlink_inputs)
-    odc_inputs = OdcInputs(
+    ai_inputs = AiComputeInputs(
         assumptions=assumptions,
         starlink_capacity=sl_capacity,
         sats_deployed=odc_sats,
     )
-    bb_claim, dtc_claim = odc_bandwidth_claim(odc_inputs)
+    bb_claim, dtc_claim = odc_bandwidth_claim(ai_inputs)
     starlink_inputs = StarlinkInputs(
         assumptions=assumptions,
         demand_curves=demand,
@@ -459,12 +468,11 @@ def _single_pass(state_dict: dict[str, Any]) -> dict[str, Any]:
     module_outputs = {
         "customer_launch": customer_launch_out(cl_inputs),
         "starlink": starlink_out(starlink_inputs),
-        "odc": odc_out(odc_inputs),
-        "ai_stack": ai_stack_out(AIStackInputs(assumptions=assumptions)),
+        "ai_compute": ai_compute_out(ai_inputs),
         "lunar_mars": lunar_mars_out(lm_inputs),
     }
 
-    eliminations = _build_internal_eliminations(cl_inputs, starlink_inputs, odc_inputs)
+    eliminations = _build_internal_eliminations(cl_inputs, starlink_inputs, ai_inputs)
     cl_external = _customer_launch_external_revenue(cl_inputs)
     opex = compute_opex(
         OpExInputs(
@@ -489,7 +497,16 @@ def _single_pass(state_dict: dict[str, Any]) -> dict[str, Any]:
         )
     )
 
-    flows = _build_internal_flows(starlink_inputs, odc_inputs)
+    flows = _build_internal_flows(starlink_inputs, ai_inputs)
+    fb = compute_facilities_build(
+        FacilitiesBuildInputs(
+            assumptions=assumptions,
+            sats_built_starlink=module_outputs["starlink"].capital_deployed,
+            ships_built=lc.total_starship_launches,
+            starship_launches=lc.total_starship_launches,
+            group_revenue_base=module_outputs["starlink"].total_revenue,
+        )
+    )
     allocator_pre = compute_allocator(
         AllocatorInputs(
             assumptions=assumptions,
@@ -505,6 +522,9 @@ def _single_pass(state_dict: dict[str, Any]) -> dict[str, Any]:
             f9_customer_launches=f9_customer,
             historical_2025=_historical_2025_overrides(assumptions),
             solver_cash_boy=solver_cash_boy,
+            facilities_build=fb,
+            corp_sga=opex.total_sga,
+            shared_rd=opex.total_rd,
         )
     )
 
@@ -538,6 +558,10 @@ def _single_pass(state_dict: dict[str, Any]) -> dict[str, Any]:
             solver_cash_boy=_blended_cash_boy(
                 prior, state_dict.get("monitored_blend"), assumptions, group.group_fcf
             ),
+            facilities_build=fb,
+            group_fcf=group.group_fcf,
+            corp_sga=opex.total_sga,
+            shared_rd=opex.total_rd,
         )
     )
 

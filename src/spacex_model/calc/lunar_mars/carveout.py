@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import numpy as np
 
+from spacex_model.config import canonical_labels as cl
 from spacex_model.config.constants import FIRST_YEAR, HORIZON_YEARS
 from spacex_model.domain.assumption_helpers import assumption_scalar
 from spacex_model.domain.year_vector import YearVector
@@ -22,8 +23,8 @@ def compute_mars_carveout(
     Principle:         22 (Mars carve-out off-the-top)
 
     """
-    pct = assumption_scalar(assumptions, "Mars carve-out % of prior-year Group FCF", default=0.15)
-    floor = assumption_scalar(assumptions, "Mars carve-out floor ($mm/yr)", default=1000.0)
+    pct = assumption_scalar(assumptions, cl.LUNAR_MARS_CARVE_OUT_OF_PRIOR_YEAR_GROUP_FCF, default=0.15)
+    floor = assumption_scalar(assumptions, cl.LUNAR_MARS_CARVE_OUT_FLOOR_MM_YR, default=1000.0)
     values = np.zeros(HORIZON_YEARS, dtype=np.float64)
     for t in range(HORIZON_YEARS):
         year = FIRST_YEAR + t
