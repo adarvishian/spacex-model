@@ -55,6 +55,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Python package (precompute base case)
+        run: pip install -e ".[dev,service]"
+
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
@@ -72,6 +79,10 @@ jobs:
       - name: Frontend bundle budget (FRONTEND_PRD §8.3)
         working-directory: frontend
         run: npm run check:bundle
+
+      - name: Design token lint (FRONTEND_UX_PRD A6)
+        working-directory: frontend
+        run: npm run check:tokens
 
       - name: Install Playwright browsers
         working-directory: frontend

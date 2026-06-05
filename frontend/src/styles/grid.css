@@ -4,28 +4,30 @@
 }
 
 .audit-grid-wrap .ag-theme-alpine-dark {
-  --ag-background-color: #0d0f15;
+  --ag-background-color: var(--grid-bg);
   --ag-header-background-color: var(--panel);
-  --ag-odd-row-background-color: #11141c;
-  --ag-row-hover-color: rgba(99, 102, 241, 0.08);
-  --ag-border-color: #1e2230;
+  --ag-odd-row-background-color: var(--grid-row-alt);
+  --ag-row-hover-color: var(--indigo-row-hover);
+  --ag-border-color: var(--border-subtle);
   --ag-header-foreground-color: var(--muted);
   --ag-foreground-color: var(--text);
   --ag-font-size: 11.5px;
   --ag-grid-size: 4px;
-  --ag-row-height: 28px;
-  --ag-header-height: 32px;
+  --ag-row-height: var(--row-height-compact);
+  --ag-header-height: var(--ag-header-height);
   font-variant-numeric: tabular-nums;
 }
 
 .audit-grid-wrap .ag-cell.input-cell {
   background-color: var(--input-bg) !important;
   color: var(--text) !important;
+  border-left: 2px dashed var(--info) !important;
 }
 
 .audit-grid-wrap .ag-cell.derived-cell {
-  background-color: #11141c !important;
+  background-color: var(--derived-bg) !important;
   color: var(--text) !important;
+  border-left: 2px solid var(--muted) !important;
 }
 
 .audit-grid-wrap .ag-cell.input-cell .ag-cell-value,
@@ -60,13 +62,27 @@
   text-align: right;
 }
 
+.audit-grid-wrap .ag-cell.num-cell .ag-cell-value {
+  overflow: visible;
+  text-overflow: clip;
+  white-space: nowrap;
+}
+
 .audit-grid-wrap .ag-cell.label-cell {
   font-weight: 500;
   color: var(--text) !important;
+  line-height: 1.3;
 }
 
 .audit-grid-wrap .ag-cell.label-cell .ag-cell-value {
   color: var(--text) !important;
+  white-space: normal;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  word-break: break-word;
 }
 
 .audit-grid-wrap .ag-cell.row-id-cell {
@@ -85,4 +101,12 @@
 
 .audit-grid-wrap .ag-header {
   border-bottom: 1px solid var(--border);
+}
+
+.audit-grid-wrap.density-comfortable .ag-theme-alpine-dark {
+  --ag-row-height: var(--row-height-comfortable);
+}
+
+.audit-grid-wrap.density-compact .ag-theme-alpine-dark {
+  --ag-row-height: var(--row-height-compact);
 }

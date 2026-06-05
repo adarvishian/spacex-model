@@ -1,5 +1,10 @@
 import type { ActiveCell, LineageEntry } from "../shared/types";
-import { formatGridNumber } from "../shared/format";
+import {
+  formatGridNumber,
+  formatUnitLabel,
+  formatValueWithUnit,
+  isStubLineage,
+} from "../shared/format";
 
 type Props = {
   entry: LineageEntry | null;
@@ -33,18 +38,13 @@ function statusPill(entry: LineageEntry): { className: string; text: string } {
   return { className: "pill match", text: "—" };
 }
 
+function stubSpecRef(entry: LineageEntry): string {
+  return entry.section_ref ?? entry.architecture_ref ?? "architecture spec";
+}
+
 export function DerivationPanel({ entry, activeCell, expanded = false }: Props) {
   if (!entry || !activeCell) {
-    return (
-      <section
-        className="derivation-panel empty"
-        aria-label="Derivation panel"
-        tabIndex={0}
-        data-testid="derivation-panel"
-      >
-        <p className="panel-hint">Click a grid cell to inspect its derivation.</p>
-      </section>
-    );
+    return null;
   }
 
   const pill = statusPill(entry);
@@ -53,39 +53,81 @@ export function DerivationPanel({ entry, activeCell, expanded = false }: Props) 
     ? `${addr.sheet}!${addr.row} · column ${addr.year ?? activeCell.year}`
     : `${activeCell.label} · ${activeCell.year}`;
 
+  const unit = entry.unit ?? activeCell.unit;
+  const unitLabel = formatUnitLabel(unit);
+  const isStub = isStubLineage(entry, activeCell.cellKind);
+  const displayedValue = formatValueWithUnit(activeCell.displayValue, unit);
+  const tracedValue =
+    entry.computed_value != null ? formatValueWithUnit(entry.computed_value, unit) : null;
+  const hasResolvedInputs = (entry.resolved_inputs ?? []).length > 0;
+
   return (
     <section
-      className={`derivation-panel ${expanded ? "expanded" : ""}`}
+      className={`derivation-panel ${isStub ? "stub" : "derived"} ${expanded ? "expanded" : ""}`}
       aria-label="Derivation panel"
       tabIndex={0}
       data-testid="derivation-panel"
     >
       <div className="derivation-addr">
+        <p className="derivation-label" title={activeCell.label}>
+          {activeCell.label}
+        </p>
         <code>{addressStr}</code>
         <span className="addr-meta">
-          type: <strong>{entry.cell_kind ?? activeCell.cellKind} (year-row)</strong>
+          type:{" "}
+          <strong className={isStub ? "cell-kind-stub" : "cell-kind-derived"}>
+            {entry.cell_kind ?? activeCell.cellKind} (year-row)
+          </strong>
         </span>
         <span className="addr-meta">
-          unit: <strong>{entry.unit === "dollars_mm" ? "$mm" : entry.unit ?? activeCell.unit}</strong>
+          unit: <strong>{unitLabel}</strong>
         </span>
         <span className="addr-spacer" />
         <span className={pill.className}>{pill.text}</span>
       </div>
 
+      <div className="derivation-value-row" data-testid="derivation-displayed-value">
+        <span className="panel-title">Displayed value (grid)</span>
+        <span className="derivation-displayed-value">{displayedValue}</span>
+        {!isStub && tracedValue && tracedValue !== displayedValue && (
+          <span className="derivation-traced-note muted">
+            Traced value differs: {tracedValue}
+          </span>
+        )}
+      </div>
+
       <div className="derivation-columns">
         <div>
           <p className="panel-title">Formula</p>
-          <div className="formula-box">{entry.formula_expression ?? entry.display_name}</div>
-          <p className="panel-title">Computed</p>
-          <div className="formula-box computed">
-            = {formatGridNumber(entry.computed_value ?? null, entry.unit ?? "dollars_mm")}
-            {entry.unit === "dollars_mm" ? " $mm" : ""}
+          <div className="formula-box" data-testid="derivation-formula">
+            {entry.formula_expression ?? entry.display_name}
           </div>
+
+          {isStub ? (
+            <>
+              <p className="panel-title">Computed (traced)</p>
+              <div className="stub-state" data-testid="derivation-stub-state">
+                <p>
+                  No computed value — this cell is a <strong>stub</strong> (not yet ported to a
+                  traced derivation).
+                </p>
+                <p className="stub-spec">Spec: {stubSpecRef(entry)}</p>
+              </div>
+            </>
+          ) : (
+            <>
+              <p className="panel-title">Computed (traced)</p>
+              <div className="formula-box computed traced" data-testid="derivation-computed">
+                = {formatGridNumber(entry.computed_value ?? null, unit)}
+                {unit === "dollars_mm" ? " $mm" : ""}
+              </div>
+            </>
+          )}
         </div>
 
         <div>
           <p className="panel-title">Resolved inputs (depth 1)</p>
-          <table className="inputs-table">
+          <table className="inputs-table" data-testid="derivation-inputs">
             <thead>
               <tr>
                 <th>Input</th>
@@ -94,10 +136,12 @@ export function DerivationPanel({ entry, activeCell, expanded = false }: Props) 
               </tr>
             </thead>
             <tbody>
-              {(entry.resolved_inputs ?? []).length === 0 && (
+              {!hasResolvedInputs && (
                 <tr>
                   <td colSpan={3} className="muted">
-                    No resolved inputs for this cell.
+                    {isStub
+                      ? "No resolved inputs — stub cell has no traced upstream."
+                      : "No resolved inputs for this cell."}
                   </td>
                 </tr>
               )}

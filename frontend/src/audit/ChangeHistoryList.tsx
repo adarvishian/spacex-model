@@ -75,15 +75,11 @@ export function ChangeHistoryList({ lineageKey }: Props) {
   const visible = showAll ? entries : entries.slice(0, 3);
 
   if (!lineageKey) {
-    return (
-      <section className="change-history empty" aria-label="Change history">
-        <p className="panel-hint">Select a cell to view change history.</p>
-      </section>
-    );
+    return null;
   }
 
   return (
-    <section className="change-history" aria-label="Change history">
+    <section className="change-history" aria-label="Change history" tabIndex={0}>
       <p className="group-title">Change history</p>
       {historyQ.isLoading && <p className="muted">Loading history…</p>}
       {historyQ.error && <p className="audit-alert error">{String(historyQ.error)}</p>}

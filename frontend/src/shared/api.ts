@@ -27,6 +27,14 @@ export function fetchHealth() {
   return request<{ status: string; git_sha: string | null; serverless?: boolean }>("/health");
 }
 
+export type { RunProvenance, BaseCaseArtifact } from "./base-case-artifact";
+export {
+  getBaseCaseArtifact,
+  canHydrateFromArtifact,
+  artifactMatchesGitSha,
+  runCacheKey,
+} from "./base-case-artifact";
+
 export function fetchScenarios() {
   return request<Scenario[]>("/scenarios");
 }

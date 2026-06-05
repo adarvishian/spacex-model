@@ -239,4 +239,6 @@ export type ActiveCell = {
   lineageKey: string;
   unit: string;
   cellKind: CellKind;
+  /** Grid cell value — authoritative display value for derivation reconciliation (F6). */
+  displayValue: number | null;
 };

@@ -96,43 +96,54 @@ export function DependencyGraph({
           source: edge.source,
           target: edge.target,
           type: edge.type ?? "smoothstep",
-          style: { stroke: "#8a93a8", strokeWidth: 1.5, ...edge.style },
-          markerEnd: { type: MarkerType.ArrowClosed, color: "#8a93a8" },
+          style: { stroke: "var(--muted)", strokeWidth: 1.5, ...edge.style },
+          markerEnd: { type: MarkerType.ArrowClosed, color: "var(--muted)" },
         }),
       ),
     [graphQ.data?.edges],
   );
+
+  const hasUpstream = edges.length > 0;
 
   if (!lineageKey || !runId) {
     return null;
   }
 
   return (
-    <div className="depgraph-wrap" aria-label="Dependency graph">
+    <div className="depgraph-wrap" aria-label="Dependency graph" tabIndex={0}>
       <div className="depgraph-header">
         <p className="panel-title">Dependency graph (depth {depth})</p>
-        <div className="depgraph-controls">
-          <button
-            type="button"
-            className="dep-depth-btn"
-            disabled={depth <= 1}
-            onClick={() => setDepth((d) => Math.max(1, d - 1))}
-          >
-            −
-          </button>
-          <button
-            type="button"
-            className="dep-depth-btn"
-            disabled={depth >= 4}
-            onClick={() => setDepth((d) => Math.min(4, d + 1))}
-          >
-            Expand +
-          </button>
-        </div>
+        {hasUpstream && (
+          <div className="depgraph-controls">
+            <button
+              type="button"
+              className="dep-depth-btn"
+              disabled={depth <= 1}
+              aria-label="Decrease graph depth"
+              onClick={() => setDepth((d) => Math.max(1, d - 1))}
+            >
+              −
+            </button>
+            <button
+              type="button"
+              className="dep-depth-btn"
+              disabled={depth >= 4}
+              aria-label="Increase graph depth"
+              onClick={() => setDepth((d) => Math.min(4, d + 1))}
+            >
+              Expand +
+            </button>
+          </div>
+        )}
       </div>
       {graphQ.isLoading && <p className="muted">Loading graph…</p>}
       {graphQ.error && <p className="audit-alert error">{String(graphQ.error)}</p>}
-      {nodes.length > 0 && (
+      {!graphQ.isLoading && !graphQ.error && !hasUpstream && (
+        <p className="depgraph-empty muted" data-testid="depgraph-empty">
+          No upstream dependencies traced for this cell.
+        </p>
+      )}
+      {hasUpstream && (
         <div className="depgraph-canvas">
           <ReactFlow
             nodes={nodes}
@@ -142,15 +153,15 @@ export function DependencyGraph({
             fitView
             fitViewOptions={{ padding: 0.2 }}
             defaultEdgeOptions={{
-              style: { stroke: "#8a93a8", strokeWidth: 1.5 },
-              markerEnd: { type: MarkerType.ArrowClosed, color: "#8a93a8" },
+              style: { stroke: "var(--muted)", strokeWidth: 1.5 },
+              markerEnd: { type: MarkerType.ArrowClosed, color: "var(--muted)" },
             }}
             nodesDraggable={false}
             nodesConnectable={false}
             elementsSelectable
             proOptions={{ hideAttribution: true }}
           >
-            <Background gap={16} color="#2a3544" />
+            <Background gap={16} color="var(--border)" />
             <Controls showInteractive={false} />
           </ReactFlow>
         </div>

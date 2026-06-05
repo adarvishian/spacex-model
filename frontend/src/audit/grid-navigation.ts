@@ -22,6 +22,7 @@ export function cellAt(
     lineageKey: row.lineage_keys[yearIndex],
     unit: row.unit,
     cellKind: row.cell_kinds[yearIndex],
+    displayValue: row.year_values[yearIndex] ?? null,
   };
 }
 

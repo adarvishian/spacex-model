@@ -1,15 +1,100 @@
-:root {
+/**
+ * Audit Mode design tokens — single source of truth (FRONTEND_UX_PRD §4, Sprint 4).
+ * Light theme: swap values under [data-theme="light"] without touching components.
+ */
+:root,
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  /* ——— Color: backgrounds & surfaces ——— */
   --bg: #0f1115;
   --panel: #161922;
   --panel-2: #1c2030;
   --border: #262b3a;
-  --muted: #8a93a8;
+  --border-subtle: #1e2230;
+
+  /* Grid-specific surfaces (AG Grid theme) */
+  --grid-bg: #0d0f15;
+  --grid-row-alt: #11141c;
+  --derived-bg: #11141c;
+
+  /* ——— Color: text ——— */
   --text: #e6e9f2;
+  --muted: #9aa3b8;
+  --formula-text: #c7d2fe;
+
+  /* ——— Color: accent & state (WCAG AA on --panel / --bg) ——— */
   --indigo: #6366f1;
   --indigo-soft: #2a2a55;
+  --indigo-dim: #4f46e5;
   --amber: #f59e0b;
   --green: #10b981;
   --red: #ef4444;
   --blue: #3b82f6;
+  --info: #60a5fa;
   --input-bg: #18243a;
+
+  /* Map / graph accents */
+  --map-dot: #2a3046;
+  --map-depends: #6b7280;
+  --lifecycle-stage-bg: #1a1f2d;
+  --dep-node-bg: #1a1f30;
+
+  /* ——— Client Mode aliases (same palette) ——— */
+  --surface: var(--panel);
+  --surface-2: var(--panel-2);
+  --accent: var(--indigo);
+  --accent-dim: var(--indigo-dim);
+  --positive: var(--green);
+  --negative: var(--red);
+  --warn: var(--amber);
+
+  /* ——— Type scale ——— */
+  --font-sans: "IBM Plex Sans", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --text-xs: 10.5px;
+  --text-sm: 11px;
+  --text-base: 12px;
+  --text-md: 13px;
+  --text-lg: 14px;
+  --text-xl: 18px;
+
+  /* ——— Spacing scale ——— */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+
+  /* ——— Density (grid row heights) ——— */
+  --row-height-comfortable: 36px;
+  --row-height-compact: 28px;
+  --ag-row-height: var(--row-height-compact);
+  --ag-header-height: 32px;
+
+  /* ——— Semantic overlays (no raw hex in components) ——— */
+  --overlay-scrim: rgb(0 0 0 / 0.55);
+  --shadow-panel: rgb(0 0 0 / 0.35);
+  --shadow-elevated: rgb(0 0 0 / 0.45);
+  --accent-subtle: color-mix(in srgb, var(--accent) 12%, transparent);
+  --accent-hover: color-mix(in srgb, var(--accent) 8%, transparent);
+  --green-subtle: color-mix(in srgb, var(--green) 15%, transparent);
+  --amber-subtle: color-mix(in srgb, var(--amber) 15%, transparent);
+  --amber-border: color-mix(in srgb, var(--amber) 35%, transparent);
+  --red-subtle: color-mix(in srgb, var(--red) 15%, transparent);
+  --red-border: color-mix(in srgb, var(--red) 35%, transparent);
+  --warn-subtle: color-mix(in srgb, var(--warn) 12%, transparent);
+  --warn-border: color-mix(in srgb, var(--warn) 35%, transparent);
+  --negative-subtle: color-mix(in srgb, var(--negative) 12%, transparent);
+  --negative-border: color-mix(in srgb, var(--negative) 35%, transparent);
+  --indigo-row-hover: color-mix(in srgb, var(--indigo) 8%, transparent);
+  --provenance-green-border: color-mix(in srgb, var(--green) 40%, var(--border));
+  --provenance-info-border: color-mix(in srgb, var(--info) 40%, var(--border));
+  --provenance-amber-border: color-mix(in srgb, var(--amber) 40%, var(--border));
+}
+
+/* Light theme placeholder — token swap only, no component rewrites (F12 deferred). */
+[data-theme="light"] {
+  color-scheme: light;
+  /* Values TBD in fast-follow; structure ready for swap. */
 }

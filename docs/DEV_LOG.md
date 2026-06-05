@@ -13,6 +13,186 @@ Override source of truth for disclosed inputs: `src/spacex_model/inputs/s1_overr
 
 ---
 
+## 2026-06-05 — Frontend Sprint 5: Controls, layout, accessibility & test hardening (F14, F9, F10, §3.7)
+
+**Trigger:** `docs/FRONTEND_UX_PRD_2026-06-05.md` §6.5 — grid toolbar; single rail empty state; title bar `?` popover; axe in Playwright CI.
+
+### Shipped
+
+| Area | Change | Primary files |
+|------|--------|---------------|
+| Grid toolbar (F14) | Format toggle (`$mm` / `$B` / raw), density (comfortable/compact), fit/reset columns; prefs in `localStorage` | `frontend/src/audit/GridToolbar.tsx`, `frontend/src/shared/grid-prefs.ts`, `Grid.tsx`, `format.ts` |
+| Rail empty state (F9) | One `RailEmptyState` when no cell selected; derivation/sources/history panels return `null` instead of redundant hints | `frontend/src/audit/RailEmptyState.tsx`, `DerivationPanel.tsx`, `SourcesPanel.tsx`, `ChangeHistoryList.tsx`, `AuditApp.tsx` |
+| Title bar (F10) | Sheet name + dimensions left; legend + `?` help popover right; shortcuts removed from always-visible row | `frontend/src/audit/GridHelpPopover.tsx`, `AuditApp.tsx`, `styles.css` |
+| Non-color cues (§3.7) | Input/derived cells: dashed/solid left border + I/D/▲ legend glyphs; calibration already PASS/FAIL + glyph from Sprint 4 | `grid.css`, `AuditApp.tsx` |
+| Focus & motion | `focus-visible` on rail panels; `prefers-reduced-motion` on skeleton animations (unchanged from Sprint 1); grid wrapper `role="region"` (AG Grid owns `role="grid"`) | `styles.css`, `Grid.tsx`, `DependencyGraph.tsx`, `RunAuditTab.tsx` |
+| Axe CI (A7) | `@axe-core/playwright` — no critical/serious violations on grid panel, rail, Run Audit, full audit shell | `frontend/e2e/accessibility.spec.ts`, `frontend/e2e/performance.spec.ts`, `frontend/package.json` |
+| E2E A7/A8/A9 | Toolbar persistence + `$B` format; single rail empty state; title bar height at 1280px; help popover; keyboard walkthrough | `frontend/e2e/audit-mode.spec.ts`, `frontend/e2e/accessibility.spec.ts` |
+
+### Sprint 5 gate status
+
+**Passing:** A7 acceptance — axe reports no critical/serious violations on grid panel, derivation rail, dependency graph context, and Run Audit; keyboard walkthrough selects cell, reads derivation, opens Run Audit. A8 acceptance — toolbar toggles format/density, fit columns, persists across reload. A9 acceptance — at most one rail empty-state message; title bar single row at 1280px with shortcuts in `?` popover. `npm run build` + bundle budget green (464 KB gzip); `check:tokens` green; Playwright **29/29**.
+
+### UX overhaul complete
+
+All five sprints from `FRONTEND_UX_PRD_2026-06-05.md` §6 are shipped. Acceptance criteria A1–A9 pass in Playwright.
+
+**Deferred (unchanged):** Light theme token values (structure ready in Sprint 4); optional backend run-progress streaming for live solver ETA.
+
+### Next agent actions
+
+1. Open PR `feat/audit-ux-sprint5-controls-a11y` if not yet merged; attach before/after screenshots per PRD §6.0.
+2. `cd frontend && npm run build && npm run check:tokens && npm run test:e2e` before any follow-on Audit Mode work.
+3. Light theme or Client Mode UX — separate efforts per PRD §1.4.
+
+---
+
+## 2026-06-05 — Frontend Sprint 4: Design system + PASS/FAIL calibration (F8, F12, F11)
+
+**Trigger:** `docs/FRONTEND_UX_PRD_2026-06-05.md` §6.4 — consolidate tokens; CI hex lint; AA contrast palette; Run Audit PASS/FAIL verdicts.
+
+### Shipped
+
+| Area | Change | Primary files |
+|------|--------|---------------|
+| Token consolidation | Single `:root` in `tokens.css`: color, type scale (11–18 px), spacing (4–24 px), density row heights, grid surfaces, Client Mode aliases (`--surface` → `--panel`, etc.); light-theme swap structure under `[data-theme="light"]` | `frontend/src/styles/tokens.css` |
+| Duplicate removal | Removed second `:root` from `styles.css`; stripped all `var(--token, #hex)` fallbacks and hard-coded hex from audit/component CSS | `frontend/src/styles.css`, `frontend/src/styles/grid.css` |
+| AG Grid theme | Grid CSS vars map to tokens (`--grid-bg`, `--derived-bg`, `--border-subtle`, `--indigo-row-hover`) — no `#0d0f15`/`#11141c` literals | `frontend/src/styles/grid.css` |
+| Graph colors | Dependency graph edges/background use `var(--muted)` / `var(--border)` | `frontend/src/audit/DependencyGraph.tsx` |
+| CI token lint | `npm run check:tokens` fails on duplicate `:root`, hex outside `tokens.css`, or `var(--x, #hex)` fallbacks; wired in CI after bundle budget | `frontend/scripts/check-design-tokens.mjs`, `frontend/package.json`, `.github/workflows/ci.yml` |
+| Contrast (F12) | Muted text bumped to `#9aa3b8` for AA on panel/grid surfaces; semantic overlays via `color-mix` tokens (no raw rgba hex in components) | `tokens.css`, `styles.css` |
+| PASS/FAIL (F11) | Calibration table: `✓ PASS` / `✗ FAIL` with color + glyph; `Δ% vs tol` column; conservation header uses "FAIL years" not "CHECK years" | `frontend/src/audit/RunAuditTab.tsx` |
+| E2E A5/A6 | Playwright: no "CHECK" in calibration table; all status cells match PASS/FAIL; token lint script smoke | `frontend/e2e/audit-mode.spec.ts` |
+
+### Sprint 4 gate status
+
+**Passing:** A5 acceptance — calibration uses PASS/FAIL with glyph; word "CHECK" absent. A6 acceptance — single token source; CI `check:tokens` green. A7 contrast portion — palette structured for AA (muted bump + semantic overlays); full axe pass deferred to Sprint 5. `npm run build` + bundle budget green (462 KB gzip); Playwright 21/21.
+
+### Deferred to Sprint 5
+
+- F14/F9/F10 grid toolbar + rail empty state + title bar — Sprint 5.
+- Full axe + keyboard a11y hardening (A7 complete) — Sprint 5.
+- Light theme values (token structure ready; values TBD).
+
+### Next agent actions
+
+1. **Sprint 5 — Controls & a11y:** grid toolbar; single rail empty state; title bar `?` popover; axe in Playwright CI.
+2. `cd frontend && npm run build && npm run check:tokens && npm run test:e2e` before each UX sprint.
+
+---
+
+## 2026-06-05 — Frontend Sprint 3: Derivation trust & completeness (F2, F6, F13)
+
+**Trigger:** `docs/FRONTEND_UX_PRD_2026-06-05.md` §6.3 — stub-aware derivation panel; grid/derivation value reconciliation; dependency graph empty state.
+
+### Shipped
+
+| Area | Change | Primary files |
+|------|--------|---------------|
+| Stub state | When `computed_value == null`, Computed box shows explicit stub message (never `"= $mm"`); amber left border + `cell-kind-stub` distinguishes stubs from derived cells | `frontend/src/audit/DerivationPanel.tsx`, `frontend/src/styles.css` |
+| Value reconciliation | `ActiveCell.displayValue` carries grid cell value; derivation header shows **Displayed value (grid)** as authoritative; traced value shown separately when present (F6) | `DerivationPanel.tsx`, `frontend/src/shared/types.ts`, `Grid.tsx`, `grid-navigation.ts`, `AuditApp.tsx` |
+| Format helpers | `formatValueWithUnit`, `formatUnitLabel`, `isStubLineage` for honest derivation rendering | `frontend/src/shared/format.ts` |
+| Graph empty state | Cells with no upstream edges show compact message instead of lone-node 200 px canvas; depth controls hidden when empty (F13) | `frontend/src/audit/DependencyGraph.tsx`, `styles.css` |
+| Derived cells | Non-stub cells surface `formula_expression` and `resolved_inputs` when present (consume §8 contract) | `DerivationPanel.tsx` |
+| E2E A2/A3 | Playwright: stub shows stub state + no `"= $mm"`; Group P&L R14 derived shows formula + ≥1 input + graph edges; grid value matches derivation displayed value | `frontend/e2e/audit-mode.spec.ts`, `frontend/e2e/mock-api.ts` |
+| Mock contract | Stub lineage (`computed_value: null`, `cell_kind: stub`) for Starlink R11; derived lineage + graph edges for `group.group_revenue_net` | `mock-api.ts` |
+
+### Sprint 3 gate status
+
+**Passing:** A2 acceptance — no `"= $mm"`; stub cells show explicit stub state; Group Revenue (R14) shows formula and 2 resolved inputs. A3 acceptance — derivation displayed value matches grid cell for deep-linked stub. `npm run build` + bundle budget green (462 KB gzip); Playwright 19/19.
+
+**API ask (unchanged):** Backend should populate `computed_value` and `resolved_inputs` for ported derived cells; `cell_kind: "stub"` reliably set on unported cells. Frontend branches on contract; e2e mocks both paths.
+
+### Deferred to Sprint 4+
+
+- F8/F11/F12 design tokens + PASS/FAIL — Sprint 4.
+- F14/F9/F10 grid toolbar + rail empty state + title bar — Sprint 5.
+
+### Next agent actions
+
+1. **Sprint 4 — Design system:** consolidate tokens; PASS/FAIL calibration verdicts; contrast verification.
+2. `cd frontend && npm run build && npm run test:e2e` before each UX sprint.
+3. Backend: populate `computed_value` / `resolved_inputs` on derived cells when lineage API is extended.
+
+---
+
+## 2026-06-05 — Frontend Sprint 2: Grid legibility — no truncation, correct units (F1, F4, F5)
+
+**Trigger:** `docs/FRONTEND_UX_PRD_2026-06-05.md` §6.2 — autosize year columns; `flag` unit type; label tooltips/wrap; pct guard for mis-tagged rows.
+
+### Shipped
+
+| Area | Change | Primary files |
+|------|--------|---------------|
+| Column autosize | Year columns auto-size to formatted content on load and sheet change (min 64 px); label column autosizes with 280–420 px cap | `frontend/src/audit/Grid.tsx` |
+| Label legibility | `tooltipField` + `enableBrowserTooltips`; two-line wrap via CSS line-clamp; row height 36 px | `Grid.tsx`, `frontend/src/styles/grid.css` |
+| Derivation label | Full untruncated row label in derivation address strip | `frontend/src/audit/DerivationPanel.tsx`, `frontend/src/styles.css` |
+| Unit formatting | `flag`/`boolean` unit renders `1`/`0`; implausible `pct`/`ratio` (>150% magnitude) shows raw value + `⚠` instead of silent `×100` | `frontend/src/shared/format.ts` |
+| Numeric overflow | `num-cell` values use `nowrap` + `text-overflow: clip`; columns sized to content | `grid.css`, `Grid.tsx` |
+| Stale grid fix | While a live run is in flight with no embedded grid for the active sheet, do not fall back to stale React Query grid data (skeleton shows correctly on scenario change) | `frontend/src/app/AuditApp.tsx` |
+| E2E A1 | Playwright: all 13 data sheets — no ellipsis / `scrollWidth ≤ clientWidth` on numeric cells; flag rows `1`/`0`; Group P&L R34 not `%`; implausible pct shows `⚠`; label tooltip + derivation strip | `frontend/e2e/audit-mode.spec.ts`, `frontend/e2e/mock-api.ts` |
+| Mock unit patches | E2E serves corrected `flag` / `dollars_mm` units for known mis-tagged rows (Starlink R28/R29, Group P&L R34); full 13-sheet registry | `mock-api.ts` |
+
+### Sprint 2 gate status
+
+**Passing:** A1 acceptance — numeric cells fit without truncation on all 13 sheets; flag rows `1`/`0`; patched `$mm` rows do not render `%`; implausible pct guard active; label tooltip + derivation strip show full text; `npm run build` + bundle budget green; Playwright 16/16.
+
+**API ask (unchanged):** Backend `GET /api/sheets/{sheet}/grid` should emit `flag` unit on 1/0 rows and correct `dollars_mm` on mis-tagged rows (e.g. Group P&L R34). Frontend renders the supplied unit exactly; e2e mocks the corrected contract.
+
+### Deferred to Sprint 3+
+
+- F2/F6/F13 derivation trust (stub state, value reconciliation, graph empty state) — Sprint 3.
+- F8/F11/F12 design tokens + PASS/FAIL — Sprint 4.
+- F14/F9/F10 grid toolbar + rail empty state + title bar — Sprint 5.
+
+### Next agent actions
+
+1. **Sprint 3 — Derivation trust:** stub-aware `DerivationPanel`, grid/derivation value reconciliation, dependency graph empty state.
+2. `cd frontend && npm run build && npm run test:e2e` before each UX sprint.
+3. Backend: add `flag` unit to grid payload for binary rows when authoring API contract fixes.
+
+---
+
+## 2026-06-05 — Frontend Sprint 1: Instant base case + honest loading (F3, F7)
+
+**Trigger:** `docs/FRONTEND_UX_PRD_2026-06-05.md` §6.1 — precompute base-case audit grids at build; hydrate Audit Mode synchronously from static artifact; skeleton + progress for non-base paths; Run Audit reuses active run.
+
+### Shipped
+
+| Area | Change | Primary files |
+|------|--------|---------------|
+| Precompute pipeline | `scripts/precompute_base_case.py` runs base-case solve once; writes all 13 sheet grids + Run Audit payload to `frontend/public/data/base_case_run.json` tagged with `git_sha` | `scripts/precompute_base_case.py` |
+| Build hook | `npm run prebuild` invokes precompute before Vite build; Vercel `buildCommand` installs Python package first | `frontend/package.json`, `vercel.json`, `.github/workflows/ci.yml` |
+| Instant base case | Audit Mode fetches static artifact on mount; base case + matching `git_sha` paints grid from precomputed data before any solver POST; background refresh obtains live `runId` without blanking grid | `frontend/src/app/AuditApp.tsx`, `frontend/src/shared/base-case-artifact.ts` |
+| Run cache | React Query client cache keyed by `(scenario, overrides)` with `precomputed` vs `live` source; re-selecting a computed scenario is instant (`cached` provenance) | `frontend/src/shared/query-client.ts` |
+| Provenance UI | Header badge: `precomputed` / `cached` / `fresh` | `frontend/src/app/AuditApp.tsx`, `frontend/src/styles.css` |
+| Fallback UX | Non-base scenario or artifact miss: skeleton grid + status line (`Running {scenario} — solver converging, ~40 s on first run`) | `frontend/src/audit/Grid.tsx` (`GridSkeleton`), `AuditApp.tsx`, `styles.css` |
+| Run Audit reuse | `RunAuditTab` accepts embedded `auditPayload` from artifact/cache; skips redundant fetch when payload already present | `frontend/src/audit/RunAuditTab.tsx` |
+| E2E A4 | Playwright asserts grid before delayed `runDeterministic`; bear scenario shows skeleton; Run Audit tab instant from precompute | `frontend/e2e/audit-mode.spec.ts`, `frontend/e2e/mock-api.ts` |
+
+### Sprint 1 gate status
+
+**Passing:** A4 acceptance — base case grid visible in < 1 s without solver response; non-base shows skeleton + status (no blank pane); Run Audit tab renders from precomputed payload; provenance badge always visible; `npm run build` + bundle budget green (461 KB gzip); Playwright 11/11.
+
+**Artifact mechanics:** JSON served from `/data/base_case_run.json` (static, not bundled — keeps JS budget under 520 KB). Regenerated each build; invalidated when `health.git_sha` ≠ artifact `git_sha` (falls back to live run).
+
+**API ask (unchanged):** Full `audit_grids` on serverless deterministic response still Starlink-only; frontend no longer blocked on this for base case open.
+
+### Deferred to Sprint 2+
+
+- F1/F4/F5 grid legibility (autosize, units, label tooltips) — Sprint 2.
+- F2/F6/F13 derivation trust — Sprint 3.
+- F8/F11/F12 design tokens + PASS/FAIL — Sprint 4.
+- F14/F9/F10 controls + rail empty state — Sprint 5.
+
+### Next agent actions
+
+1. **Sprint 2 — Grid legibility:** autosize year columns; `flag` unit type; label tooltips/wrap (`Grid.tsx`, `format.ts`).
+2. `cd frontend && npm run build && npm run test:e2e` before each UX sprint.
+3. On model changes, precompute artifact regenerates automatically via `prebuild`; confirm `git_sha` match after deploy.
+
+---
+
 ## 2026-06-04 — Sprint U4: Guardrail repair + supersession sweep (F6)
 
 **Trigger:** `PRD_V4.113_Unified_Allocation_2026-06-04.md` Phase U — repair Conservation R14 for facility flows; add unified allocator identities; clear dead residue.

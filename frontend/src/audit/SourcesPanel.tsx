@@ -6,17 +6,13 @@ type Props = {
 
 export function SourcesPanel({ entry }: Props) {
   if (!entry?.sources) {
-    return (
-      <section className="sources-panel empty" aria-label="Sources panel">
-        <p className="panel-hint">Select a cell to view sources.</p>
-      </section>
-    );
+    return null;
   }
 
   const { methodology, input_provenance, calibration_anchor } = entry.sources;
 
   return (
-    <section className="sources-panel" aria-label="Sources panel">
+    <section className="sources-panel" aria-label="Sources panel" tabIndex={0}>
       <p className="group-title">Sources for this cell</p>
 
       <div className="source-row">

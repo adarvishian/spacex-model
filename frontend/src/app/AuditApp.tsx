@@ -4,8 +4,11 @@ import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom"
 import { ChangeHistoryList } from "../audit/ChangeHistoryList";
 import { DependencyGraph } from "../audit/DependencyGraph";
 import { DerivationPanel } from "../audit/DerivationPanel";
-import { Grid, type GridHandle } from "../audit/Grid";
+import { Grid, GridSkeleton, type GridHandle } from "../audit/Grid";
+import { GridHelpPopover } from "../audit/GridHelpPopover";
+import { GridToolbar } from "../audit/GridToolbar";
 import { LabelSearchPalette, type LabelSearchHit } from "../audit/LabelSearchPalette";
+import { RailEmptyState } from "../audit/RailEmptyState";
 import { moveActiveCell } from "../audit/grid-navigation";
 import { RunAuditTab } from "../audit/RunAuditTab";
 import { ScenarioSidebar } from "../audit/ScenarioSidebar";
@@ -13,16 +16,37 @@ import { SheetTabs } from "../audit/SheetTabs";
 import { SourcesPanel } from "../audit/SourcesPanel";
 import { parseCellAddress, sheetSlugFromName } from "../shared/cell-ref";
 import {
+  canHydrateFromArtifact,
+  getBaseCaseArtifact,
+  loadBaseCaseArtifact,
+  type RunProvenance,
+} from "../shared/base-case-artifact";
+import {
+  cacheFromDeterministicRun,
+  getCachedRun,
+  setCachedRun,
+} from "../shared/query-client";
+import {
   fetchHealth,
   fetchLineage,
+  fetchRunAuditDashboard,
   fetchScenarios,
   fetchSheetGrid,
   fetchSheets,
   runDeterministic,
 } from "../api";
-import type { ActiveCell, GridPayload, LineageEntry } from "../shared/types";
+import { loadGridPrefs, saveGridPrefs, type GridPrefs } from "../shared/grid-prefs";
+import type { ActiveCell, GridPayload, LineageEntry, RunAuditPayload } from "../shared/types";
 
 const RUN_AUDIT_SLUG = "run_audit";
+
+function buildOverrides(overrideLabel: string, overrideValue: string): Record<string, number> {
+  const overrides: Record<string, number> = {};
+  if (overrideValue.trim() && overrideLabel) {
+    overrides[overrideLabel] = parseFloat(overrideValue);
+  }
+  return overrides;
+}
 
 export default function AuditApp() {
   const { sheetSlug = "starlink" } = useParams<{ sheetSlug: string }>();
@@ -31,22 +55,46 @@ export default function AuditApp() {
 
   const isRunAudit = sheetSlug === RUN_AUDIT_SLUG;
 
+  const [artifactReady, setArtifactReady] = useState(Boolean(getBaseCaseArtifact()));
   const [selectedScenario, setSelectedScenario] = useState("base_case");
   const [overrideLabel, setOverrideLabel] = useState("");
   const [overrideValue, setOverrideValue] = useState("");
   const [runId, setRunId] = useState<string | null>(null);
   const [embeddedGrids, setEmbeddedGrids] = useState<Record<string, GridPayload>>({});
+  const [runAuditPayload, setRunAuditPayload] = useState<RunAuditPayload | null>(null);
+  const [provenance, setProvenance] = useState<RunProvenance>("fresh");
   const [activeCell, setActiveCell] = useState<ActiveCell | null>(null);
   const [lineage, setLineage] = useState<LineageEntry | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [running, setRunning] = useState(false);
   const [derivationExpanded, setDerivationExpanded] = useState(false);
   const [labelSearchOpen, setLabelSearchOpen] = useState(false);
+  const [gridPrefs, setGridPrefs] = useState<GridPrefs>(() => loadGridPrefs());
   const gridRef = useRef<GridHandle>(null);
+  const backgroundRunRef = useRef(false);
 
   const healthQ = useQuery({ queryKey: ["health"], queryFn: fetchHealth });
   const scenariosQ = useQuery({ queryKey: ["scenarios"], queryFn: fetchScenarios });
   const sheetsQ = useQuery({ queryKey: ["sheets"], queryFn: fetchSheets });
+
+  const overrides = useMemo(
+    () => buildOverrides(overrideLabel, overrideValue),
+    [overrideLabel, overrideValue],
+  );
+
+  useEffect(() => {
+    let cancelled = false;
+    void loadBaseCaseArtifact()
+      .then(() => {
+        if (!cancelled) setArtifactReady(true);
+      })
+      .catch(() => {
+        if (!cancelled) setArtifactReady(true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const gridQ = useQuery({
     queryKey: ["grid", runId, sheetSlug, selectedScenario],
@@ -56,39 +104,134 @@ export default function AuditApp() {
 
   const gridData = isRunAudit
     ? null
-    : embeddedGrids[sheetSlug] ?? gridQ.data ?? null;
+    : running && !embeddedGrids[sheetSlug]
+      ? null
+      : embeddedGrids[sheetSlug] ?? gridQ.data ?? null;
 
-  const handleRun = useCallback(async () => {
-    setRunning(true);
-    setError(null);
-    try {
-      const overrides: Record<string, number> = {};
-      if (overrideValue.trim() && overrideLabel) {
-        overrides[overrideLabel] = parseFloat(overrideValue);
-      }
-      const result = await runDeterministic({
-        scenario: selectedScenario,
-        overrides,
-        use_cache: true,
-      });
-      setRunId(result.run_id);
-      if (result.audit_grids) {
-        setEmbeddedGrids(result.audit_grids);
-      }
-    } catch (e) {
-      setError(String(e));
-    } finally {
-      setRunning(false);
-    }
-  }, [overrideLabel, overrideValue, selectedScenario]);
+  const waitingForArtifact =
+    selectedScenario === "base_case" &&
+    Object.keys(overrides).length === 0 &&
+    !artifactReady &&
+    !getCachedRun(selectedScenario, overrides);
 
-  // Auto-run on mount / scenario change only — do not retry in a loop when the API fails.
+  const showRunProgress =
+    (running || waitingForArtifact) && !gridData && !isRunAudit;
+  const showGridSkeleton = (running || waitingForArtifact) && !gridData && !isRunAudit;
+
+  const handleRun = useCallback(
+    async (opts?: { background?: boolean }) => {
+      const background = opts?.background ?? false;
+      backgroundRunRef.current = background;
+
+      const cached = getCachedRun(selectedScenario, overrides);
+      if (cached) {
+        setRunId(cached.run_id);
+        setEmbeddedGrids(cached.audit_grids);
+        setRunAuditPayload(cached.run_audit);
+        setProvenance(cached.source === "precomputed" ? "precomputed" : "cached");
+        setRunning(false);
+        return;
+      }
+
+      if (!background) {
+        setRunning(true);
+      }
+      setError(null);
+
+      try {
+        const result = await runDeterministic({
+          scenario: selectedScenario,
+          overrides,
+          use_cache: true,
+        });
+
+        let audit: RunAuditPayload | null = runAuditPayload;
+        try {
+          audit = await fetchRunAuditDashboard(result.run_id, selectedScenario);
+        } catch {
+          audit = runAuditPayload;
+        }
+
+        const grids = result.audit_grids ?? embeddedGrids;
+        setRunId(result.run_id);
+        if (Object.keys(grids).length > 0) {
+          setEmbeddedGrids(grids);
+        }
+        if (audit) {
+          setRunAuditPayload(audit);
+        }
+
+        cacheFromDeterministicRun(
+          selectedScenario,
+          overrides,
+          { ...result, audit_grids: grids },
+          audit ?? undefined,
+        );
+
+        if (!background) {
+          setProvenance(result.cached ? "cached" : "fresh");
+        }
+      } catch (e) {
+        if (!background) {
+          setError(String(e));
+        }
+      } finally {
+        setRunning(false);
+        backgroundRunRef.current = false;
+      }
+    },
+    [embeddedGrids, overrides, runAuditPayload, selectedScenario],
+  );
+
   useEffect(() => {
+    if (waitingForArtifact) return;
+
+    const cached = getCachedRun(selectedScenario, overrides);
+    if (cached) {
+      setRunId(cached.run_id);
+      setEmbeddedGrids(cached.audit_grids);
+      setRunAuditPayload(cached.run_audit);
+      setProvenance(cached.source === "precomputed" ? "precomputed" : "cached");
+      return;
+    }
+
+    const gitSha = healthQ.data?.git_sha;
+    const artifact = getBaseCaseArtifact();
+    if (artifact && canHydrateFromArtifact(selectedScenario, overrides, gitSha)) {
+      setRunId(artifact.run_id);
+      setEmbeddedGrids(artifact.audit_grids);
+      setRunAuditPayload(artifact.run_audit);
+      setProvenance("precomputed");
+      setCachedRun(selectedScenario, overrides, {
+        run_id: artifact.run_id,
+        audit_grids: artifact.audit_grids,
+        run_audit: artifact.run_audit,
+        cached: true,
+        source: "precomputed",
+      });
+      void handleRun({ background: true });
+      return;
+    }
+
     setRunId(null);
     setEmbeddedGrids({});
+    setRunAuditPayload(null);
+    setProvenance("fresh");
     void handleRun();
     // eslint-disable-next-line react-hooks/exhaustive-deps -- overrides use explicit Re-run
-  }, [selectedScenario]);
+  }, [selectedScenario, artifactReady, waitingForArtifact]);
+
+  useEffect(() => {
+    const gitSha = healthQ.data?.git_sha;
+    if (!gitSha || provenance !== "precomputed") return;
+    if (!canHydrateFromArtifact(selectedScenario, overrides, gitSha)) {
+      setRunId(null);
+      setEmbeddedGrids({});
+      setRunAuditPayload(null);
+      setProvenance("fresh");
+      void handleRun();
+    }
+  }, [healthQ.data?.git_sha, provenance, selectedScenario, overrides, handleRun]);
 
   const openLineage = useCallback(
     async (cell: ActiveCell) => {
@@ -146,6 +289,7 @@ export default function AuditApp() {
       lineageKey: row.lineage_keys[yearIndex],
       unit: row.unit,
       cellKind: row.cell_kinds[yearIndex],
+      displayValue: row.year_values[yearIndex] ?? null,
     };
     void openLineage(cell);
   }, [gridData, urlRow, urlCol, openLineage, isRunAudit, sheetSlug]);
@@ -239,6 +383,11 @@ export default function AuditApp() {
     }
   }, [activeCell, sheetSlug]);
 
+  const onGridPrefsChange = useCallback((prefs: GridPrefs) => {
+    setGridPrefs(prefs);
+    saveGridPrefs(prefs);
+  }, []);
+
   return (
     <div className="audit-app">
       <header className="audit-header">
@@ -255,6 +404,9 @@ export default function AuditApp() {
               run: <code>{runId}</code>
             </span>
           )}
+          <span className={`run-provenance provenance-${provenance}`} data-testid="run-provenance">
+            {provenance}
+          </span>
           {healthQ.data?.git_sha && (
             <span>
               build: <code>{healthQ.data.git_sha}</code>
@@ -283,8 +435,8 @@ export default function AuditApp() {
             overrideValue={overrideValue}
             onOverrideLabel={setOverrideLabel}
             onOverrideValue={setOverrideValue}
-            onRun={handleRun}
-            loading={running}
+            onRun={() => void handleRun()}
+            loading={running && !backgroundRunRef.current}
           />
         </aside>
 
@@ -293,46 +445,75 @@ export default function AuditApp() {
             <RunAuditTab
               runId={runId}
               scenario={selectedScenario}
+              auditPayload={runAuditPayload}
+              loading={running && !runAuditPayload}
               onNavigateDivergence={({ sheetSlug: slug, rowId, year }) =>
                 navigateToCell({ sheetSlug: slug, rowId, year })
               }
             />
           ) : (
             <div className="audit-grid-panel">
-              <div className="grid-title-bar">
-                <span>
+              <div className="grid-title-bar" data-testid="grid-title-bar">
+                <div className="grid-title-left">
                   <strong>{activeSheetMeta?.display_name ?? sheetSlug}</strong>
                   {gridData && (
-                    <>
-                      {" "}
-                      · {gridData.rows.length} rows × {gridData.years.length} year-columns
-                    </>
+                    <span className="grid-dims">
+                      {gridData.rows.length} rows × {gridData.years.length} year-columns
+                    </span>
                   )}
-                </span>
-                <div className="grid-legend">
-                  <span className="grid-shortcuts-hint" aria-label="Keyboard shortcuts">
-                    ↑↓←→ cell · Enter expand · ⌘J upstream · ⌘K search
-                  </span>
-                  <span>
-                    <i className="sw input" /> Input
-                  </span>
-                  <span>
-                    <i className="sw derived" /> Derived
-                  </span>
-                  <span>
-                    <i className="sw divergence" /> Divergence
-                  </span>
+                </div>
+                <div className="grid-title-right">
+                  <div className="grid-legend" id="grid-cell-legend" aria-label="Cell type legend">
+                    <span>
+                      <i className="sw input" aria-hidden="true" />
+                      <span className="legend-glyph" aria-hidden="true">
+                        I
+                      </span>{" "}
+                      Input
+                    </span>
+                    <span>
+                      <i className="sw derived" aria-hidden="true" />
+                      <span className="legend-glyph" aria-hidden="true">
+                        D
+                      </span>{" "}
+                      Derived
+                    </span>
+                    <span>
+                      <i className="sw divergence" aria-hidden="true" />
+                      <span className="legend-glyph" aria-hidden="true">
+                        ▲
+                      </span>{" "}
+                      Divergence
+                    </span>
+                  </div>
+                  <GridHelpPopover />
                 </div>
               </div>
-              {gridQ.isLoading && !gridData && (
-                <p className="audit-loading">Loading grid…</p>
+              {gridData && (
+                <GridToolbar
+                  prefs={gridPrefs}
+                  onPrefsChange={onGridPrefsChange}
+                  onFitColumns={() => gridRef.current?.fitColumns()}
+                  onResetColumns={() => gridRef.current?.resetColumns()}
+                />
               )}
+              {showRunProgress && (
+                <div className="audit-run-status" data-testid="audit-run-status">
+                  <span className="skeleton-pulse" aria-hidden="true" />
+                  {waitingForArtifact
+                    ? "Loading base case…"
+                    : `Running ${selectedScenario.replace("_", " ")} — solver converging, ~40 s on first run`}
+                </div>
+              )}
+              {showGridSkeleton && <GridSkeleton />}
               {gridData && (
                 <Grid
                   ref={gridRef}
                   payload={gridData}
                   activeCell={activeCell}
                   onCellSelect={openLineage}
+                  numberFormat={gridPrefs.numberFormat}
+                  density={gridPrefs.density}
                 />
               )}
             </div>
@@ -341,26 +522,32 @@ export default function AuditApp() {
 
         {!isRunAudit && (
           <aside className="audit-detail-rail" aria-label="Cell detail panel">
-            <DerivationPanel
-              entry={lineage}
-              activeCell={activeCell}
-              expanded={derivationExpanded}
-            />
-            <DependencyGraph
-              lineageKey={activeCell?.lineageKey ?? null}
-              runId={runId}
-              year={activeCell?.year}
-              sheet={gridData?.source_sheet}
-              row={activeCell?.rowIndex}
-              scenario={selectedScenario}
-              onNavigateCell={({ sheetSlug: slug, rowId, year, lineageKey }) => {
-                navigateToCell({ sheetSlug: slug, rowId, year, lineageKey });
-              }}
-            />
-            <div className="sources-history-row">
-              <SourcesPanel entry={lineage} />
-              <ChangeHistoryList lineageKey={activeCell?.lineageKey ?? null} />
-            </div>
+            {!activeCell ? (
+              <RailEmptyState />
+            ) : (
+              <>
+                <DerivationPanel
+                  entry={lineage}
+                  activeCell={activeCell}
+                  expanded={derivationExpanded}
+                />
+                <DependencyGraph
+                  lineageKey={activeCell.lineageKey}
+                  runId={runId}
+                  year={activeCell.year}
+                  sheet={gridData?.source_sheet}
+                  row={activeCell.rowIndex}
+                  scenario={selectedScenario}
+                  onNavigateCell={({ sheetSlug: slug, rowId, year, lineageKey }) => {
+                    navigateToCell({ sheetSlug: slug, rowId, year, lineageKey });
+                  }}
+                />
+                <div className="sources-history-row">
+                  <SourcesPanel entry={lineage} />
+                  <ChangeHistoryList lineageKey={activeCell.lineageKey} />
+                </div>
+              </>
+            )}
           </aside>
         )}
       </div>
