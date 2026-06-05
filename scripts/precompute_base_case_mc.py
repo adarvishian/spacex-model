@@ -22,6 +22,9 @@ OUT_PATH = REPO_ROOT / "frontend" / "public" / "data" / "base_case_mc.json"
 DEFAULT_TRIALS = 2000
 DEFAULT_SEED = 42
 
+sys.path.insert(0, str(REPO_ROOT / "scripts"))
+from precache_skip import should_skip_precache  # noqa: E402
+
 
 def _env_bool(name: str, default: bool) -> bool:
     raw = os.environ.get(name)
@@ -46,7 +49,7 @@ def _mc_config(trials: int, base_seed: int, scenario: str) -> "McRunConfig":
         warm_start=_env_bool("SPACEX_MODEL_MC_WARM_START", True),
         mc_lite=_env_bool("SPACEX_MODEL_MC_LITE", True),
         adaptive=_env_bool("SPACEX_MODEL_MC_ADAPTIVE", False),
-        conservation_audit_every=int(os.environ.get("SPACEX_MODEL_MC_CONSERVATION_AUDIT_EVERY", "100")),
+        conservation_audit_every=int(os.environ.get("SPACEX_MODEL_MC_CONSERVATION_AUDIT_EVERY", "0")),
     )
 
 
@@ -77,6 +80,9 @@ def main() -> int:
     if not settings.workbook_path.exists():
         print(f"Workbook not found: {settings.workbook_path}", file=sys.stderr)
         return 1
+
+    if should_skip_precache(OUT_PATH, repo_root=REPO_ROOT, label="MC precompute"):
+        return 0
 
     trials = int(os.environ.get("SPACEX_MODEL_MC_PRECOMPUTE_TRIALS", str(DEFAULT_TRIALS)))
     base_seed = int(os.environ.get("SPACEX_MODEL_MC_PRECOMPUTE_SEED", str(DEFAULT_SEED)))

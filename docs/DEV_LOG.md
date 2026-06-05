@@ -13,6 +13,27 @@ Override source of truth for disclosed inputs: `src/spacex_model/inputs/s1_overr
 
 ---
 
+## 2026-06-05 — Vercel build fix: commit precache artifacts, skip precompute on deploy (Option F)
+
+**Trigger:** Vercel 45 min build limit still exceeded after MC perf sprint (~36 min MC + base-case precompute on cold builders).
+
+### Shipped
+
+| Area | Change | Primary files |
+|------|--------|---------------|
+| Committed artifacts | `frontend/public/data/base_case_{mc,run}.json` tracked in git (2000-trial MC, full audit grids) | `.gitignore`, `frontend/public/data/` |
+| Skip on deploy | `SPACEX_MODEL_SKIP_PRECOMPUTE=1` in `vercel.json`; auto-skip when artifact `git_sha` matches HEAD | `scripts/precache_skip.py`, both precompute scripts |
+| Regen workflow | Offline: `python scripts/precompute_base_case.py && python scripts/precompute_base_case_mc.py`; commit JSON when inputs change | `scripts/precompute_*.py` |
+
+**Vercel prebuild now:** `pip install` + `npm ci` + `tsc` + `vite build` only — no 2000-trial MC on critical path.
+
+### Next agent actions
+
+1. After model/input changes: regen both artifacts, commit with same commit as code (or immediately after).
+2. `SPACEX_MODEL_FORCE_PRECOMPUTE=1` to override skip locally.
+
+---
+
 ## 2026-06-05 — MC Performance Sprint: lite pipeline + warm-start + QMC + adaptive (PRD_MC_Performance)
 
 **Trigger:** `docs/PRD_MC_Performance_2026-06-05.md` — cut 2,000-trial base-case MC wall-clock on Vercel prebuild without degrading published distribution quality.

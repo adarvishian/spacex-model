@@ -1,6 +1,9 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "buildCommand": "pip install -e . && cd frontend && npm ci && npm run build",
+  "env": {
+    "SPACEX_MODEL_SKIP_PRECOMPUTE": "1"
+  },
   "outputDirectory": "static/ui",
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/$1" },

@@ -15,7 +15,11 @@ node_modules/
 frontend/dist/
 frontend/test-results/
 playwright-report/
-public/
+# Vite public dir — only committed precache JSON is tracked (Option F)
+frontend/public/*
+!frontend/public/data/
+frontend/public/data/*
+!frontend/public/data/*.json
 *.tsbuildinfo
 *.mhtml           # S-1 filing (~200 MB); not read at runtime — see s1_overrides.py
 *.docx

@@ -18,6 +18,11 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[1]
 OUT_PATH = REPO_ROOT / "frontend" / "public" / "data" / "base_case_run.json"
 
+import sys as _sys
+
+_sys.path.insert(0, str(REPO_ROOT / "scripts"))
+from precache_skip import should_skip_precache  # noqa: E402
+
 
 def _git_sha() -> str:
     try:
@@ -46,6 +51,9 @@ def main() -> int:
     if not settings.workbook_path.exists():
         print(f"Workbook not found: {settings.workbook_path}", file=sys.stderr)
         return 1
+
+    if should_skip_precache(OUT_PATH, repo_root=REPO_ROOT, label="base-case precompute"):
+        return 0
 
     scenario = "base_case"
     scenario_path = settings.scenarios_dir / f"{scenario}.yaml"
