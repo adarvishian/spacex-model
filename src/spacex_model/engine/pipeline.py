@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import copy
 import hashlib
 import json
 import time
@@ -619,6 +620,39 @@ def _single_pass(state_dict: dict[str, Any]) -> dict[str, Any]:
     return {**state_dict, "pipeline": new_pipeline}
 
 
+def _zero_initial_pipeline() -> PipelineState:
+    return PipelineState(
+        cash_alloc=CashAllocations.zeros(),
+        kg_alloc=KgAllocations.zeros(),
+        vehicle_build_claim=YearVector.zeros(),
+        module_outputs={k: AllocatorOut.zeros() for k in _MODULE_KEYS},
+    )
+
+
+def copy_pipeline_state(state: PipelineState) -> PipelineState:
+    """Deep copy for warm-start seeding (worker-safe)."""
+    return copy.deepcopy(state)
+
+
+def pipeline_state_from_result(result: ModelResult) -> PipelineState:
+    """Reconstruct converged PipelineState from a ModelResult."""
+    alloc = result.allocator
+    return PipelineState(
+        cash_alloc=alloc.cash,
+        kg_alloc=alloc.kg,
+        vehicle_build_claim=alloc.vehicle_build_claim,
+        module_outputs=result.module_outputs,
+        launch_capacity=result.launch_capacity,
+        group_pnl=result.group_pnl,
+        allocator=alloc,
+        valuation=result.valuation,
+    )
+
+
+def _mc_lite_conservation_stub() -> ConservationResult:
+    return ConservationResult(r108_ok_by_year={}, residuals_by_check={})
+
+
 def _extract_monitored(state_dict: dict[str, Any]) -> dict[str, np.ndarray]:
     pipeline: PipelineState = state_dict["pipeline"]
     group = pipeline.group_pnl
@@ -663,6 +697,7 @@ def run_pipeline(
     write_outputs: bool = True,
     skip_conservation_halt: bool = False,
     extra_overrides: dict[str, Any] | None = None,
+    initial_state: PipelineState | None = None,
 ) -> ModelResult:
     """Execute pipeline: ingest → optional scenario overrides → iterative solve."""
     from spacex_model.inputs.scenarios import apply_assumption_overrides, load_scenario
@@ -709,28 +744,11 @@ def run_pipeline(
     ingest.value_pass.warnings.extend(anchor_warnings)
     demand = demand_curves if demand_curves is not None else demand_curves_from_ingest(ingest)
 
-    initial_pipeline = PipelineState(
-        cash_alloc=CashAllocations.zeros(),
-        kg_alloc=KgAllocations.zeros(),
-        vehicle_build_claim=YearVector.zeros(),
-        module_outputs={k: AllocatorOut.zeros() for k in _MODULE_KEYS},
+    pipeline, solver_trace = _solve_pipeline(
+        assumptions,
+        demand,
+        initial_pipeline=initial_state,
     )
-    state_in = {
-        "assumptions": assumptions,
-        "demand_curves": demand,
-        "pipeline": initial_pipeline,
-    }
-
-    final_state, solver_trace = solve_fixed_point(
-        state_in,
-        _single_pass,
-        extract_monitored=_extract_monitored,
-    )
-    pipeline: PipelineState = final_state["pipeline"]
-    assert pipeline.group_pnl is not None
-    assert pipeline.allocator is not None
-    assert pipeline.valuation is not None
-    assert pipeline.launch_capacity is not None
 
     allocation_check = check_allocation_bounds(
         pipeline.allocator.cash,
@@ -829,3 +847,98 @@ def run_pipeline(
             result.audit["divergence"] = div_report.to_dict()
 
     return result
+
+
+def _solve_pipeline(
+    assumptions: Assumptions,
+    demand: DemandCurves,
+    *,
+    initial_pipeline: PipelineState | None = None,
+) -> tuple[PipelineState, SolverTrace]:
+    """Core fixed-point solve shared by full and MC-lite paths."""
+    state_in = {
+        "assumptions": assumptions,
+        "demand_curves": demand,
+        "pipeline": initial_pipeline or _zero_initial_pipeline(),
+    }
+    final_state, solver_trace = solve_fixed_point(
+        state_in,
+        _single_pass,
+        extract_monitored=_extract_monitored,
+    )
+    pipeline: PipelineState = final_state["pipeline"]
+    assert pipeline.group_pnl is not None
+    assert pipeline.allocator is not None
+    assert pipeline.valuation is not None
+    assert pipeline.launch_capacity is not None
+    return pipeline, solver_trace
+
+
+def run_pipeline_mc(
+    workbook_path: Path | None = None,
+    scenario_path: Path | None = None,
+    assumptions: Assumptions | None = None,
+    *,
+    ingest: IngestResult | None = None,
+    demand_curves: DemandCurves | None = None,
+    run_id: str | None = None,
+    extra_overrides: dict[str, Any] | None = None,
+    initial_state: PipelineState | None = None,
+) -> ModelResult:
+    """Lean pipeline for MC trials — same solve math, skips audit overhead."""
+    from spacex_model.inputs.scenarios import apply_assumption_overrides, load_scenario
+
+    settings = get_settings()
+    repo_root = Path(__file__).resolve().parents[3]
+    path = workbook_path or settings.workbook_path
+    scenario_name = "base_case"
+    overrides: dict = {}
+
+    if scenario_path is not None:
+        spec = load_scenario(scenario_path)
+        scenario_name = spec.name
+        overrides = spec.overrides
+        if spec.baseline_workbook:
+            wb = Path(spec.baseline_workbook)
+            path = wb if wb.is_absolute() else repo_root / wb
+
+    if extra_overrides:
+        overrides = {**overrides, **extra_overrides}
+
+    rid = run_id or str(uuid.uuid4())[:8]
+
+    if ingest is None:
+        if not path.exists():
+            raise FileNotFoundError(f"Workbook not found: {path}")
+        ingest = ingest_workbook(path)
+
+    if assumptions is None:
+        assumptions = assumptions_from_ingest(ingest)
+    from spacex_model.inputs.s1_overrides import apply_s1_adherence_overrides
+
+    assumptions = apply_s1_adherence_overrides(assumptions)
+    if overrides:
+        assumptions = apply_assumption_overrides(assumptions, overrides)
+
+    demand = demand_curves if demand_curves is not None else demand_curves_from_ingest(ingest)
+
+    pipeline, solver_trace = _solve_pipeline(
+        assumptions,
+        demand,
+        initial_pipeline=initial_state,
+    )
+
+    return ModelResult(
+        run_id=rid,
+        assumptions=assumptions,
+        ingest=ingest,
+        demand_curves=demand,
+        module_outputs=pipeline.module_outputs,
+        group_pnl=pipeline.group_pnl,
+        launch_capacity=pipeline.launch_capacity,
+        allocator=pipeline.allocator,
+        valuation=pipeline.valuation,
+        solver_trace=solver_trace,
+        conservation=_mc_lite_conservation_stub(),
+        audit={"scenario": scenario_name, "mc_lite": True},
+    )

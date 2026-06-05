@@ -217,7 +217,16 @@ def build_group_ev_histogram(
     clean = values[np.isfinite(values)]
     if clean.size == 0:
         return None
-    counts, edges = np.histogram(clean, bins=n_bins)
+    if float(np.ptp(clean)) < 1e-9:
+        center = float(np.mean(clean))
+        return HistogramBins(
+            metric=metric,
+            bin_edges=[center - 0.5, center + 0.5],
+            counts=[int(clean.size)],
+            n_bins=1,
+        )
+    effective_bins = min(n_bins, max(1, len(np.unique(clean)) // 2))
+    counts, edges = np.histogram(clean, bins=effective_bins)
     return HistogramBins(
         metric=metric,
         bin_edges=[float(x) for x in edges],
@@ -269,6 +278,123 @@ def build_group_fcf_fan(
         p95=fan_pct["p95"],
         base_case=base_case,
     )
+
+
+MONITORED_ADAPTIVE_METRICS = ("group_ev_2025_b",)
+
+
+def _relative_change(a: float, b: float) -> float:
+    """Relative change between two values; 0 if both near zero."""
+    if not np.isfinite(a) or not np.isfinite(b):
+        return float("inf")
+    denom = max(abs(a), abs(b), 1e-12)
+    return abs(a - b) / denom
+
+
+def running_adaptive_diagnostics(
+    ev_values: np.ndarray,
+    *,
+    checkpoint_size: int,
+    eps: float = 0.0025,
+    consecutive: int = 2,
+    min_trials: int = 512,
+) -> dict[str, Any]:
+    """Checkpoint percentile trace and stopping recommendation for adaptive MC."""
+    clean = ev_values[np.isfinite(ev_values)]
+    n = int(clean.size)
+    trace: list[dict[str, float]] = []
+    stable_streak = 0
+    stop_at: int | None = None
+
+    if n < min_trials or checkpoint_size <= 0:
+        return {
+            "checkpoints": trace,
+            "stable_streak": 0,
+            "stop_at": None,
+            "should_stop": False,
+        }
+
+    prev_p5: float | None = None
+    prev_p50: float | None = None
+    prev_std: float | None = None
+    for end in range(checkpoint_size, n + 1, checkpoint_size):
+        subset = clean[:end]
+        p5 = float(np.percentile(subset, 5))
+        p50 = float(np.percentile(subset, 50))
+        std = float(np.std(subset))
+        entry = {
+            "trials": float(end),
+            "p5": p5,
+            "p50": p50,
+            "std": std,
+        }
+        trace.append(entry)
+
+        if prev_p5 is not None and prev_p50 is not None and prev_std is not None:
+            stable = (
+                _relative_change(p5, prev_p5) < eps
+                and _relative_change(p50, prev_p50) < eps
+                and _relative_change(std, prev_std) < eps
+            )
+            stable_streak = stable_streak + 1 if stable else 0
+            if stable_streak >= consecutive and end >= min_trials and stop_at is None:
+                stop_at = end
+        prev_p5, prev_p50, prev_std = p5, p50, std
+
+    return {
+        "checkpoints": trace,
+        "stable_streak": stable_streak,
+        "stop_at": stop_at,
+        "should_stop": stop_at is not None,
+    }
+
+
+def compare_aggregations(
+    candidate: McAggregation,
+    baseline: McAggregation,
+    *,
+    rel_tol: float = 0.005,
+    abs_tol_mm: float = 1.0,
+) -> list[str]:
+    """Return list of metric/percentile failures vs baseline (§3.2 harness)."""
+    failures: list[str] = []
+    pct_keys = ("p5", "p25", "p50", "p75", "p95")
+
+    for key, base_summary in baseline.metrics.items():
+        cand_summary = candidate.metrics.get(key)
+        if cand_summary is None:
+            failures.append(f"missing metric {key}")
+            continue
+        for pct in pct_keys:
+            base_val = getattr(base_summary, pct)
+            cand_val = getattr(cand_summary, pct)
+            if not np.isfinite(base_val) and not np.isfinite(cand_val):
+                continue
+            if not np.isfinite(cand_val):
+                failures.append(f"{key}.{pct}: candidate non-finite")
+                continue
+            rel = _relative_change(cand_val, base_val)
+            abs_diff = abs(cand_val - base_val)
+            tol = rel_tol
+            if abs(base_val) < 10.0 and "_fcf_" in key:
+                tol = max(rel_tol, abs_tol_mm / max(abs(base_val), abs_tol_mm))
+            if rel > tol and abs_diff > abs_tol_mm:
+                failures.append(f"{key}.{pct}: {cand_val} vs {base_val} (rel={rel:.4f})")
+
+        for stat in ("mean",):
+            base_val = getattr(base_summary, stat)
+            cand_val = getattr(cand_summary, stat)
+            if np.isfinite(base_val) and np.isfinite(cand_val):
+                if _relative_change(cand_val, base_val) > rel_tol:
+                    failures.append(f"{key}.{stat}: {cand_val} vs {base_val}")
+        if key == "group_ev_2025_b":
+            base_val = base_summary.cvar_5
+            cand_val = cand_summary.cvar_5
+            if np.isfinite(base_val) and np.isfinite(cand_val):
+                if _relative_change(cand_val, base_val) > rel_tol:
+                    failures.append(f"{key}.cvar_5: {cand_val} vs {base_val}")
+
+    return failures
 
 
 def aggregate_trials(

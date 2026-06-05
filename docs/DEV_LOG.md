@@ -13,6 +13,55 @@ Override source of truth for disclosed inputs: `src/spacex_model/inputs/s1_overr
 
 ---
 
+## 2026-06-05 — MC Performance Sprint: lite pipeline + warm-start + QMC + adaptive (PRD_MC_Performance)
+
+**Trigger:** `docs/PRD_MC_Performance_2026-06-05.md` — cut 2,000-trial base-case MC wall-clock on Vercel prebuild without degrading published distribution quality.
+
+### Shipped
+
+| Area | Change | Primary files |
+|------|--------|---------------|
+| Equivalence harness | Golden baseline `tests/golden/mc_baseline_seed42_2000.{parquet,_agg.json}`; per-trial + aggregate tests | `tests/reconciliation/test_mc_equivalence.py`, `scripts/generate_mc_golden.py` |
+| WS-A MC-lite | `run_pipeline_mc()` — same `_solve_pipeline` math, skips tracemalloc/conservation/divergence/audit writes; periodic full-pipeline conservation audit every K trials | `engine/pipeline.py`, `mc/runner.py` |
+| WS-B warm-start | Base-case converged `PipelineState` seeded per trial; cold-retry on `NonConvergenceError`; `initial_state` on `run_pipeline` too | `engine/pipeline.py`, `mc/runner.py` |
+| WS-C QMC | `inverse_cdf_value()` + scrambled Sobol via `scipy.stats.qmc`; `McRunConfig.sampling` opt-in (`mc` default) | `mc/distributions.py`, `mc/sampler.py` |
+| WS-D adaptive | Running P5/P50/std stability check after checkpoints; `min_trials=512`, `max_trials=2000` | `mc/aggregator.py`, `mc/runner.py` |
+| Precompute knobs | Env vars `SPACEX_MODEL_MC_{SAMPLING,WARM_START,MC_LITE,ADAPTIVE,CONSERVATION_AUDIT_EVERY}`; `mc_config` block in artifact | `scripts/precompute_base_case_mc.py` |
+| Histogram fix | Degenerate near-constant Group EV (this workbook) no longer crashes 30-bin histogram | `mc/aggregator.py` |
+
+### Performance (measured, 32-trial benchmark, seed 42)
+
+| Config | Wall-clock | Mean solver iters |
+|--------|------------|-------------------|
+| Legacy (`mc_lite=False`, `warm_start=False`) | 163.4 s | 137.9 |
+| Optimized (defaults) | 36.9 s | 133.3 |
+| **Speedup** | **~4.4×** | −3% iterations |
+
+2000-trial golden generation (optimized path): **~15 min** (vs estimated ~170 min legacy). Extrapolated deploy precompute: **~36 min** vs prior **~25 min** claim was optimistic for legacy path — actual legacy 2000-trial would be ~2.5 h; optimized lands near the original deploy budget target.
+
+### Gate status
+
+**Passing:** `test_mc_lite_matches_full_per_trial` (32 trials, exact); `test_warm_start_matches_cold_per_trial` (32 trials, ≤10× solver tol); `test_qmc_sampling_produces_valid_trials`; `test_adaptive_stopping_on_golden_replay` (stops at N\*<2000 on golden); `pytest tests/mc/test_mc_distribution_payload.py` 4/4. Golden: 2000/2000 converged, seed 42.
+
+**Defaults flipped:** `McRunConfig.mc_lite=True`, `warm_start=True`. QMC and adaptive remain opt-in (PRD §4.3–4.4 — sample-changing; need Vlad sign-off before default flip).
+
+**Model note:** `group_ev_2025_b` shows ~zero cross-trial variance on this workbook (2 unique float values across 2000 trials) — distribution is FCF-driven; harness tolerances still apply to FCF fan metrics.
+
+### Deferred
+
+- Option E (looser MC solver tolerance) — out of scope per PRD.
+- Option F (decouple MC from Vercel prebuild) — companion infra track.
+- QMC default flip + convergence study at N∈{256,512,1024} — config-ready, not enabled in precompute.
+- `test_optimized_mc_matches_golden_aggregate` marked `@pytest.mark.slow` — run in full CI/nightly.
+
+### Next agent actions
+
+1. Run `pytest tests/reconciliation/test_mc_equivalence.py -v` before MC changes.
+2. Regenerate golden only on explicit approval: `python scripts/generate_mc_golden.py`.
+3. For deploy speed without quality change: keep optimized defaults; set `SPACEX_MODEL_MC_PRECOMPUTE_TRIALS=2000` on offline job, commit artifact (Option F).
+
+---
+
 ## 2026-06-05 — Lineage Trust Sprint 7: MC in Audit Mode + legacy cleanup (M1 frontend)
 
 **Trigger:** `docs/PRD_Lineage_Trust_and_Monte_Carlo_2026-06-05.md` §10 Sprint 7 — per-output MC panel from headline cells; derivation ↔ distribution toggle; retire `/explorer` MC path.

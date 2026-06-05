@@ -109,6 +109,63 @@ def parse_discrete_choices(
     return [base]
 
 
+def inverse_cdf_value(
+    distribution: DistributionType,
+    u: float,
+    *,
+    base_case: float | str | None,
+    year_values: dict[int, float | str | None],
+    mc_min: float | None,
+    mc_max: float | None,
+    mc_notes: str | None = None,
+) -> SampledValue:
+    """Map a uniform [0, 1) draw to a sample via inverse CDF (QMC path)."""
+    u = float(min(max(u, 0.0), 1.0 - 1e-15))
+    base = _base_scalar(base_case, year_values)
+    lo = float(mc_min) if mc_min is not None else base
+    hi = float(mc_max) if mc_max is not None else base
+    if lo > hi:
+        lo, hi = hi, lo
+
+    if distribution == DistributionType.FIXED:
+        return SampledValue(kind="scalar", scalar=base)
+
+    if distribution == DistributionType.FIXED_YEARROW:
+        yv = {y: float(v) for y, v in year_values.items() if isinstance(v, (int, float))}
+        return SampledValue(kind="yearrow_fixed", year_values=yv)
+
+    if distribution == DistributionType.TRIANGLE_YEARROW:
+        m_lo = lo / base if base else lo
+        m_hi = hi / base if base else hi
+        mult = float(triangle_distribution(m_lo, 1.0, m_hi).ppf(u))
+        yv: dict[int, float] = {}
+        for year, val in year_values.items():
+            if isinstance(val, (int, float)):
+                yv[year] = float(val) * mult
+            elif isinstance(base_case, (int, float)):
+                yv[year] = float(base_case) * mult
+        if not yv and isinstance(base_case, (int, float)):
+            yv = {y: float(base_case) * mult for y in range(FIRST_YEAR, FIRST_YEAR + HORIZON_YEARS)}
+        return SampledValue(kind="yearrow_multiplier", year_values=yv)
+
+    if distribution == DistributionType.DISCRETE:
+        choices = parse_discrete_choices(mc_min=mc_min, mc_max=mc_max, mc_notes=mc_notes, base=base)
+        # Equal-width bins: u in [k/n, (k+1)/n) → choices[k]
+        idx = min(int(u * len(choices)), len(choices) - 1)
+        return SampledValue(kind="scalar", scalar=float(choices[idx]))
+
+    if distribution == DistributionType.TRIANGLE:
+        return SampledValue(kind="scalar", scalar=float(triangle_distribution(lo, base, hi).ppf(u)))
+
+    if distribution == DistributionType.UNIFORM:
+        return SampledValue(kind="scalar", scalar=float(stats.uniform(loc=lo, scale=hi - lo).ppf(u)))
+
+    if distribution == DistributionType.LOGNORMAL:
+        return SampledValue(kind="scalar", scalar=float(fit_lognorm_from_p10_p90(lo, hi).ppf(u)))
+
+    return SampledValue(kind="scalar", scalar=base)
+
+
 def sample_value(
     distribution: DistributionType,
     *,

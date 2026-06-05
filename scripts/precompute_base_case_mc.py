@@ -23,6 +23,33 @@ DEFAULT_TRIALS = 2000
 DEFAULT_SEED = 42
 
 
+def _env_bool(name: str, default: bool) -> bool:
+    raw = os.environ.get(name)
+    if raw is None:
+        return default
+    return raw.strip().lower() in {"1", "true", "yes", "on"}
+
+
+def _mc_config(trials: int, base_seed: int, scenario: str) -> "McRunConfig":
+    from spacex_model.mc.runner import McRunConfig
+
+    sampling = os.environ.get("SPACEX_MODEL_MC_SAMPLING", "mc")
+    if sampling not in {"mc", "qmc"}:
+        sampling = "mc"
+    return McRunConfig(
+        trials=trials,
+        base_seed=base_seed,
+        n_jobs=-1,
+        checkpoint_interval=max(100, trials // 10),
+        scenario_name=scenario,
+        sampling=sampling,  # type: ignore[arg-type]
+        warm_start=_env_bool("SPACEX_MODEL_MC_WARM_START", True),
+        mc_lite=_env_bool("SPACEX_MODEL_MC_LITE", True),
+        adaptive=_env_bool("SPACEX_MODEL_MC_ADAPTIVE", False),
+        conservation_audit_every=int(os.environ.get("SPACEX_MODEL_MC_CONSERVATION_AUDIT_EVERY", "100")),
+    )
+
+
 def _git_sha() -> str:
     try:
         out = subprocess.check_output(
@@ -55,16 +82,14 @@ def main() -> int:
     base_seed = int(os.environ.get("SPACEX_MODEL_MC_PRECOMPUTE_SEED", str(DEFAULT_SEED)))
     scenario = "base_case"
 
-    print(f"Running base-case MC ({trials} trials, seed {base_seed})…")
+    cfg = _mc_config(trials, base_seed, scenario)
+    print(
+        f"Running base-case MC ({trials} trials, seed {base_seed}, "
+        f"lite={cfg.mc_lite}, warm={cfg.warm_start}, sampling={cfg.sampling}, adaptive={cfg.adaptive})…"
+    )
     mc = run_mc(
         workbook_path=settings.workbook_path,
-        config=McRunConfig(
-            trials=trials,
-            base_seed=base_seed,
-            n_jobs=-1,
-            checkpoint_interval=max(100, trials // 10),
-            scenario_name=scenario,
-        ),
+        config=cfg,
         run_id="precache",
     )
 
@@ -86,6 +111,14 @@ def main() -> int:
         "n_converged": agg.n_converged,
         "convergence_status": agg.convergence_status,
         "wall_clock_sec": round(mc.wall_clock_sec, 3),
+        "mc_config": {
+            "sampling": cfg.sampling,
+            "warm_start": cfg.warm_start,
+            "mc_lite": cfg.mc_lite,
+            "adaptive": cfg.adaptive,
+            "adaptive_stop_at": mc.audit.get("adaptive_stop_at"),
+            "conservation_audit_every": cfg.conservation_audit_every,
+        },
         "aggregation": serialize_mc_aggregation(agg),
     }
 
