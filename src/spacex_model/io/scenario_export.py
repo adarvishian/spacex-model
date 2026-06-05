@@ -21,8 +21,7 @@ from spacex_model.service.serializers import _MODULE_DISPLAY, _MODULE_KEYS, _YEA
 _MODULE_SHEET_SLUG = {
     "customer_launch": "customer_launch",
     "starlink": "starlink",
-    "odc": "odc",
-    "ai_stack": "ai_stack",
+    "ai_compute": "odc",
     "lunar_mars": "lunar_mars",
 }
 

@@ -18,3 +18,4 @@ public/
 *.tsbuildinfo
 *.mhtml           # S-1 filing (~200 MB); not read at runtime — see s1_overrides.py
 *.docx
+.vercel

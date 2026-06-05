@@ -12,12 +12,11 @@ from spacex_model.mc.aggregator import McAggregation
 from spacex_model.mc.sensitivity import TornadoBar
 from spacex_model.service.lineage import get_lineage_registry
 
-_MODULE_KEYS = ("customer_launch", "starlink", "odc", "ai_stack", "lunar_mars")
+_MODULE_KEYS = ("customer_launch", "starlink", "ai_compute", "lunar_mars")
 _MODULE_DISPLAY = {
     "customer_launch": "Customer Launch",
     "starlink": "Starlink",
-    "odc": "ODC",
-    "ai_stack": "AI Stack",
+    "ai_compute": "AI Compute",
     "lunar_mars": "Lunar Mars",
 }
 _YEARS = list(range(FIRST_YEAR, LAST_YEAR + 1))

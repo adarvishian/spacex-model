@@ -14,6 +14,7 @@ from fastapi.responses import FileResponse, Response
 from fastapi.staticfiles import StaticFiles
 
 from spacex_model.config.settings import get_repo_root, get_settings, is_serverless
+from spacex_model.engine.iterative_solver import NonConvergenceError
 from spacex_model.engine.pipeline import ModelResult, run_pipeline
 from spacex_model.inputs.assumptions import assumptions_from_ingest
 from spacex_model.inputs.demand_curves import demand_curves_from_ingest
@@ -405,11 +406,16 @@ def run_deterministic(body: DeterministicRunRequest) -> dict[str, Any]:
     base_assumptions = assumptions_from_ingest(ingest)
     override_warnings = _validate_overrides(base_assumptions, merged_overrides)
 
-    result = run_pipeline(
-        scenario_path=scenario_path,
-        extra_overrides=merged_overrides or None,
-        write_outputs=not is_serverless(),
-    )
+    try:
+        result = run_pipeline(
+            scenario_path=scenario_path,
+            extra_overrides=merged_overrides or None,
+            write_outputs=not is_serverless(),
+        )
+    except NonConvergenceError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    except KeyError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
 
     payload = serialize_model_result(result, cached=False)
     payload["override_warnings"] = override_warnings
