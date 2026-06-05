@@ -1,8 +1,7 @@
-"""Sprint R3 gate — CAE allocator as-is (softmax + water-fill + pro-rata kg + debt)."""
+"""Sprint R3 gate — CAE allocator as-is (xlsx diagnostic + structural invariants)."""
 
 from __future__ import annotations
 
-import math
 from pathlib import Path
 
 import numpy as np
@@ -17,7 +16,7 @@ from spacex_model.calc.allocator.debt_facilities import (
     odc_debt_conservation_ok,
     terafab_debt_conservation_ok,
 )
-from spacex_model.calc.allocator.priority import compute_softmax_allocation
+from spacex_model.calc.allocator.priority import compute_softmax_shares
 from spacex_model.calc.allocator.queue_gate import compute_queue_gate
 from spacex_model.calc.facilities_build import FacilitiesBuildInputs, compute_facilities_build
 from spacex_model.calc.launch_capacity import LaunchCapacityInputs, compute_launch_capacity
@@ -64,13 +63,13 @@ def _fb_from_xlsx(ingest, assumptions):
 def test_r3_allocator_modules_importable() -> None:
     from spacex_model.calc.allocator import (
         compute_carve_out,
-        compute_kg_rationing,
         compute_queue_gate,
-        compute_softmax_allocation,
-        compute_water_fill,
+        compute_softmax_shares,
+        compute_two_resource_fill,
     )
 
-    assert callable(compute_softmax_allocation)
+    assert callable(compute_softmax_shares)
+    assert callable(compute_two_resource_fill)
 
 
 def test_r3_softmax_shares_match_xlsx_2030(ingest, assumptions) -> None:
@@ -78,7 +77,7 @@ def test_r3_softmax_shares_match_xlsx_2030(ingest, assumptions) -> None:
     spot = label_year_vector(ingest, CAE, cl.SPOT_IRR_STARLINK)
     spot_cl = label_year_vector(ingest, CAE, cl.SPOT_IRR_CUSTOMER_LAUNCH)
     spot_ai = label_year_vector(ingest, CAE, cl.SPOT_IRR_AI_COMPUTE)
-    from spacex_model.calc.allocator.priority import ModuleSpotIrrs, compute_softmax_shares
+    from spacex_model.calc.allocator.priority import ModuleSpotIrrs
 
     spot_irr = ModuleSpotIrrs(starlink=spot, customer_launch=spot_cl, ai_compute=spot_ai)
     _, _, shares = compute_softmax_shares(spot_irr, assumptions)
@@ -106,22 +105,6 @@ def test_r3_remaining_pool_zero_in_2025(ingest, assumptions) -> None:
     )
     carve = compute_carve_out(assumptions, pool.pool_after_gate)
     assert carve.remaining_pool.at(FIRST_YEAR) == 0.0
-
-
-def test_r3_kg_pro_rata_independent_of_cash(assumptions) -> None:
-    """F2 defect: kg rationing uses pro-rata, not cash softmax weights."""
-    from spacex_model.calc.allocator.kg_rationing import compute_kg_rationing
-    from spacex_model.calc.allocator.priority import ModuleSpotIrrs
-
-    desired = ModuleSpotIrrs(
-        starlink=YearVector(np.full(HORIZON_YEARS, 100.0)),
-        customer_launch=YearVector(np.full(HORIZON_YEARS, 50.0)),
-        ai_compute=YearVector(np.full(HORIZON_YEARS, 50.0)),
-    )
-    cap = YearVector(np.full(HORIZON_YEARS, 200.0))
-    result = compute_kg_rationing(desired, cap, YearVector.zeros())
-    assert result.allotment_kg.starlink.at(2030) == pytest.approx(100.0, rel=0.01)
-    assert result.allotment_kg.customer_launch.at(2030) == pytest.approx(50.0, rel=0.01)
 
 
 def test_r3_debt_wired_through_allocator(ingest, assumptions) -> None:
@@ -164,7 +147,7 @@ def test_r3_debt_wired_through_allocator(ingest, assumptions) -> None:
 
 
 def test_r3_structural_invariants(ingest, assumptions) -> None:
-    """Σ cash alloc ≤ remaining pool; shares sum ≈ 1; 2025 cash alloc = 0."""
+    """Σ cash alloc ≤ remaining pool; 2025 cash alloc = 0."""
     lc = compute_launch_capacity(LaunchCapacityInputs(assumptions=assumptions))
     mods = {k: AllocatorOut.zeros() for k in ("customer_launch", "starlink", "ai_compute", "lunar_mars")}
     result = compute_allocator(
@@ -187,13 +170,10 @@ def test_r3_structural_invariants(ingest, assumptions) -> None:
             assert total_cash == pytest.approx(0.0, abs=1.0)
 
 
-def test_r3_defect_f4_documented_kg_demand_mismatch(ingest) -> None:
-    """F4: memo kg demand ≠ sum desired launch kg (defect reproduced, not fixed)."""
+def test_r3_defect_f4_xlsx_cached_mismatch_persists(ingest) -> None:
+    """F4 as-is xlsx: memo kg demand ≠ total desired launch kg (fixed in Python U0)."""
     memo = label_year_vector(ingest, CAE, "Memo: total kg demand (kg)").at(2030)
-    sl = label_year_vector(ingest, CAE, cl.DESIRED_LAUNCH_KG_STARLINK).at(2030)
-    cl_kg = label_year_vector(ingest, CAE, cl.DESIRED_LAUNCH_KG_CUSTOMER_LAUNCH).at(2030)
-    ai = label_year_vector(ingest, CAE, cl.DESIRED_LAUNCH_KG_AI_COMPUTE).at(2030)
-    total = sl + cl_kg + ai
+    total = label_year_vector(ingest, CAE, cl.TOTAL_DESIRED_LAUNCH_KG).at(2030)
     assert memo != pytest.approx(total, rel=0.1)
 
 
@@ -205,13 +185,13 @@ def test_r3_inline_labels_allocator_scope(ingest) -> None:
         "allocator/cash_pool.py",
         "allocator/queue_gate.py",
         "allocator/priority.py",
-        "allocator/kg_rationing.py",
-        "allocator/water_fill.py",
         "allocator/carve_out.py",
-        "allocator/level2_split.py",
         "allocator/cae_demands.py",
+        "allocator/demand_spine.py",
+        "allocator/cap_base.py",
         "allocator/debt_facilities.py",
         "allocator/irr_display.py",
+        "allocator/conservation.py",
     }
     r3_violations = [v for v in violations if any(m in v for m in r3_modules)]
     assert r3_violations == [], "\n".join(r3_violations[:15])

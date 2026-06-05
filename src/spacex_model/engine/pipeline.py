@@ -73,7 +73,16 @@ from spacex_model.config.constants import FIRST_YEAR, HORIZON_YEARS, LAST_YEAR
 from spacex_model.config.settings import get_settings
 from spacex_model.domain.assumption_helpers import assumption_scalar, assumption_year_vector
 from spacex_model.domain.year_vector import YearVector
-from spacex_model.engine.conservation import ConservationResult, check_allocation_bounds, raise_on_break
+from spacex_model.calc.allocator.conservation import (
+    AllocatorConservationInputs,
+    compute_allocator_conservation,
+)
+from spacex_model.engine.conservation import (
+    ConservationResult,
+    check_allocation_bounds,
+    merge_allocator_conservation,
+    raise_on_break,
+)
 from spacex_model.engine.iterative_solver import SolverTrace, damped_blend, solve_fixed_point
 from spacex_model.inputs.assumptions import Assumptions, assumptions_from_ingest
 from spacex_model.inputs.demand_curves import DemandCurves, demand_curves_from_ingest
@@ -507,6 +516,13 @@ def _single_pass(state_dict: dict[str, Any]) -> dict[str, Any]:
             group_revenue_base=module_outputs["starlink"].total_revenue,
         )
     )
+    ai_inputs = AiComputeInputs(
+        assumptions=assumptions,
+        starlink_capacity=sl_capacity,
+        sats_deployed=odc_sats,
+        facilities_build=fb,
+    )
+    module_outputs["ai_compute"] = ai_compute_out(ai_inputs)
     allocator_pre = compute_allocator(
         AllocatorInputs(
             assumptions=assumptions,
@@ -720,8 +736,29 @@ def run_pipeline(
         pipeline.allocator.cash,
         pipeline.allocator.available_cash,
     )
+    gigabay_tp = None
+    if (
+        pipeline.allocator.ship_slots_used is not None
+        and pipeline.allocator.ship_slots_idle is not None
+    ):
+        gigabay_tp = YearVector(
+            pipeline.allocator.ship_slots_used.values
+            + pipeline.allocator.ship_slots_idle.values
+        )
+    alloc_cons = compute_allocator_conservation(
+        AllocatorConservationInputs(
+            allocator=pipeline.allocator,
+            group_fcf=pipeline.group_pnl.group_fcf,
+            debt=pipeline.allocator.debt,
+            gigabay_throughput=gigabay_tp,
+            bridge_drawdown=compute_bridge_drawdown(assumptions),
+            ipo_drawdown=compute_ipo_drawdown(assumptions),
+        )
+    )
+    conservation = merge_allocator_conservation(pipeline.group_pnl.conservation, alloc_cons)
+
     if not skip_conservation_halt:
-        raise_on_break(pipeline.group_pnl.conservation)
+        raise_on_break(conservation)
 
     elapsed = time.perf_counter() - t0
     _current, peak = tracemalloc.get_traced_memory()
@@ -770,7 +807,7 @@ def run_pipeline(
         allocator=pipeline.allocator,
         valuation=pipeline.valuation,
         solver_trace=solver_trace,
-        conservation=pipeline.group_pnl.conservation,
+        conservation=conservation,
         vehicle_pools=vehicle_pools,
         f9_customer_launches=f9_customer,
         audit=audit,

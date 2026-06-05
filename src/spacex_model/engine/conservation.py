@@ -65,10 +65,16 @@ class CashIdentityInputs:
 class ConservationResult:
     r108_ok_by_year: dict[int, str]
     residuals_by_check: dict[str, dict[int, float]]
+    allocator_ok: bool = True
+    r14_ok: bool = True
 
     @property
     def all_ok(self) -> bool:
-        return all(v == "OK" for v in self.r108_ok_by_year.values())
+        return (
+            all(v == "OK" for v in self.r108_ok_by_year.values())
+            and self.allocator_ok
+            and self.r14_ok
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -277,9 +283,38 @@ def compute_conservation(
     )
 
 
+def merge_allocator_conservation(
+    base: ConservationResult,
+    allocator_result: object,
+) -> ConservationResult:
+    """Fold U4 allocator guardrails (R14 + unified identities) into conservation block."""
+    from spacex_model.calc.allocator.conservation import AllocatorConservationResult
+
+    if not isinstance(allocator_result, AllocatorConservationResult):
+        return base
+    merged_residuals = {**base.residuals_by_check, **allocator_result.residuals_by_check}
+    return ConservationResult(
+        r108_ok_by_year=base.r108_ok_by_year,
+        residuals_by_check=merged_residuals,
+        allocator_ok=allocator_result.all_ok,
+        r14_ok=allocator_result.ok_by_check.get("R14", True),
+    )
+
+
 def raise_on_break(conservation: ConservationResult) -> None:
     """Halt the pipeline when R108 contains any CHECK year (PRD §16.2)."""
+    if conservation.all_ok:
+        return
     failed = {year: status for year, status in conservation.r108_ok_by_year.items() if status != "OK"}
+    if not failed and not conservation.allocator_ok:
+        raise ConservationBrokenError(
+            "Allocator conservation failed — "
+            + ", ".join(
+                k
+                for k, v in conservation.residuals_by_check.items()
+                if k not in ("R99", "R100", "R101", "R102", "R103", "R104", "R105", "R106", "R107", "R109", "R110")
+            )
+        )
     if not failed:
         return
     details = []

@@ -124,9 +124,12 @@ def test_r4_divergence_all_triaged(base_case) -> None:
 def test_r4_defects_f1_f6_documented_not_fixed(base_case) -> None:
     """R4 reproduces known allocator defects — remediation is U0–U4 scope."""
     alloc = base_case.allocator
-    # F4: memo kg demand vs desired launch kg may diverge (as-is CAE)
+    # F4: fixed in Python U0 (total ≡ memo); xlsx cached CAE may still diverge
+    assert alloc.total_desired_launch_kg is not None
+    assert alloc.memo_total_kg_demand is not None
     assert alloc.capacity_available_kg is not None
     # F5: ODC debt draw field present (bypass spine — as-is R2/R3)
     assert hasattr(alloc, "debt_odc_draw")
-    # F6: conservation passes structurally but R14 facility repair deferred to U4
+    # F6: R14 facility-flow identity repaired in U4
+    assert base_case.conservation.r14_ok
     assert base_case.conservation.all_ok

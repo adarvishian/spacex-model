@@ -1,4 +1,4 @@
-"""CAE allocator brain — pool → gate → carve-out → softmax → kg → water-fill."""
+"""CAE allocator brain — pool → gate → carve-out → two-resource fill (U2)."""
 
 from __future__ import annotations
 
@@ -7,10 +7,12 @@ from dataclasses import dataclass, replace
 import numpy as np
 
 from spacex_model.calc._allocator_out import AllocatorOut
+from spacex_model.calc.allocator.cap_base import CapBaseInputs, compute_cap_base
 from spacex_model.calc.allocator.cae_demands import (
     aggregate_cae_demands,
-    cae_cash_to_sub_blocks,
-    cae_kg_to_sub_blocks,
+    four_cash_to_sub_blocks,
+    four_kg_to_sub_blocks,
+    four_program_demands,
 )
 from spacex_model.calc.allocator.carve_out import compute_carve_out
 from spacex_model.calc.allocator.cash_pool import (
@@ -22,19 +24,21 @@ from spacex_model.calc.allocator.debt_facilities import (
     DebtFacilitiesResult,
     OdcFacilityInputs,
     TerafabFacilityInputs,
+    compute_chip_transfer_revenue_mm,
     compute_debt_facilities,
+)
+from spacex_model.calc.allocator.strategic_seed import (
+    StrategicSeedInputs,
+    compute_strategic_seed,
 )
 from spacex_model.calc.allocator.demand_builders import compute_exogenous_demands
 from spacex_model.calc.allocator.deployment import apply_first_year_override, cap_cash_allocations_to_available
-from spacex_model.calc.allocator.irr_display import compute_level2_spot_irrs, compute_module_spot_irrs
-from spacex_model.calc.allocator.kg_rationing import compute_kg_rationing
-from spacex_model.calc.allocator.level2_split import compute_level2_split
+from spacex_model.calc.allocator.irr_display import compute_four_program_prior_irrs
 from spacex_model.calc.allocator.physical_gates import (
     apply_f9_supply_gate,
     apply_v2_phase_out_gate,
     apply_v3_startup_gate,
 )
-from spacex_model.calc.allocator.priority import compute_softmax_allocation
 from spacex_model.calc.allocator.queue_gate import compute_non_module_claims, compute_queue_gate
 from spacex_model.calc.allocator.types import (
     AllocatorResult,
@@ -43,8 +47,11 @@ from spacex_model.calc.allocator.types import (
     QueueSubBlockDemands,
     QueueSubBlockIrrs,
 )
+from spacex_model.calc.allocator.two_resource_fill import (
+    compute_two_resource_fill,
+    kg_per_ship_year,
+)
 from spacex_model.calc.allocator.vehicle_build import compute_vehicle_build_claim
-from spacex_model.calc.allocator.water_fill import compute_water_fill
 from spacex_model.calc.facilities_build import FacilitiesBuildResult
 from spacex_model.calc.launch_capacity import LaunchCapacityResult
 from spacex_model.config import canonical_labels as cl
@@ -53,7 +60,7 @@ from spacex_model.config.canonical_labels_supplement import (
     SATS_PER_F9_LAUNCH_V2_DTC,
     V2_PHASE_OUT_YEAR,
 )
-from spacex_model.config.constants import FIRST_YEAR, HORIZON_YEARS
+from spacex_model.config.constants import HORIZON_YEARS
 from spacex_model.domain.assumption_helpers import assumption_scalar
 from spacex_model.domain.year_vector import YearVector
 from spacex_model.inputs.assumptions import Assumptions
@@ -146,21 +153,6 @@ def _apply_physical_gates(
     )
 
 
-def _forward_kg_from_modules(
-    module_outputs: dict[str, AllocatorOut],
-    lunar_mars_kg: YearVector | None,
-) -> dict[str, YearVector]:
-    z = YearVector.zeros()
-    return {
-        "starlink": module_outputs.get("starlink", AllocatorOut.zeros()).capacity_demand_kg,
-        "odc": module_outputs.get("ai_compute", module_outputs.get("odc", AllocatorOut.zeros())).capacity_demand_kg,
-        "customer_launch": module_outputs.get(
-            "customer_launch", AllocatorOut.zeros()
-        ).capacity_demand_kg,
-        "lunar_mars": lunar_mars_kg or z,
-    }
-
-
 def _resolve_facilities(
     inputs: AllocatorInputs,
     forward_kg: dict[str, YearVector],
@@ -170,12 +162,33 @@ def _resolve_facilities(
     return None
 
 
+def _gigabay_throughput(fb: FacilitiesBuildResult | None) -> YearVector:
+    if fb is not None:
+        return fb.gigabay_installed_capacity
+    return YearVector.zeros()
+
+
+def _chip_transfer_revenue_estimate(
+    assumptions: Assumptions,
+    odc_kg: YearVector,
+    chip_at_cost_per_sat: YearVector,
+) -> YearVector:
+    """Estimate at-cost chip transfer from exogenous ODC kg demand (acyclic)."""
+    mass = assumption_scalar(assumptions, cl.V3_MASS_KG, default=2000.0)
+    chips_per_sat = assumption_scalar(assumptions, cl.CHIPS_PER_SAT, default=0.0)
+    if mass <= 0.0 or chips_per_sat <= 0.0:
+        return YearVector.zeros()
+    sats = odc_kg.values / mass
+    chips = sats * chips_per_sat
+    return compute_chip_transfer_revenue_mm(YearVector(chips), chip_at_cost_per_sat)
+
+
 def compute_allocator(inputs: AllocatorInputs) -> AllocatorResult:
-    """Run full CAE spine: pool → gate → carve-out → softmax → kg → water-fill → debt.
+    """Run full CAE spine: pool → gate → carve-out → two-resource fill → debt.
 
     Excel cell:        Cash Allocation Engine (orchestrator)
     Excel label:       "▸ Cash Allocation Engine inputs"
-    Architecture ref:  §2.3 CAE map + PRD R3
+    Architecture ref:  §2.3 CAE map + PRD U2
     Principle:         4 (queue gate before IRR-weighted allocation)
 
     """
@@ -196,10 +209,18 @@ def compute_allocator(inputs: AllocatorInputs) -> AllocatorResult:
         f9_launches=inputs.f9_launches,
         f9_customer_launches=inputs.f9_customer_launches,
     )
-    cae_dem = aggregate_cae_demands(demands, inputs.module_outputs)
+    cae_dem = aggregate_cae_demands(a, demands, inputs.module_outputs)
+    fb_early = _resolve_facilities(inputs, {})
+    cap_base = compute_cap_base(
+        CapBaseInputs(
+            assumptions=a,
+            sub_demands=demands,
+            module_outputs=inputs.module_outputs,
+            facilities_build=fb_early,
+        )
+    )
 
-    forward_kg = inputs.forward_kg_demands or _forward_kg_from_modules(
-        inputs.module_outputs,
+    forward_kg = inputs.forward_kg_demands or cae_dem.unified_kg.forward_kg_by_program(
         inputs.lunar_mars_kg_reserved,
     )
     vehicle_build_claim = compute_vehicle_build_claim(
@@ -219,34 +240,45 @@ def compute_allocator(inputs: AllocatorInputs) -> AllocatorResult:
         spectrum_capex=inputs.spectrum_capex,
         taxes=inputs.taxes,
         vehicle_build_claim=vehicle_build_claim,
+        maintenance_capex=cap_base.maintenance_claim,
+        enabling_infra_equity=cap_base.enabling_infra_equity,
     )
     carve = compute_carve_out(a, gate.pool_after_gate, inputs.prior_year_group_fcf)
 
-    spot_irr = compute_module_spot_irrs(inputs.module_outputs)
-    softmax = compute_softmax_allocation(carve.remaining_pool, spot_irr, a)
-    water = compute_water_fill(
-        carve.remaining_pool,
-        cae_dem.cash,
-        softmax.allocated_cash,
-        spot_irr,
+    fb = _resolve_facilities(inputs, forward_kg)
+    prior_irr = compute_four_program_prior_irrs(
+        inputs.module_outputs,
         a,
+        facilities_build=fb,
+        chip_at_cost_per_sat=cap_base.chip_at_cost_per_sat,
     )
-
+    seed = compute_strategic_seed(
+        StrategicSeedInputs(
+            assumptions=a,
+            odc_demand_buildable=cap_base.odc_demand_buildable,
+            odc_kg_demand=demands.odc_kg,
+            prior_odc_irr=prior_irr.odc,
+            pool_after_carveout=carve.remaining_pool,
+        )
+    )
+    four_dem = four_program_demands(
+        cap_base.growth_caps,
+        cap_base.odc_demand_buildable,
+        cap_base.terr_demand_buildable,
+        cae_dem.unified_kg,
+        demands,
+    )
     lm_kg = inputs.lunar_mars_kg_reserved or YearVector.zeros()
-    kg_gate = compute_kg_rationing(
-        cae_dem.kg,
-        inputs.launch_capacity.total_annual_capacity_kg,
-        lm_kg,
-    )
-
-    irr_odc, irr_ter = compute_level2_spot_irrs(inputs.module_outputs)
-    level2 = compute_level2_split(
-        water.allocated_final.ai_compute,
-        irr_odc,
-        irr_ter,
-        cae_dem.odc_cash,
-        cae_dem.terrestrial_cash,
+    kg_reserved = YearVector(lm_kg.values + seed.kg_reserved.values)
+    fill = compute_two_resource_fill(
+        seed.remaining_pool,
+        four_dem,
+        prior_irr,
         a,
+        gigabay_throughput=_gigabay_throughput(fb),
+        kg_per_ship_yr=kg_per_ship_year(a, inputs.launch_capacity.per_launch_upmass_kg),
+        lm_kg_reserved=kg_reserved,
+        total_desired_launch_kg=cae_dem.unified_kg.total,
     )
 
     (
@@ -257,31 +289,28 @@ def compute_allocator(inputs: AllocatorInputs) -> AllocatorResult:
         sl_v3_dtc,
         odc_cash,
         ai_stack_cash,
-    ) = cae_cash_to_sub_blocks(
-        water.allocated_final,
-        level2.allocated_odc,
-        level2.allocated_terrestrial,
-        demands,
-    )
+    ) = four_cash_to_sub_blocks(fill.allocated_cash, demands)
+    odc_total_cash = YearVector(fill.allocated_cash.odc.values + seed.cash_claim.values)
     cash_alloc = CashAllocations(
         customer_launch=cl_cash,
         starlink_v2_bb=sl_v2_bb,
         starlink_v2_dtc=sl_v2_dtc,
         starlink_v3_bb=sl_v3_bb,
         starlink_v3_dtc=sl_v3_dtc,
-        odc=odc_cash,
+        odc=odc_total_cash,
         ai_stack=ai_stack_cash,
     )
 
-    cl_kg, sl_v3_bb_kg, sl_v3_dtc_kg, odc_kg, ai_stack_kg = cae_kg_to_sub_blocks(
-        kg_gate.allotment_kg,
+    cl_kg, sl_v3_bb_kg, sl_v3_dtc_kg, odc_kg, ai_stack_kg = four_kg_to_sub_blocks(
+        fill.allocated_kg,
         demands,
     )
+    odc_total_kg = YearVector(odc_kg.values + seed.kg_reserved.values)
     kg_alloc = KgAllocations(
         customer_launch=cl_kg,
         starlink_v3_bb=sl_v3_bb_kg,
         starlink_v3_dtc=sl_v3_dtc_kg,
-        odc=odc_kg,
+        odc=odc_total_kg,
         ai_stack=ai_stack_kg,
     )
 
@@ -292,7 +321,7 @@ def compute_allocator(inputs: AllocatorInputs) -> AllocatorResult:
             inputs.historical_2025,
         )
 
-    available_cash = carve.remaining_pool
+    available_cash = seed.remaining_pool
     cash_alloc = cap_cash_allocations_to_available(cash_alloc, available_cash)
 
     non_module_claims = compute_non_module_claims(
@@ -304,11 +333,15 @@ def compute_allocator(inputs: AllocatorInputs) -> AllocatorResult:
         vehicle_build_claim,
     )
 
+    group_fcf_for_debt = inputs.group_fcf or inputs.prior_year_group_fcf or YearVector.zeros()
+    cash_eoy = YearVector(cash_boy.values + group_fcf_for_debt.values)
+
     debt: DebtFacilitiesResult | None = None
-    fb = _resolve_facilities(inputs, forward_kg)
     if fb is not None:
-        group_fcf = inputs.group_fcf or inputs.prior_year_group_fcf or YearVector.zeros()
-        cash_eoy = YearVector(cash_boy.values + group_fcf.values)
+        group_fcf = group_fcf_for_debt
+        chip_transfer = _chip_transfer_revenue_estimate(
+            a, demands.odc_kg, cap_base.chip_at_cost_per_sat
+        )
         debt = compute_debt_facilities(
             TerafabFacilityInputs(
                 assumptions=a,
@@ -316,16 +349,21 @@ def compute_allocator(inputs: AllocatorInputs) -> AllocatorResult:
                 cash_eoy=cash_eoy,
                 ipo_injection=ipo,
                 group_fcf=group_fcf,
+                chip_transfer_revenue=chip_transfer,
             ),
             OdcFacilityInputs(
                 assumptions=a,
-                odc_capex_need=cae_dem.odc_cash,
-                odc_pool_allocation=level2.allocated_odc,
+                odc_capex_need=cap_base.odc_demand_buildable,
+                odc_pool_allocation=odc_total_cash,
                 ai_compute_module_fcf=inputs.module_outputs.get(
                     "ai_compute", AllocatorOut.zeros()
                 ).module_fcf,
             ),
         )
+
+    ai_compute_cash = YearVector(
+        odc_total_cash.values + fill.allocated_cash.terrestrial.values
+    )
 
     return AllocatorResult(
         cash=cash_alloc,
@@ -335,13 +373,42 @@ def compute_allocator(inputs: AllocatorInputs) -> AllocatorResult:
         mars_carveout=carve.lunar_mars_carveout,
         vehicle_build_claim=vehicle_build_claim,
         non_module_claims=non_module_claims,
-        capacity_available_kg=kg_gate.capacity_after_lm,
+        capacity_available_kg=YearVector(
+            _gigabay_throughput(fb).values
+            * kg_per_ship_year(a, inputs.launch_capacity.per_launch_upmass_kg).values
+            - kg_reserved.values
+        ),
         pool_after_gate=gate.pool_after_gate,
-        remaining_pool=carve.remaining_pool,
-        allocated_final_starlink=water.allocated_final.starlink,
-        allocated_final_customer_launch=water.allocated_final.customer_launch,
-        allocated_final_ai_compute=water.allocated_final.ai_compute,
-        kg_binding_flag=kg_gate.kg_binding_flag,
+        remaining_pool=seed.remaining_pool,
+        allocated_final_starlink=fill.allocated_cash.starlink,
+        allocated_final_customer_launch=fill.allocated_cash.customer_launch,
+        allocated_final_ai_compute=ai_compute_cash,
+        allocated_final_odc=odc_total_cash,
+        strategic_seed_cash=seed.cash_claim,
+        strategic_seed_kg=seed.kg_reserved,
+        odc_graduated=seed.graduated,
+        odc_total_cash=odc_total_cash,
+        allocated_final_terrestrial=fill.allocated_cash.terrestrial,
+        kg_binding_flag=fill.kg_binding_flag,
+        total_desired_launch_kg=cae_dem.unified_kg.total,
+        memo_total_kg_demand=cae_dem.unified_kg.total,
+        growth_cap_starlink=cap_base.growth_caps.starlink,
+        growth_cap_customer_launch=cap_base.growth_caps.customer_launch,
+        growth_cap_ai_compute=cap_base.growth_caps.ai_compute,
+        maintenance_claim=cap_base.maintenance_claim,
+        enabling_infra_equity=cap_base.enabling_infra_equity,
+        chip_at_cost_per_sat=cap_base.chip_at_cost_per_sat,
+        water_fill_residual=fill.cash_residual,
+        capped_share_starlink=fill.capped_shares.starlink,
+        capped_share_odc=fill.capped_shares.odc,
+        capped_share_terrestrial=fill.capped_shares.terrestrial,
+        capped_share_customer_launch=fill.capped_shares.customer_launch,
+        ship_slots_used=fill.ship_slots_used,
+        ship_slots_idle=fill.ship_slots_idle,
         debt_odc_draw=debt.odc.draw if debt else None,
         debt_terafab_draw=debt.terafab.draw if debt else None,
+        odc_pool_cash=fill.allocated_cash.odc,
+        cash_available_for_year=cash_available,
+        cash_eoy=cash_eoy,
+        debt=debt,
     )

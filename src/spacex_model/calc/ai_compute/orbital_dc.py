@@ -22,6 +22,7 @@ class OrbitalDcInputs:
     assumptions: Assumptions
     starlink_capacity: StarlinkCapacityResult | None = None
     sats_deployed: YearVector | None = None
+    chip_at_cost_per_sat: YearVector | None = None
 
 
 def _per_sat_model_a_revenue_mm(assumptions: Assumptions, year_index: int) -> float:
@@ -168,35 +169,47 @@ def compute_orbital_revenue(inputs: OrbitalDcInputs) -> YearVector:
 
 
 def compute_orbital_cogs(inputs: OrbitalDcInputs) -> YearVector:
-    """Orbital DC bandwidth COGS from at-cost internal transfers.
+    """Orbital DC COGS — bandwidth at-cost + Terafab chip transfer (bucket 2).
 
     Excel cell:        AI - Compute!—
     Excel label:       "COGS: Orbital DC"
-    Architecture ref:  §9.4
-    Principle:         9 (at-cost internal bandwidth)
+    Architecture ref:  §9.4 + U1 at-cost chip transfer
+    Principle:         9 (predetermined at-cost transfer; fab not in growth CapEx)
 
     """
     deployed = inputs.sats_deployed or YearVector.zeros()
+    chip = inputs.chip_at_cost_per_sat or YearVector.zeros()
     values = np.zeros(HORIZON_YEARS, dtype=np.float64)
     for t in range(HORIZON_YEARS):
         if deployed.values[t] <= 0:
             continue
         bw = per_sat_bandwidth_cost_mm(inputs.assumptions, inputs.starlink_capacity, t)
-        values[t] = bw * deployed.values[t]
+        chip_mm = chip.values[t] / 1e6
+        values[t] = (bw + chip_mm) * deployed.values[t]
     return YearVector(values)
 
 
 def per_sat_blended_irr(inputs: OrbitalDcInputs) -> float:
-    """Per-sat blended IRR for Orbital DC spot signal.
+    """Per-sat blended IRR — growth CapEx slug only; Terafab lump excluded (U1).
 
     Excel cell:        AI - Compute!—
     Excel label:       "Spot IRR: ODC"
-    Architecture ref:  §9.4
-    Principle:         2 (per-unit marginal IRR)
+    Architecture ref:  §9.4 + U1 three-bucket split
+    Principle:         2 (per-unit marginal IRR; bucket-2 fab out of −CapEx leg)
 
     """
     a = inputs.assumptions
-    cost = assumption_scalar(a, cl.V3_BB_SAT_UNIT_COST_MM_SAT, default=50.0)
+    subsystem = assumption_scalar(a, cl.SUBSYSTEM_COST_PRE_WL_SAT, default=0.0) / 1e6
+    if subsystem <= 0.0:
+        subsystem = assumption_scalar(a, cl.V3_BB_SAT_UNIT_COST_MM_SAT, default=50.0) * 0.5
+    chip = (
+        inputs.chip_at_cost_per_sat.at(2025) / 1e6
+        if inputs.chip_at_cost_per_sat is not None
+        else 0.0
+    )
+    cost = subsystem + chip
+    if cost <= 0.0:
+        cost = assumption_scalar(a, cl.V3_BB_SAT_UNIT_COST_MM_SAT, default=50.0)
     n = int(assumption_scalar(a, cl.ODC_FLEET_DESIGN_LIFE_YEARS, default=5.0))
     rev = np.array(
         [per_sat_net_marginal_revenue_mm(a, inputs.starlink_capacity, t) for t in range(n)],

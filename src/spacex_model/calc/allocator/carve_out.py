@@ -32,7 +32,7 @@ def compute_carve_out(
     Architecture ref:  §2.3 carve-out + §5.2 senior claims
     Principle:         22 (Mars carve-out off-the-top on prior-yr FCF)
 
-    IRR-responsive ramp (R95–R98) deferred to U3; base carve-out uses prior FCF × pct.
+    ODC strategic seed is a separate senior claim after LM carve-out (U3); LM uses prior FCF × pct.
 
     """
     carveout = compute_mars_carveout(assumptions, prior_year_group_fcf)

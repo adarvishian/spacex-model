@@ -4,8 +4,10 @@ from __future__ import annotations
 
 import pytest
 
-from spacex_model.calc.allocator.sigmoid_cash import compute_sigmoid_cash_allocations
-from spacex_model.calc.allocator.types import QueueSubBlockDemands, QueueSubBlockIrrs
+from spacex_model.calc.allocator.priority import FourProgramIrrs
+from spacex_model.calc.allocator.two_resource_fill import FourProgramDemands, compute_two_resource_fill
+from spacex_model.calc.allocator.two_resource_fill import kg_per_ship_year
+from spacex_model.calc.launch_capacity import LaunchCapacityInputs, compute_launch_capacity
 from spacex_model.config.constants import (
     FIRST_YEAR,
     LAST_YEAR,
@@ -67,37 +69,34 @@ def test_audit_outputs_hash_and_peak_memory(model_result: ModelResult) -> None:
     assert model_result.audit["peak_memory_mb"] > 0
 
 
-def test_negative_irr_module_receives_zero_cash_allocation() -> None:
-    """Blended IRR ≤ 0 → zero cash allocation every year (PRD §7.1 strict cutoff)."""
-    z = YearVector.zeros()
-    odc_demand = YearVector.constant(5000.0)
-    positive = YearVector.constant(0.25)
-    negative = YearVector.constant(-0.01)
-    demands = QueueSubBlockDemands(
-        customer_launch_cash=positive,
-        starlink_v2_bb_cash=z,
-        starlink_v2_dtc_cash=z,
-        starlink_v3_bb_cash=z,
-        starlink_v3_dtc_cash=z,
-        odc_cash=odc_demand,
-        ai_stack_cash=z,
-        customer_launch_kg=z,
-        starlink_v3_bb_kg=z,
-        starlink_v3_dtc_kg=z,
-        odc_kg=z,
-        ai_stack_kg=z,
+def test_negative_irr_module_receives_floor_only_cash_allocation() -> None:
+    """Negative-IRR program limited to soft floor (D1) — not full pool share."""
+    from spacex_model.inputs.assumptions import assumptions_from_ingest
+    from spacex_model.io.excel_ingest import ingest_workbook
+    from spacex_model.config.settings import get_settings
+
+    assumptions = assumptions_from_ingest(ingest_workbook(get_settings().workbook_path))
+    lc = compute_launch_capacity(LaunchCapacityInputs(assumptions=assumptions))
+    pool = YearVector.constant(10_000.0)
+    prior = FourProgramIrrs(
+        starlink=YearVector.constant(0.40),
+        odc=YearVector.constant(-0.05),
+        terrestrial=YearVector.constant(0.20),
+        customer_launch=YearVector.constant(0.30),
     )
-    irrs = QueueSubBlockIrrs(
-        customer_launch=positive,
-        starlink_v2_bb=positive,
-        starlink_v2_dtc=positive,
-        starlink_v3_bb=positive,
-        starlink_v3_dtc=positive,
-        odc=negative,
-        ai_stack=positive,
+    four_dem = FourProgramDemands(
+        cash_caps=prior,
+        kg=FourProgramIrrs.zeros(),
     )
-    available = YearVector.constant(10_000.0)
-    alloc = compute_sigmoid_cash_allocations(available, demands, irrs)
-    for year in range(FIRST_YEAR, LAST_YEAR + 1):
-        assert alloc.odc.at(year) == 0.0
-        assert alloc.customer_launch.at(year) > 0.0
+    fill = compute_two_resource_fill(
+        pool,
+        four_dem,
+        prior,
+        assumptions,
+        gigabay_throughput=YearVector.zeros(),
+        kg_per_ship_yr=kg_per_ship_year(assumptions, lc.per_launch_upmass_kg),
+    )
+    odc_alloc = fill.allocated_cash.odc.at(2030)
+    cl_alloc = fill.allocated_cash.customer_launch.at(2030)
+    assert odc_alloc <= pool.at(2030) * 0.06 + 1.0
+    assert cl_alloc > odc_alloc

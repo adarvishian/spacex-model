@@ -5,10 +5,16 @@ from __future__ import annotations
 import numpy as np
 
 from spacex_model.calc._allocator_out import AllocatorOut
-from spacex_model.calc.allocator.priority import ModuleSpotIrrs
+from spacex_model.calc.ai_compute.orbital_dc import OrbitalDcInputs, per_sat_blended_irr
+from spacex_model.calc.allocator.cap_base import compute_chip_at_cost_per_sat
+from spacex_model.calc.allocator.priority import FourProgramIrrs, ModuleSpotIrrs
 from spacex_model.calc.allocator.types import QueueSubBlockIrrs
+from spacex_model.calc.facilities_build import FacilitiesBuildResult
+from spacex_model.config import canonical_labels as cl
 from spacex_model.config.constants import HORIZON_YEARS
+from spacex_model.domain.assumption_helpers import assumption_scalar, assumption_year_vector
 from spacex_model.domain.year_vector import YearVector
+from spacex_model.inputs.assumptions import Assumptions
 
 
 def _prior_year(values: np.ndarray) -> np.ndarray:
@@ -44,24 +50,57 @@ def compute_module_spot_irrs(module_outputs: dict[str, AllocatorOut]) -> ModuleS
     )
 
 
-def compute_level2_spot_irrs(module_outputs: dict[str, AllocatorOut]) -> tuple[YearVector, YearVector]:
-    """Prior-year ODC / Terrestrial spot IRR for Level-2 split.
-    Excel cell:        V4.113 (canonical label registry)
-    Excel label:       (see module docstring)
-    Architecture ref:  PRD V4.113 §2 / context.md §6
-    Principle:         6 (one-tab-one-module)
-"""
+def _terrestrial_spot_irr(assumptions: Assumptions) -> YearVector:
+    """Predetermined terrestrial marginal IRR proxy (cash-only program).
+
+    Excel cell:        Cash Allocation Engine!D78
+    Excel label:       "Spot IRR: Terrestrial (prior yr)"
+    Architecture ref:  U2 four first-class programs
+    Principle:         2 (predetermined prior-yr signal; no this-year deployment)
+
+    """
+    margin = assumption_year_vector(assumptions, cl.MARGIN_PER_MW_PER_YR_MM, default=0.0).values
+    slug = assumption_scalar(assumptions, cl.CAPEX_SLUG_PER_MW_MM, default=20.0)
+    if slug <= 0.0:
+        return YearVector.zeros()
+    return YearVector(np.clip(margin / slug, -1.0, 2.0))
+
+
+def compute_four_program_prior_irrs(
+    module_outputs: dict[str, AllocatorOut],
+    assumptions: Assumptions,
+    *,
+    facilities_build: FacilitiesBuildResult | None = None,
+    chip_at_cost_per_sat: YearVector | None = None,
+) -> FourProgramIrrs:
+    """Prior-year spot IRR for {Starlink, ODC, Terr, CL} — retires AI roll-up + Level-2.
+
+    Excel cell:        Cash Allocation Engine!D28:D30 + D77:D78
+    Excel label:       "Spot IRR: Starlink" … "Spot IRR: Terrestrial (prior yr)"
+    Architecture ref:  PRD U2 four first-class programs
+    Principle:         2 (acyclicity firewall — prior-yr IRR only)
+
+    """
+    cl_out = module_outputs.get("customer_launch", AllocatorOut.zeros())
+    sl_out = module_outputs.get("starlink", AllocatorOut.zeros())
     ai = module_outputs.get("ai_compute")
-    if ai is not None:
-        return (
-            YearVector(_prior_year(ai.spot_irr.values)),
-            YearVector(_prior_year(ai.spot_irr.values * 0.0)),
+
+    if ai is not None and np.any(ai.spot_irr.values != 0.0):
+        odc_irr = ai.spot_irr.values
+    else:
+        chip = chip_at_cost_per_sat or compute_chip_at_cost_per_sat(assumptions, facilities_build)
+        odc_scalar = per_sat_blended_irr(
+            OrbitalDcInputs(assumptions=assumptions, chip_at_cost_per_sat=chip)
         )
-    odc = module_outputs.get("odc", AllocatorOut.zeros())
-    terr = module_outputs.get("ai_stack", AllocatorOut.zeros())
-    return (
-        YearVector(_prior_year(odc.spot_irr.values)),
-        YearVector(_prior_year(terr.spot_irr.values)),
+        odc_irr = np.full(HORIZON_YEARS, max(odc_scalar, -1.0), dtype=np.float64)
+
+    terr_irr = _terrestrial_spot_irr(assumptions).values
+
+    return FourProgramIrrs(
+        starlink=YearVector(_prior_year(sl_out.spot_irr.values)),
+        odc=YearVector(_prior_year(odc_irr)),
+        terrestrial=YearVector(_prior_year(terr_irr)),
+        customer_launch=YearVector(_prior_year(cl_out.spot_irr.values)),
     )
 
 

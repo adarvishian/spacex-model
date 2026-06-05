@@ -3,8 +3,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 from spacex_model.domain.year_vector import YearVector
+
+if TYPE_CHECKING:
+    from spacex_model.calc.allocator.debt_facilities import DebtFacilitiesResult
 
 
 @dataclass(frozen=True, slots=True)
@@ -186,8 +190,33 @@ class AllocatorResult:
     allocated_final_customer_launch: YearVector | None = None
     allocated_final_ai_compute: YearVector | None = None
     kg_binding_flag: YearVector | None = None
+    total_desired_launch_kg: YearVector | None = None
+    memo_total_kg_demand: YearVector | None = None
+    growth_cap_starlink: YearVector | None = None
+    growth_cap_customer_launch: YearVector | None = None
+    growth_cap_ai_compute: YearVector | None = None
+    maintenance_claim: YearVector | None = None
+    enabling_infra_equity: YearVector | None = None
+    chip_at_cost_per_sat: YearVector | None = None
+    water_fill_residual: YearVector | None = None
+    allocated_final_odc: YearVector | None = None
+    allocated_final_terrestrial: YearVector | None = None
+    capped_share_starlink: YearVector | None = None
+    capped_share_odc: YearVector | None = None
+    capped_share_terrestrial: YearVector | None = None
+    capped_share_customer_launch: YearVector | None = None
+    ship_slots_used: YearVector | None = None
+    ship_slots_idle: YearVector | None = None
+    strategic_seed_cash: YearVector | None = None
+    strategic_seed_kg: YearVector | None = None
+    odc_graduated: YearVector | None = None
+    odc_total_cash: YearVector | None = None
     debt_odc_draw: YearVector | None = None
     debt_terafab_draw: YearVector | None = None
+    odc_pool_cash: YearVector | None = None
+    cash_available_for_year: YearVector | None = None
+    cash_eoy: YearVector | None = None
+    debt: DebtFacilitiesResult | None = None
 
     @classmethod
     def zeros(cls) -> AllocatorResult:
@@ -207,6 +236,31 @@ class AllocatorResult:
             allocated_final_customer_launch=z,
             allocated_final_ai_compute=z,
             kg_binding_flag=z,
-            debt_odc_draw=z,
-            debt_terafab_draw=z,
-        )
+            total_desired_launch_kg=z,
+            memo_total_kg_demand=z,
+            growth_cap_starlink=z,
+            growth_cap_customer_launch=z,
+            growth_cap_ai_compute=z,
+            maintenance_claim=z,
+            enabling_infra_equity=z,
+            chip_at_cost_per_sat=z,
+            water_fill_residual=z,
+            allocated_final_odc=z,
+            allocated_final_terrestrial=z,
+            capped_share_starlink=z,
+            capped_share_odc=z,
+            capped_share_terrestrial=z,
+            capped_share_customer_launch=z,
+            ship_slots_used=z,
+            ship_slots_idle=z,
+        strategic_seed_cash=z,
+        strategic_seed_kg=z,
+        odc_graduated=z,
+        odc_total_cash=z,
+        debt_odc_draw=z,
+        debt_terafab_draw=z,
+        odc_pool_cash=z,
+        cash_available_for_year=z,
+        cash_eoy=z,
+        debt=None,
+    )

@@ -70,6 +70,8 @@ CREDENCE_ON_MODEL_A_PR_A: Final[str] = "Credence on Model A (Pr(A))"
 BB_SHARE_OF_ODC_BANDWIDTH_CLAIM: Final[str] = "BB-share of ODC bandwidth claim"
 GBPS_PER_GWH_ODC_COMPUTE_ENERGY: Final[str] = "Gbps per GWh/yr of ODC compute energy"
 ODC_GROUND_OPS_PCT_REV: Final[str] = "ODC ground ops % of revenue"
+ODC_STRATEGIC_SEED_RAMP_YEARS: Final[str] = "ODC strategic seed ramp (years)"
+ODC_STRATEGIC_SEED_GRADUATION_IRR: Final[str] = "ODC strategic seed graduation IRR"
 S1_AI_SEGMENT_REVENUE_YEAR_ROW: Final[str] = "S-1 AI segment revenue ($mm) — year-row"
 ANTHROPIC_COMPUTE_REVENUE_YEAR_ROW: Final[str] = (
     "Anthropic compute services revenue ($mm) — year-row"

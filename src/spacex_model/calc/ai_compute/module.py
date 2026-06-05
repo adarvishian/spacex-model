@@ -18,6 +18,8 @@ from spacex_model.calc.ai_compute.orbital_dc import (
     orbital_bandwidth_claim,
     per_sat_blended_irr,
 )
+from spacex_model.calc.allocator.cap_base import compute_chip_at_cost_per_sat
+from spacex_model.calc.facilities_build import FacilitiesBuildResult
 from spacex_model.calc.ai_compute.terrestrial import (
     TerrestrialInputs,
     compute_ai_apps_revenue,
@@ -38,6 +40,14 @@ class AiComputeInputs:
     assumptions: Assumptions
     starlink_capacity: StarlinkCapacityResult | None = None
     sats_deployed: YearVector | None = None
+    facilities_build: FacilitiesBuildResult | None = None
+    chip_at_cost_per_sat: YearVector | None = None
+
+
+def _chip_at_cost(inputs: AiComputeInputs) -> YearVector:
+    if inputs.chip_at_cost_per_sat is not None:
+        return inputs.chip_at_cost_per_sat
+    return compute_chip_at_cost_per_sat(inputs.assumptions, inputs.facilities_build)
 
 
 def _orbital(inputs: AiComputeInputs) -> OrbitalDcInputs:
@@ -45,6 +55,7 @@ def _orbital(inputs: AiComputeInputs) -> OrbitalDcInputs:
         assumptions=inputs.assumptions,
         starlink_capacity=inputs.starlink_capacity,
         sats_deployed=inputs.sats_deployed,
+        chip_at_cost_per_sat=_chip_at_cost(inputs),
     )
 
 
@@ -147,12 +158,12 @@ def compute_gross_profit(inputs: AiComputeInputs | None = None) -> YearVector:
 
 
 def compute_capex(inputs: AiComputeInputs | None = None) -> YearVector:
-    """Module CapEx — terrestrial data-center build (orbital via allocator).
+    """Growth-slice Module CapEx — demand-buildable only; Terafab excluded (bucket 2).
 
     Excel cell:        AI - Compute!—
     Excel label:       "Module CapEx ($mm)"
-    Architecture ref:  §9 unified AI - Compute
-    Principle:         8 (vending-machine module)
+    Architecture ref:  §9 unified AI - Compute + U1 three-bucket split
+    Principle:         8 (vending-machine module; enabling infra out of IRR base)
 
     """
     if inputs is None:

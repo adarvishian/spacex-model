@@ -13,6 +13,187 @@ Override source of truth for disclosed inputs: `src/spacex_model/inputs/s1_overr
 
 ---
 
+## 2026-06-04 — Sprint U4: Guardrail repair + supersession sweep (F6)
+
+**Trigger:** `PRD_V4.113_Unified_Allocation_2026-06-04.md` Phase U — repair Conservation R14 for facility flows; add unified allocator identities; clear dead residue.
+
+### Shipped
+
+| Area | Change | Primary files |
+|------|--------|---------------|
+| R14 repair | `compute_r14_cash_flow_identity` — CAE cash spine + Terafab/ODC facility flows + bridge/IPO reconciliation (F6) | `calc/allocator/conservation.py` |
+| Allocator guardrails | Σalloc ≤ pool; Σslots ≤ throughput; ODC deploy = seed + pool; leftovers parked; chip-transfer check | `calc/allocator/conservation.py` |
+| Pipeline merge | Allocator conservation folded into `ConservationResult.all_ok` / `r14_ok` | `engine/conservation.py`, `engine/pipeline.py` |
+| Brain extensions | `cash_eoy`, `cash_available_for_year`, `odc_pool_cash`, full `debt` on `AllocatorResult` | `calc/allocator/brain.py`, `types.py` |
+| Supersession sweep | Deleted `sigmoid_cash`, `sigmoid_kg`, `kg_rationing`, `water_fill`, `level2_split`; retired `compute_softmax_allocation`, `compute_level2_spot_irrs` | `calc/allocator/` |
+| Binding flag helper | `compute_kg_binding_flag` on demand spine (replaces kg_rationing shim) | `calc/allocator/demand_spine.py` |
+| Gate tests | `pytest tests/test_u4_guardrail_sweep.py` — 8/8 pass | `tests/test_u4_guardrail_sweep.py` |
+| Divergence | F6 documented as Python-only fix; xlsx cached Conservation R14 still broken | `docs/intentional_divergences.md` |
+
+### U4 gate status
+
+**Passing:** R14 OK every year 2025–2040; allocator identities (alloc bounds, slot bounds, ODC deploy, leftovers); superseded modules not importable; conservation ALL-OK 2025–2040; 5× pipeline hash stable; full R0–R4 + U0–U4 regression.
+
+**Xlsx diagnostic (unchanged):** V4.113 cached Conservation R14 still omits ODC facility flows — spec-first; Python is authoritative.
+
+**F6 fixed in Python:** Conservation R14 includes Terafab interest/repay and folded ODC facility terms; bridge/IPO double-count vs R8-chained `cash_eoy` reconciled.
+
+**Superseded retired:** pro-rata kg (`kg_rationing`), water-fill path, Level-2 split, V2.16 sigmoid cash/kg shims; `compute_softmax_shares` retained for xlsx diagnostic only.
+
+### Phase U complete
+
+All seven defects F1–F6 resolved in Python (F7 by construction since R3). Unified allocation U0–U4 landed.
+
+### Next agent actions
+
+1. Regenerate `docs/reconciliation_report.md`: `python -m spacex_model.cli.run_model --base-case`
+2. `pytest tests/test_r0_ingest_horizon.py … tests/test_u4_guardrail_sweep.py -v` before any post-U work.
+3. Vlad sign-off on Phase U completion; triage remaining Block B xfails vs S-1 GAAP mapping.
+
+---
+
+## 2026-06-04 — Sprint U3: Seed + debt re-scope (F5)
+
+**Trigger:** `PRD_V4.113_Unified_Allocation_2026-06-04.md` Phase U — ODC pre-revenue seed off both pools; fold ODC bypass into spine; Terafab genuine project debt.
+
+### Shipped
+
+| Area | Change | Primary files |
+|------|--------|---------------|
+| Strategic seed | New `strategic_seed.py`: ODC pre-revenue ramp senior claim (cash + kg); graduates on prior-yr IRR; deducted after LM carve-out | `calc/allocator/strategic_seed.py` |
+| Debt re-scope | Terafab draws sized to fab CapEx; repaid from at-cost chip transfer + FCF sweep; ODC facility draw retired (zero bypass) | `calc/allocator/debt_facilities.py` |
+| Brain | Seed → reduced remaining pool + kg reservation; `odc_total_cash` = seed + pool alloc; chip-transfer repayment wired | `calc/allocator/brain.py` |
+| Types | `AllocatorResult` extended: `strategic_seed_cash/kg`, `odc_graduated`, `odc_total_cash` | `calc/allocator/types.py` |
+| Supplement labels | `ODC_STRATEGIC_SEED_RAMP_YEARS`, `ODC_STRATEGIC_SEED_GRADUATION_IRR` | `canonical_labels_supplement.py` |
+| Gate tests | `pytest tests/test_u3_seed_debt.py` — 11/11 pass | `tests/test_u3_seed_debt.py` |
+| Divergence | F5 documented as Python-only fix; xlsx cached CAE still pool-bypasses R134 | `docs/intentional_divergences.md` |
+
+### U3 gate status
+
+**Passing:** seed deploys ramp pre-graduation and sunsets on prior-yr IRR ≥ graduation hurdle; ODC facility draw always zero (no pool bypass); `odc_total` = seed + pool alloc (no double-fund); Terafab Σdraw−Σrepay−balance = 0 with chip-transfer repayment; ending Terafab balance ≈ 0 at 2040; 2025 frozen; conservation ALL-OK 2025–2040; 5× pipeline hash stable; full R0–R4 + U0–U3 regression 84/85 (R4 Block D docstring xfails on pre-U3 `cae_demands` shims).
+
+**Xlsx diagnostic (unchanged):** V4.113 cached CAE still shows ODC facility bypass `AI!R30 += R134` — spec-first; Python is authoritative.
+
+**F5 fixed in Python:** ODC funded by strategic seed + IRR-ranked pool allocation only; Terafab is genuine project-finance debt repaid from predetermined at-cost chip transfer.
+
+### Deferred to U4
+
+- Conservation R14 repair (F6); supersession sweep; dead residue retirement.
+
+### Next agent actions
+
+1. **U4 — Guardrail repair + supersession sweep:** repair Conservation R14 for facility flows; add new identities; clear dead residue.
+2. `pytest tests/test_r0_ingest_horizon.py … tests/test_u3_seed_debt.py -v` before each U-sprint.
+3. Re-resolve CAE row map against live workbook before authoring U4.
+
+---
+
+## 2026-06-04 — Sprint U1: Three-bucket split + cap-base (F1)
+
+**Trigger:** `PRD_V4.113_Unified_Allocation_2026-06-04.md` Phase U — route enabling infra out of IRR deploy base; at-cost chip transfer; maintenance senior claim; align growth caps R64/65/66.
+
+### Shipped
+
+| Area | Change | Primary files |
+|------|--------|---------------|
+| Cap-base engine | New `cap_base.py`: three-bucket split; R64 headroom×slug / R65 CL module CapEx / R66 ODC+Terr demand-buildable; maintenance + enabling-infra senior claims; chip at-cost absorption | `calc/allocator/cap_base.py` |
+| Queue gate | Bucket-3 maintenance + bucket-2 enabling-infra equity reserved before carve-out | `calc/allocator/queue_gate.py` |
+| Water-fill | Caps at growth slice (R64–R66), not full exogenous demand — F1 core fix | `calc/allocator/water_fill.py` |
+| Brain / types | Wires `compute_cap_base`; Level-2 split on demand-buildable; growth caps + senior claims on `AllocatorResult` | `calc/allocator/brain.py`, `types.py` |
+| AI - Compute | Chip at-cost → orbital COGS; IRR −CapEx uses growth slug only (Terafab out of numerator) | `calc/ai_compute/module.py`, `orbital_dc.py` |
+| Pipeline | FB wired into `AiComputeInputs` post-facilities pass for chip transfer | `engine/pipeline.py` |
+| Gate tests | `pytest tests/test_u1_three_bucket.py` — 10/10 pass | `tests/test_u1_three_bucket.py` |
+| Divergence | F1 documented as Python-only fix; xlsx cached CAE deploy base unchanged | `docs/intentional_divergences.md` |
+
+### U1 gate status
+
+**Passing:** R64/R66 growth caps match xlsx at edge years 2025/2030/2035/2040; water-fill caps at growth slice (allocated ≤ growth cap); ODC IRR not crushed by fab lump; chip at-cost transfer positive; maintenance + enabling-infra senior claims wired; 2025 frozen; conservation ALL-OK 2025–2040; 5× pipeline hash stable; full R0–R4 + U0–U1 regression 62/62.
+
+**Xlsx diagnostic (unchanged):** V4.113 cached CAE still shows pre-U1 deploy-base inflation — spec-first; Python is authoritative.
+
+**Terafab double-count:** fab routed out of growth CapEx / IRR numerator; chip transfer enters COGS at predetermined absorption — roll-up deploy base no longer includes FB Terafab lump in Python path.
+
+### Deferred to U2 (landed — see U2 entry above)
+
+- ~~Unified two-resource allocator (F2/F3)~~ — shipped U2.
+- ODC seed + debt re-scope (F5); Conservation R14 repair (F6) — U3/U4.
+
+---
+
+## 2026-06-04 — Sprint U2: Unified two-resource allocator (F2)
+
+**Trigger:** `PRD_V4.113_Unified_Allocation_2026-06-04.md` Phase U — one 2-yr-avg prior-IRR weight across {Starlink, ODC, Terr, CL}; cash + Gigabay throughput fill + cross-resource MIN; retire pro-rata kg + Level-2 softmax.
+
+### Shipped
+
+| Area | Change | Primary files |
+|------|--------|---------------|
+| Two-resource fill | New `two_resource_fill.py`: cash + Gigabay ships/yr; cross-resource MIN; bounded single re-cascade; capped reported shares | `calc/allocator/two_resource_fill.py` |
+| Four-program priority | `FourProgramIrrs`; 2-yr-avg prior IRR (D3); soft-floor shares across 4 programs (D1) | `calc/allocator/priority.py` |
+| IRR display | `compute_four_program_prior_irrs` — ODC + Terr first-class; retires AI roll-up R30 + Level-2 R76–R94 | `calc/allocator/irr_display.py` |
+| Brain | Replaced softmax → water-fill → pro-rata kg → Level-2 with unified two-resource spine | `calc/allocator/brain.py` |
+| CAE demands | `four_program_demands`, `four_cash_to_sub_blocks`, `four_kg_to_sub_blocks` | `calc/allocator/cae_demands.py` |
+| Types | `AllocatorResult` extended: per-program capped shares, ODC/Terr finals, ship slot used/idle | `calc/allocator/types.py` |
+| Gate tests | `pytest tests/test_u2_two_resource.py` — 12/12 pass | `tests/test_u2_two_resource.py` |
+| Divergence | F2 documented as Python-only fix; xlsx cached CAE still independent cash/kg | `docs/intentional_divergences.md` |
+
+### U2 gate status
+
+**Passing:** 2-yr-avg prior IRR + 5% floor across four programs; Σalloc ≤ pool; Σship slots ≤ Gigabay throughput; CL never ~80% capped share under high-IRR/tiny-demand scenario (F2); negative-IRR program limited to floor (F3); cash + kg reconciled in one pass (≠ pro-rata); ODC/Terr first-class (no Level-2); 2025 frozen; conservation ALL-OK 2025–2040; 5× pipeline hash stable; full R0–R4 + U0–U2 regression 74/74.
+
+**Xlsx diagnostic (unchanged):** V4.113 cached CAE still shows pre-U2 independent softmax + pro-rata kg — spec-first; Python is authoritative.
+
+**Superseded in brain (retained as R3 shims):** `compute_softmax_allocation`, `compute_water_fill`, `compute_kg_rationing`, `compute_level2_split` — isolated tests still pass; delete after U4 proves out.
+
+### Deferred to U3
+
+- ODC seed + debt re-scope (F5); Conservation R14 repair (F6).
+
+### Next agent actions
+
+1. **U3 — Seed + debt re-scope:** ODC pre-revenue seed off both pools; fold ODC bypass into spine; Terafab genuine project debt.
+2. `pytest tests/test_r0_ingest_horizon.py … tests/test_u2_two_resource.py -v` before each U-sprint.
+3. Re-resolve CAE row map against live workbook before authoring U3.
+
+---
+
+## 2026-06-04 — Sprint U0: Demand-spine unification (F4)
+
+**Trigger:** `PRD_V4.113_Unified_Allocation_2026-06-04.md` Phase U — one exogenous deployable-demand per program; de-inflate Starlink desired kg; R102 ≡ R46; VB R104 spine; honest binding flag; retire VB R67 orphan.
+
+### Shipped
+
+| Area | Change | Primary files |
+|------|--------|---------------|
+| Demand spine | New `demand_spine.py`: realistic Starlink kg (deployment × mass, not saturation-headroom); CL/AI exogenous kg; unified total | `calc/allocator/demand_spine.py` |
+| CAE demands | Removed F4 inflation (`np.maximum` with module `capacity_demand_kg`); routes through unified spine | `calc/allocator/cae_demands.py` |
+| Kg rationing | Binding flag reads `total_desired_launch_kg` (R102); memo ≡ total (R46) | `calc/allocator/kg_rationing.py` |
+| Brain / types | Vehicle-build forward kg from unified spine (VB R104); `total_desired_launch_kg` + `memo_total_kg_demand` on result | `calc/allocator/brain.py`, `types.py` |
+| Gate tests | `pytest tests/test_u0_demand_spine.py` — 9/9 pass | `tests/test_u0_demand_spine.py` |
+| Divergence | F4 documented as Python-only fix; xlsx cached CAE still inflated | `docs/intentional_divergences.md` |
+
+### U0 gate status
+
+**Passing:** R102 ≡ R46 every year (total desired = memo kg demand); 2030 total not inflated vs xlsx R102 (~509M); binding flag = `IF(R102 > capacity_after_lm)`; fleet sizing / rationing / binding read one number; 2025 cash alloc frozen at 0; conservation ALL-OK 2025–2040; 5× pipeline hash stable; demand⊥output linter clean; full R0–R4 + U0 regression 52/52.
+
+**Xlsx diagnostic (unchanged):** V4.113 cached CAE still shows F4 split (memo ≠ total desired) — spec-first; Python is authoritative.
+
+**VB R67 retired:** `Total launch kg demand year N+1 (fleet)` orphan — no Python consumer; forward aggregate uses unified CAE total only.
+
+### Deferred to U1
+
+- Three-bucket CapEx split + cap-base reconciliation (F1).
+- Unified two-resource allocator (F2/F3); retire pro-rata kg + Level-2 softmax.
+- ODC seed + debt re-scope (F5); Conservation R14 repair (F6).
+
+### Next agent actions
+
+1. **U1 — Three-bucket split + cap-base:** route enabling infra out of IRR deploy base; maintenance senior claim; align growth caps R64/65/66.
+2. `pytest tests/test_r0_ingest_horizon.py … tests/test_u0_demand_spine.py -v` before each U-sprint.
+3. Re-resolve CAE row map against live workbook before authoring U1.
+
+---
+
 ## 2026-06-04 — Sprint R4: Reconciliation & calibration
 
 **Trigger:** `PRD_V4.113_Unified_Allocation_2026-06-04.md` Phase R — Blocks A/B/C/D on V4.113; divergence report with triage; solver 1000 iter @ 1e-7 gate.

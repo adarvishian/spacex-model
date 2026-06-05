@@ -15,6 +15,21 @@ from spacex_model.inputs.assumptions import Assumptions
 
 
 @dataclass(frozen=True, slots=True)
+class FourProgramIrrs:
+    """Prior-year spot IRR for four first-class programs (U2)."""
+
+    starlink: YearVector
+    odc: YearVector
+    terrestrial: YearVector
+    customer_launch: YearVector
+
+    @classmethod
+    def zeros(cls) -> FourProgramIrrs:
+        z = YearVector.zeros()
+        return cls(starlink=z, odc=z, terrestrial=z, customer_launch=z)
+
+
+@dataclass(frozen=True, slots=True)
 class ModuleSpotIrrs:
     """Prior-year spot IRR for the three CAE first-class modules."""
 
@@ -26,18 +41,6 @@ class ModuleSpotIrrs:
     def zeros(cls) -> ModuleSpotIrrs:
         z = YearVector.zeros()
         return cls(starlink=z, customer_launch=z, ai_compute=z)
-
-
-@dataclass(frozen=True, slots=True)
-class SoftmaxAllocationResult:
-    """Top-level softmax shares and pool-weighted cash (pre water-fill)."""
-
-    spot_irr: ModuleSpotIrrs
-    exp_irr: ModuleSpotIrrs
-    exp_irr_sum: YearVector
-    shares: ModuleSpotIrrs
-    allocated_cash: ModuleSpotIrrs
-    leftover_cash: YearVector
 
 
 def _beta(assumptions: Assumptions) -> float:
@@ -53,6 +56,79 @@ def _soft_floor(assumptions: Assumptions) -> float:
         assumptions,
         cl.ALLOCATOR_MIN_SOFTMAX_SHARE_FLOOR_PER_MODULE_FRAC,
         default=0.05,
+    )
+
+
+def compute_two_year_avg_prior_irr(spot_irr: FourProgramIrrs) -> FourProgramIrrs:
+    """2-yr rolling average of prior-year marginal IRR (D3).
+
+    Excel cell:        Cash Allocation Engine (U2 unified weights)
+    Excel label:       "▸ IRR-weighted allocation parameters"
+    Architecture ref:  PRD §5.2 priority + D3
+    Principle:         2 (prior-yr IRR only; no this-year returns)
+
+    """
+    def _avg(vec: np.ndarray) -> np.ndarray:
+        out = np.zeros(HORIZON_YEARS, dtype=np.float64)
+        for t in range(HORIZON_YEARS):
+            if t == 0:
+                out[t] = vec[t]
+            else:
+                out[t] = 0.5 * (vec[t] + vec[t - 1])
+        return out
+
+    return FourProgramIrrs(
+        starlink=YearVector(_avg(spot_irr.starlink.values)),
+        odc=YearVector(_avg(spot_irr.odc.values)),
+        terrestrial=YearVector(_avg(spot_irr.terrestrial.values)),
+        customer_launch=YearVector(_avg(spot_irr.customer_launch.values)),
+    )
+
+
+def compute_soft_floor_shares(
+    prior_irr_avg: FourProgramIrrs,
+    assumptions: Assumptions,
+    *,
+    n_programs: int = 4,
+) -> FourProgramIrrs:
+    """Soft-floor shares from 2-yr-avg prior IRR weights (D1).
+
+    Excel cell:        Cash Allocation Engine!D35:D37 (four-program extension)
+    Excel label:       "Allocation share: Starlink" … "Allocation share: terrestrial"
+    Architecture ref:  PRD §5.2 share = floor + (1−N·floor)·w/Σw
+    Principle:         2 (priority order only; floor kept per D1)
+
+    """
+    floor = _soft_floor(assumptions)
+    residual = max(0.0, 1.0 - n_programs * floor)
+
+    share_sl = np.zeros(HORIZON_YEARS, dtype=np.float64)
+    share_odc = np.zeros(HORIZON_YEARS, dtype=np.float64)
+    share_ter = np.zeros(HORIZON_YEARS, dtype=np.float64)
+    share_cl = np.zeros(HORIZON_YEARS, dtype=np.float64)
+
+    arrays = (
+        prior_irr_avg.starlink.values,
+        prior_irr_avg.odc.values,
+        prior_irr_avg.terrestrial.values,
+        prior_irr_avg.customer_launch.values,
+    )
+    for t in range(HORIZON_YEARS):
+        weights = [max(0.0, w) for w in (arrays[0][t], arrays[1][t], arrays[2][t], arrays[3][t])]
+        total = sum(weights)
+        if total <= 0.0:
+            share_sl[t] = share_odc[t] = share_ter[t] = share_cl[t] = 1.0 / n_programs
+        else:
+            share_sl[t] = floor + residual * weights[0] / total
+            share_odc[t] = floor + residual * weights[1] / total
+            share_ter[t] = floor + residual * weights[2] / total
+            share_cl[t] = floor + residual * weights[3] / total
+
+    return FourProgramIrrs(
+        starlink=YearVector(share_sl),
+        odc=YearVector(share_odc),
+        terrestrial=YearVector(share_ter),
+        customer_launch=YearVector(share_cl),
     )
 
 
@@ -110,44 +186,3 @@ def compute_softmax_shares(
         ai_compute=YearVector(share_ai),
     )
     return exp_irr, YearVector(exp_sum), shares
-
-
-def compute_softmax_allocation(
-    remaining_pool: YearVector,
-    spot_irr: ModuleSpotIrrs,
-    assumptions: Assumptions,
-) -> SoftmaxAllocationResult:
-    """Allocate remaining pool by softmax shares; 2025 anchor = 0.
-
-    Excel cell:        Cash Allocation Engine!D39:D41
-    Excel label:       "Allocated cash to Starlink ($mm)" … "Allocated cash to AI-Compute ($mm)"
-    Architecture ref:  §2.3 CAE top-level IRR-softmax
-    Principle:         4 (queue gate + carve-out before IRR allocation)
-
-    """
-    exp_irr, exp_sum, shares = compute_softmax_shares(spot_irr, assumptions)
-
-    alloc_sl = remaining_pool.values * shares.starlink.values
-    alloc_cl = remaining_pool.values * shares.customer_launch.values
-    alloc_ai = remaining_pool.values * shares.ai_compute.values
-
-    for t in range(HORIZON_YEARS):
-        if FIRST_YEAR + t == FIRST_YEAR:
-            alloc_sl[t] = alloc_cl[t] = alloc_ai[t] = 0.0
-
-    allocated = ModuleSpotIrrs(
-        starlink=YearVector(alloc_sl),
-        customer_launch=YearVector(alloc_cl),
-        ai_compute=YearVector(alloc_ai),
-    )
-    total_alloc = alloc_sl + alloc_cl + alloc_ai
-    leftover = np.maximum(0.0, remaining_pool.values - total_alloc)
-
-    return SoftmaxAllocationResult(
-        spot_irr=spot_irr,
-        exp_irr=exp_irr,
-        exp_irr_sum=exp_sum,
-        shares=shares,
-        allocated_cash=allocated,
-        leftover_cash=YearVector(leftover),
-    )
