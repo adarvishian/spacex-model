@@ -82,11 +82,13 @@ export default function AuditApp() {
     }
   }, [overrideLabel, overrideValue, selectedScenario]);
 
+  // Auto-run on mount / scenario change only — do not retry in a loop when the API fails.
   useEffect(() => {
-    if (!runId && !running) {
-      void handleRun();
-    }
-  }, [runId, running, handleRun]);
+    setRunId(null);
+    setEmbeddedGrids({});
+    void handleRun();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- overrides use explicit Re-run
+  }, [selectedScenario]);
 
   const openLineage = useCallback(
     async (cell: ActiveCell) => {

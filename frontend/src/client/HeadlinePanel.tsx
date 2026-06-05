@@ -15,7 +15,11 @@ export function HeadlinePanel({ run, loading }: Props) {
   return (
     <section className="client-headline panel" aria-label="Headline outputs">
       <h2>Headline</h2>
-      {loading && <p className="muted">Running scenario…</p>}
+      {loading && (
+        <p className="muted">
+          Running scenario… On serverless hosting this can take up to 60 seconds per scenario.
+        </p>
+      )}
       {!loading && run && (
         <>
           <div className="client-ev-big">
