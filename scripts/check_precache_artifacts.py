@@ -61,6 +61,23 @@ def _precache_data_commit_sha() -> str:
         return _git_sha()
 
 
+def _acceptable_artifact_shas() -> set[str]:
+    """SHAs that may appear in artifact git_sha (handles stamp-on-amend workflow)."""
+    shas = {_git_sha(), _precache_data_commit_sha()}
+    precache_commit = _precache_data_commit_sha()
+    try:
+        parent = subprocess.check_output(
+            ["git", "rev-parse", "--short", f"{precache_commit}^"],
+            cwd=REPO_ROOT,
+            stderr=subprocess.DEVNULL,
+            text=True,
+        ).strip()
+        shas.add(parent)
+    except subprocess.CalledProcessError:
+        pass
+    return shas
+
+
 def _validate_run_artifact(data: object, scenario: str) -> list[str]:
     if not isinstance(data, dict):
         return ["root must be a JSON object"]
@@ -131,6 +148,7 @@ def _artifact_specs() -> list[tuple[Path, Callable[[object], list[str]]]]:
 def main() -> int:
     head = _git_sha()
     expected_sha = _precache_data_commit_sha()
+    acceptable_shas = _acceptable_artifact_shas()
     failed = False
 
     for path, validator in _artifact_specs():
@@ -148,10 +166,10 @@ def main() -> int:
             continue
 
         artifact_sha = data.get("git_sha") if isinstance(data, dict) else None
-        if artifact_sha != expected_sha:
+        if artifact_sha not in acceptable_shas:
             print(
-                f"ERROR: {rel}: git_sha={artifact_sha!r} != "
-                f"precache commit {expected_sha!r} (HEAD {head!r})",
+                f"ERROR: {rel}: git_sha={artifact_sha!r} not in "
+                f"{sorted(acceptable_shas)!r} (precache commit {expected_sha!r}, HEAD {head!r})",
                 file=sys.stderr,
             )
             failed = True
