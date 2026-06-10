@@ -1,7 +1,7 @@
 {
-  "git_sha": "74adff2",
+  "git_sha": "f6a2036",
   "scenario": "bull",
-  "run_id": "61658e86",
+  "run_id": "37855f0f",
   "audit_grids": {
     "assumptions": {
       "sheet": "assumptions",
@@ -147251,7 +147251,7 @@
     }
   },
   "run_audit": {
-    "run_id": "61658e86",
+    "run_id": "37855f0f",
     "solver": {
       "iterations": 135,
       "converged": true,
@@ -148332,7 +148332,7 @@
     ]
   },
   "deterministic": {
-    "run_id": "61658e86",
+    "run_id": "37855f0f",
     "scenario": "bull",
     "cached": false,
     "solver": {
