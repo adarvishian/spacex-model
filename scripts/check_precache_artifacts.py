@@ -47,6 +47,20 @@ def _git_sha() -> str:
         sys.exit(1)
 
 
+def _precache_data_commit_sha() -> str:
+    """Short sha of the commit that last updated precache JSON (not necessarily HEAD)."""
+    try:
+        out = subprocess.check_output(
+            ["git", "log", "-1", "--format=%h", "--", "frontend/public/data"],
+            cwd=REPO_ROOT,
+            stderr=subprocess.DEVNULL,
+            text=True,
+        )
+        return out.strip()
+    except subprocess.CalledProcessError:
+        return _git_sha()
+
+
 def _validate_run_artifact(data: object, scenario: str) -> list[str]:
     if not isinstance(data, dict):
         return ["root must be a JSON object"]
@@ -116,6 +130,7 @@ def _artifact_specs() -> list[tuple[Path, Callable[[object], list[str]]]]:
 
 def main() -> int:
     head = _git_sha()
+    expected_sha = _precache_data_commit_sha()
     failed = False
 
     for path, validator in _artifact_specs():
@@ -133,9 +148,10 @@ def main() -> int:
             continue
 
         artifact_sha = data.get("git_sha") if isinstance(data, dict) else None
-        if artifact_sha != head:
+        if artifact_sha != expected_sha:
             print(
-                f"ERROR: {rel}: git_sha={artifact_sha!r} != HEAD {head!r}",
+                f"ERROR: {rel}: git_sha={artifact_sha!r} != "
+                f"precache commit {expected_sha!r} (HEAD {head!r})",
                 file=sys.stderr,
             )
             failed = True
@@ -151,7 +167,10 @@ def main() -> int:
         )
         return 1
 
-    print(f"Precache artifacts OK ({len(PRECACHE_SCENARIOS)} scenarios, git_sha={head})")
+    print(
+        f"Precache artifacts OK ({len(PRECACHE_SCENARIOS)} scenarios, "
+        f"git_sha={expected_sha}, HEAD={head})"
+    )
     return 0
 
 
