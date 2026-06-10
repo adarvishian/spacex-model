@@ -1,7 +1,7 @@
 {
-  "git_sha": "49a5659",
+  "git_sha": "4e2aaea",
   "scenario": "bull",
-  "run_id": "1fc1254e",
+  "run_id": "8a683f31",
   "audit_grids": {
     "assumptions": {
       "sheet": "assumptions",
@@ -147251,7 +147251,7 @@
     }
   },
   "run_audit": {
-    "run_id": "1fc1254e",
+    "run_id": "8a683f31",
     "solver": {
       "iterations": 135,
       "converged": true,
@@ -148332,18 +148332,18 @@
     ]
   },
   "deterministic": {
-    "run_id": "1fc1254e",
+    "run_id": "8a683f31",
     "scenario": "bull",
     "cached": false,
     "audit": {
-      "run_id": "1fc1254e",
-      "workbook": "/Users/alex/Documents/Claude/Projects/SpaceX Modeler/SpaceX V4.131.xlsx",
+      "run_id": "8a683f31",
+      "workbook": "/home/runner/work/spacex-model/spacex-model/SpaceX V4.131.xlsx",
       "inputs_hash": "90cac01b46b06ae2",
       "solver_iterations": 135,
       "solver_converged": true,
       "solver_max_residual": 8.69185896590352e-08,
-      "wall_clock_sec": 16.688,
-      "peak_memory_mb": 65.69,
+      "wall_clock_sec": 37.174,
+      "peak_memory_mb": 35.7,
       "phase": "E",
       "scenario": "bull",
       "allocation_bounds_ok": true,

@@ -1,7 +1,7 @@
 {
-  "git_sha": "49a5659",
+  "git_sha": "4e2aaea",
   "scenario": "bear",
-  "run_id": "da42f10d",
+  "run_id": "8d989ba5",
   "audit_grids": {
     "assumptions": {
       "sheet": "assumptions",
@@ -53869,7 +53869,7 @@
             18.833333333333336,
             16.333333333333332,
             14.261377311545155,
-            13.09905517849547,
+            13.099055178495469,
             12.553657154739211,
             12.179730176981643,
             11.848781623903534,
@@ -75948,7 +75948,7 @@
             -1801.6328836033138,
             1370.375330051414,
             816.2507086676865,
-            454.21444409820293,
+            454.2144440982029,
             252.66880783183817,
             36.08710422459475,
             25.712748061975162,
@@ -86826,7 +86826,7 @@
             -1801.6328836033138,
             1370.375330051414,
             816.2507086676865,
-            454.21444409820293,
+            454.2144440982029,
             252.66880783183817,
             36.08710422459475,
             25.712748061975162,
@@ -147251,7 +147251,7 @@
     }
   },
   "run_audit": {
-    "run_id": "da42f10d",
+    "run_id": "8d989ba5",
     "solver": {
       "iterations": 135,
       "converged": true,
@@ -147325,7 +147325,7 @@
             "R101": 0.0,
             "R102": 1.8189894035458565e-12,
             "R103": 0.0,
-            "R104": -5.684341886080802e-14,
+            "R104": 0.0,
             "R105": 0.0,
             "R106": 0.0,
             "R107": 0.0,
@@ -148332,18 +148332,18 @@
     ]
   },
   "deterministic": {
-    "run_id": "da42f10d",
+    "run_id": "8d989ba5",
     "scenario": "bear",
     "cached": false,
     "audit": {
-      "run_id": "da42f10d",
-      "workbook": "/Users/alex/Documents/Claude/Projects/SpaceX Modeler/SpaceX V4.131.xlsx",
+      "run_id": "8d989ba5",
+      "workbook": "/home/runner/work/spacex-model/spacex-model/SpaceX V4.131.xlsx",
       "inputs_hash": "ff22673ce8b285b2",
       "solver_iterations": 135,
       "solver_converged": true,
       "solver_max_residual": 8.691131370142102e-08,
-      "wall_clock_sec": 18.404,
-      "peak_memory_mb": 66.08,
+      "wall_clock_sec": 39.539,
+      "peak_memory_mb": 35.7,
       "phase": "E",
       "scenario": "bear",
       "allocation_bounds_ok": true,
@@ -148357,7 +148357,7 @@
         "Lunar/Mars carve-out % of prior-year Group FCF": 0.25,
         "Starship manufacturing WL learning rate (% reduction per doubling cum stacks)": 0.05
       },
-      "outputs_hash": "072c117a2e9f692e2ab150b9ea5053535fd097888007ec78bad076a36b23c934"
+      "outputs_hash": "62d5237f39247ec1bcb375092fe984e05377ea62909a96b42dc04b06c5407089"
     },
     "solver": {
       "iterations": 135,
@@ -148895,7 +148895,7 @@
             -1801.6328836033138,
             1370.375330051414,
             816.2507086676865,
-            454.21444409820293,
+            454.2144440982029,
             252.66880783183817,
             36.08710422459475,
             25.712748061975162,
