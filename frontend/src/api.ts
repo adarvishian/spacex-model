@@ -68,16 +68,35 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   return res.json() as Promise<T>;
 }
 
+export type HealthPayload = {
+  status: string;
+  git_sha: string | null;
+  workbook_name?: string;
+  workbook_mtime?: number | null;
+  serverless?: boolean;
+  custom_mc_enabled?: boolean;
+  precached_scenarios?: string[];
+  precache_mc_trials?: number;
+};
+
 export function fetchHealth() {
-  return request<{
-    status: string;
-    git_sha: string | null;
-    serverless?: boolean;
-    custom_mc_enabled?: boolean;
-    precached_scenarios?: string[];
-    precache_mc_trials?: number;
-  }>("/health");
+  return request<HealthPayload>("/health");
 }
+
+export type {
+  RunProvenance,
+  ScenarioRunArtifact as BaseCaseArtifact,
+} from "./shared/scenario-artifacts";
+
+export {
+  PRECACHE_SCENARIOS,
+  artifactShaMatchesDeploy as artifactMatchesGitSha,
+  canHydrateRunFromArtifact as canHydrateFromArtifact,
+  getScenarioRunArtifact as getBaseCaseArtifact,
+  loadScenarioRunArtifact as loadBaseCaseArtifact,
+  preloadScenarioRunArtifacts,
+  runCacheKey,
+} from "./shared/scenario-artifacts";
 
 export function fetchScenarios() {
   return request<import("./shared/types").Scenario[]>("/scenarios");

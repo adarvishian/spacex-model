@@ -12,6 +12,7 @@ import {
 } from "../shared/scenario-artifacts";
 import { formatBillions, formatGridNumber } from "../shared/format";
 import type { McOutputKind } from "../shared/mc-headline";
+import { McTrialSummary } from "../shared/McTrialSummary";
 import { TornadoChart } from "../shared/TornadoChart";
 import type { McAggregationPayload, McJobResult, McMetricSummary, TornadoBar } from "../shared/types";
 
@@ -413,16 +414,12 @@ export function McAuditPanel({ outputKind, label, year, scenario, overrides }: P
           )}
 
           <div className="audit-mc-provenance" data-testid="audit-mc-provenance-detail">
-            <p>
-              <strong>Trials:</strong> {visibleAggregation.n_converged.toLocaleString()} converged
-              of {visibleAggregation.n_trials.toLocaleString()}
-            </p>
-            <p>
-              <strong>Seed:</strong> {visibleAggregation.base_seed}
-            </p>
-            <p>
-              <strong>Convergence:</strong> {visibleAggregation.convergence_status}
-            </p>
+            <McTrialSummary
+              nTrials={visibleAggregation.n_trials}
+              nConverged={visibleAggregation.n_converged}
+              convergenceStatus={visibleAggregation.convergence_status}
+              baseSeed={visibleAggregation.base_seed}
+            />
           </div>
         </>
       )}

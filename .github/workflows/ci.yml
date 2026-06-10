@@ -154,3 +154,9 @@ jobs:
           CI: "true"
           E2E_LOAD_MAX_MS: "12000"
         run: npm run test:e2e
+
+      - name: Axe a11y gate — audit + client (Milestone 4.5)
+        working-directory: frontend
+        env:
+          CI: "true"
+        run: npx playwright test e2e/accessibility.spec.ts

@@ -8,8 +8,10 @@ import {
   fetchClientCalibrationStatus,
   fetchClientInputWhitelist,
   fetchClientScenarios,
+  fetchHealth,
   runDeterministic,
 } from "../api";
+import { ModelProvenanceChip } from "../shared/ModelProvenanceChip";
 import type { DeterministicRun } from "../api";
 import { CustomBuilder } from "../client/CustomBuilder";
 import { DownloadsPanel } from "../client/DownloadsPanel";
@@ -65,6 +67,7 @@ export default function ClientApp() {
   const [fieldWarnings, setFieldWarnings] = useState<Record<string, string>>({});
 
   const scenariosQ = useQuery({ queryKey: ["client-scenarios"], queryFn: fetchClientScenarios });
+  const healthQ = useQuery({ queryKey: ["health"], queryFn: fetchHealth });
   const calibrationQ = useQuery({
     queryKey: ["client-calibration-status"],
     queryFn: fetchClientCalibrationStatus,
@@ -207,9 +210,16 @@ export default function ClientApp() {
           <h1>Mach33 · SpaceX Valuation</h1>
           <span className="audit-badge">CLIENT MODE</span>
         </div>
-        <Link to="/audit/starlink" className="mode-switch">
-          Switch to Audit →
-        </Link>
+        <div className="audit-header-meta">
+          <ModelProvenanceChip
+            mode="client"
+            workbookName={healthQ.data?.workbook_name}
+            workbookMtime={healthQ.data?.workbook_mtime}
+          />
+          <Link to="/audit/starlink" className="mode-switch">
+            Switch to Audit →
+          </Link>
+        </div>
       </header>
 
       <main className="client-main">

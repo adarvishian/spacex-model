@@ -25,6 +25,7 @@
 
   /* ——— Color: accent & state (WCAG AA on --panel / --bg) ——— */
   --indigo: #6366f1;
+  --indigo-readable: #a5b4fc;
   --indigo-soft: #2a2a55;
   --indigo-dim: #4f46e5;
   --amber: #f59e0b;

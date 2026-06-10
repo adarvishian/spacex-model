@@ -38,6 +38,20 @@ test("A7 UX: run audit tab passes axe", async ({ page }) => {
   expect(seriousViolations(results)).toEqual([]);
 });
 
+/** FRONTEND_UX_PRD A7 — Client Mode passes axe on headline + MC surfaces. */
+test("A7 UX: client mode passes axe", async ({ page }) => {
+  await installMockApi(page);
+  await page.goto("/client");
+  await expect(page.getByTestId("client-app")).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByTestId("mc-panel")).toBeVisible({ timeout: 15_000 });
+
+  const results = await new AxeBuilder({ page })
+    .include(".client-main")
+    .analyze();
+
+  expect(seriousViolations(results)).toEqual([]);
+});
+
 /** FRONTEND_UX_PRD A7 — keyboard-only core loop: select cell, read derivation, open Run Audit. */
 test("A7 UX: keyboard walkthrough completes core loop", async ({ page }) => {
   await installMockApi(page);

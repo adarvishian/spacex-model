@@ -11,6 +11,29 @@ Chronological record of material changes to the Python port. Read this after `co
 
 ---
 
+## 2026-06-10 — Milestone 4 complete: UI/UX polish + provenance trust loop (audit 2026-06-10)
+
+**Trigger:** `SpaceX_Modeler_Repo_Audit_2026-06-10.md` §5 Milestone 4 tasks 4.1–4.5 (Theme D).
+
+### Shipped
+
+| Task | Change | Primary files |
+|------|--------|---------------|
+| 4.1 | Provenance everywhere: `ModelProvenanceChip` (data-as-of, workbook, run provenance, artifact freshness); `McTrialSummary` on all MC figures; `/health` exposes `workbook_name` + `workbook_mtime` | `shared/ModelProvenanceChip.tsx`, `shared/provenance.ts`, `service/api.py`, `AuditAppHeader.tsx`, `ClientApp.tsx` |
+| 4.2 | Consolidated API layer: merged scenario-artifact exports into `api.ts`; removed duplicate `shared/api.ts` and deprecated `components/TornadoChart.tsx` shim | `frontend/src/api.ts` |
+| 4.3 | Decomposed `AuditApp.tsx` (621→209 LOC) into `useAuditRun`, `useDerivationPanel`, `useAuditGrid`, `useGridState` hooks + `AuditAppHeader` / `AuditDetailRail` shells; all `app/` files ≤300 LOC | `frontend/src/app/` |
+| 4.4 | Classification coverage gate: ≥95% of finite grid cells receive real input/derived/placeholder-stub classification (100% at V4.131 HEAD) | `tests/service/test_classification_coverage.py` |
+| 4.5 | Axe a11y gate in CI for audit + client surfaces; client MC P50 contrast fix via `--indigo-readable` token | `.github/workflows/ci.yml`, `e2e/accessibility.spec.ts`, `styles/tokens.css` |
+
+### Verify
+
+```bash
+uv run pytest tests/service/test_classification_coverage.py -q
+cd frontend && npm test && npm run check:tokens && npm run build && npx playwright test
+```
+
+---
+
 ## 2026-06-10 — Milestone 3 complete: precache CI + 5k MC + defer custom MC (audit 2026-06-10)
 
 **Trigger:** `SpaceX_Modeler_Repo_Audit_2026-06-10.md` §5 Milestone 3 tasks 3.1–3.3 (Themes B, C).

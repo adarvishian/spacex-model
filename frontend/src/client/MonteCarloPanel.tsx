@@ -9,6 +9,7 @@ import {
   resolveDeploySha,
 } from "../shared/scenario-artifacts";
 import { formatBillions } from "../shared/format";
+import { McTrialSummary } from "../shared/McTrialSummary";
 import { TornadoChart } from "../shared/TornadoChart";
 import type { McAggregationPayload, McJobResult, TornadoBar } from "../shared/types";
 import { EvDistributionChart } from "./EvDistributionChart";
@@ -209,25 +210,6 @@ export function MonteCarloPanel({ scenario, overrides }: Props) {
   const histogram = visibleAggregation?.group_ev_histogram;
   const fan = visibleAggregation?.group_fcf_fan;
 
-  const provenance = useMemo(() => {
-    if (!visibleAggregation) return null;
-    const status = visibleAggregation.convergence_status;
-    const statusLabel =
-      status === "converged"
-        ? "complete"
-        : status === "partial"
-          ? "partial"
-          : status === "failed"
-            ? "incomplete"
-            : status;
-    return {
-      n_trials: visibleAggregation.n_trials,
-      n_converged: visibleAggregation.n_converged,
-      base_seed: visibleAggregation.base_seed,
-      statusLabel,
-    };
-  }, [visibleAggregation]);
-
   const showProgress =
     status === "submitting" ||
     status === "queued" ||
@@ -337,11 +319,16 @@ export function MonteCarloPanel({ scenario, overrides }: Props) {
             </>
           )}
 
-          {provenance && (
-            <p className="mc-provenance-line muted" data-testid="mc-provenance-detail">
-              {provenance.n_converged.toLocaleString()} of {provenance.n_trials.toLocaleString()}{" "}
-              trials · seed {provenance.base_seed} · {provenance.statusLabel}
-            </p>
+          {visibleAggregation && (
+            <div className="mc-provenance-line muted" data-testid="mc-provenance-detail">
+              <McTrialSummary
+                nTrials={visibleAggregation.n_trials}
+                nConverged={visibleAggregation.n_converged}
+                convergenceStatus={visibleAggregation.convergence_status}
+                baseSeed={visibleAggregation.base_seed}
+                compact
+              />
+            </div>
           )}
         </>
       )}

@@ -117,6 +117,15 @@ test("A4: base case grid visible before runDeterministic response", async ({ pag
   await expect(page.getByTestId("run-provenance")).toHaveText("precomputed");
 });
 
+/** Milestone 4.1 — provenance chips surface workbook date and artifact freshness. */
+test("M4: audit provenance chip shows data-as-of and freshness", async ({ page }) => {
+  await installMockApi(page);
+  await page.goto("/audit/starlink");
+  await expect(page.getByTestId("model-provenance-chip")).toBeVisible({ timeout: 5_000 });
+  await expect(page.getByTestId("model-data-as-of")).toContainText(/Data as of/i);
+  await expect(page.getByTestId("artifact-freshness")).toBeVisible();
+});
+
 /** FRONTEND_UX_PRD A4 — non-precached scenario shows skeleton + status, not a blank pane. */
 test("A4: non-base scenario shows progress skeleton", async ({ page }) => {
   await installMockApi(page);
@@ -446,7 +455,7 @@ test("MC3: audit MC panel opens from module FCF with distribution and provenance
   await expect(page.getByTestId("tornado-chart")).toBeVisible();
   await expect(page.getByTestId("audit-mc-provenance-detail")).toContainText(/5,000/);
   await expect(page.getByTestId("audit-mc-provenance-detail")).toContainText(/Seed:\s*42/i);
-  await expect(page.getByTestId("audit-mc-provenance-detail")).toContainText(/Convergence:\s*converged/i);
+  await expect(page.getByTestId("audit-mc-provenance-detail")).toContainText(/Convergence:\s*complete/i);
   await expect(page.getByTestId("mc-p5")).toHaveText("$220B");
   await expect(page.getByTestId("mc-p50")).toHaveText("$278B");
   await expect(page.getByTestId("mc-p95")).toHaveText("$340B");

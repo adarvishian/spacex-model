@@ -53,6 +53,16 @@ test("A6: custom mars_pct validation", async ({ page }) => {
   await expect(page.locator(".client-field-warn")).toHaveCount(0);
 });
 
+/** Milestone 4.1 — client header shows data-as-of without version numbers. */
+test("M4: client provenance chip shows data-as-of", async ({ page }) => {
+  await installMockApi(page);
+  await page.goto("/client");
+  await expect(page.getByTestId("model-provenance-chip")).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByTestId("model-data-as-of")).toContainText(/Data as of/i);
+  const html = await page.locator(".client-app").innerHTML();
+  expect(html.toLowerCase()).not.toContain("v4.131");
+});
+
 /** Sprint 6 — base-case MC distribution renders instantly from precache. */
 test("MC1: base case shows distribution without wait", async ({ page }) => {
   await installMockApi(page);

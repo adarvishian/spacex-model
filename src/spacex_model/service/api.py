@@ -198,9 +198,15 @@ def _ui_dir() -> Path | None:
 def health() -> dict[str, Any]:
     settings = get_settings()
     ui = _ui_dir()
+    workbook_path = settings.workbook_path
+    workbook_mtime: float | None = None
+    if workbook_path.exists():
+        workbook_mtime = workbook_path.stat().st_mtime
     return {
         "status": "ok",
-        "workbook_exists": settings.workbook_path.exists(),
+        "workbook_exists": workbook_path.exists(),
+        "workbook_name": workbook_path.name,
+        "workbook_mtime": workbook_mtime,
         "git_sha": _git_sha(),
         "repo_root": str(get_repo_root()),
         "ui_available": ui is not None,

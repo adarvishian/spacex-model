@@ -564,6 +564,8 @@ export async function installMockApi(page: Page) {
       return json({
         status: "ok",
         git_sha: ARTIFACT.git_sha,
+        workbook_name: "SpaceX V4.131.xlsx",
+        workbook_mtime: 1_718_000_000,
         serverless: true,
         custom_mc_enabled: false,
         precached_scenarios: ["base_case", "bear", "bull", "mars_share"],

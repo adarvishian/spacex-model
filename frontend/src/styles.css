@@ -901,6 +901,46 @@ table.data-table tbody tr.clickable:hover {
   border-color: color-mix(in srgb, var(--amber) 40%, var(--border));
 }
 
+.model-provenance-chip {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.model-provenance-item {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.artifact-freshness {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 2px 7px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+}
+
+.artifact-freshness.freshness-matched {
+  color: var(--green);
+  border-color: var(--provenance-green-border);
+}
+
+.artifact-freshness.freshness-stale {
+  color: var(--amber);
+  border-color: var(--provenance-amber-border);
+}
+
+.artifact-freshness.freshness-unknown {
+  color: var(--info);
+  border-color: var(--provenance-info-border);
+}
+
+.mc-trial-summary.compact {
+  font-size: 12px;
+}
+
 .run-audit-skeleton {
   padding: 16px;
 }
@@ -2003,7 +2043,7 @@ table.data-table tbody tr.clickable:hover {
 }
 
 .mc-percentile-callout.primary .mc-percentile-value {
-  color: var(--accent);
+  color: var(--indigo-readable);
   font-weight: 600;
 }
 
