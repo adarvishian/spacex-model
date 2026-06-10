@@ -5,5 +5,5 @@ description: >
   Tests solver + conservation under aggressive strategic carve-out.
 baseline_workbook: "SpaceX V4.131.xlsx"
 overrides:
-  "Mars carve-out % of prior-year Group FCF": 0.35
-  "Mars carve-out floor ($mm/yr)": 1500
+  "Lunar/Mars carve-out % of prior-year Group FCF": 0.35
+  "Lunar/Mars carve-out floor ($mm/yr)": 1500

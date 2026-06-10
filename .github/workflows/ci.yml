@@ -104,14 +104,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: astral-sh/setup-uv@v5
-        with:
-          enable-cache: true
-          python-version: "3.11"
-
-      - name: Install Python package (precompute base case)
-        run: uv sync --frozen --extra dev --extra service
-
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
@@ -130,12 +122,19 @@ jobs:
         working-directory: frontend
         run: npm test
 
-      - name: Build frontend
+      - name: Build frontend (15 min budget — Milestone 3.1)
         working-directory: frontend
         env:
-          # Full 2,000-trial MC precache at deploy; smoke count in CI to stay within job budget.
-          SPACEX_MODEL_MC_PRECOMPUTE_TRIALS: "64"
-        run: npm run build
+          VITE_DEPLOY_SHA: ${{ github.sha }}
+        run: |
+          start=$(date +%s)
+          npm run build
+          elapsed=$(( $(date +%s) - start ))
+          echo "Frontend build wall time: ${elapsed}s"
+          if [ "${elapsed}" -gt 900 ]; then
+            echo "Build exceeded 15 minute budget (${elapsed}s)"
+            exit 1
+          fi
 
       - name: Frontend bundle budget (FRONTEND_PRD §8.3)
         working-directory: frontend

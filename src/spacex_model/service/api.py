@@ -18,6 +18,7 @@ from fastapi.staticfiles import StaticFiles
 from spacex_model.config.settings import (
     get_repo_root,
     get_settings,
+    is_custom_mc_enabled,
     is_serverless,
     parsed_allowed_origins,
 )
@@ -40,6 +41,7 @@ from spacex_model.service.auth import require_read_auth, require_write_auth
 from spacex_model.service.cache import get_cache
 from spacex_model.service.client_config import (
     CLIENT_SCENARIO_IDS,
+    PRECACHE_SCENARIO_IDS,
     client_overrides_to_canonical,
     decode_share_state,
     encode_share_state,
@@ -203,6 +205,9 @@ def health() -> dict[str, Any]:
         "repo_root": str(get_repo_root()),
         "ui_available": ui is not None,
         "serverless": is_serverless(),
+        "custom_mc_enabled": is_custom_mc_enabled(),
+        "precached_scenarios": list(PRECACHE_SCENARIO_IDS),
+        "precache_mc_trials": 5000,
     }
 
 
@@ -499,6 +504,15 @@ def get_run_tornado(
 
 @router.post("/runs/mc", dependencies=[Depends(require_write_auth)])
 def submit_mc(body: McSubmitRequest) -> dict[str, Any]:
+    if not is_custom_mc_enabled():
+        raise HTTPException(
+            status_code=501,
+            detail={
+                "message": "Custom Monte Carlo is deferred — use precached 5,000-trial distributions.",
+                "hint": "Set SPACEX_MODEL_ENABLE_CUSTOM_MC=1 to re-enable serverless MC (development only).",
+                "precached_scenarios": list(PRECACHE_SCENARIO_IDS),
+            },
+        )
     settings = get_settings()
     if not settings.workbook_path.exists():
         raise HTTPException(status_code=503, detail="Workbook not available")

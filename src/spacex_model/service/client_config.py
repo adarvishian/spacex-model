@@ -12,7 +12,7 @@ from pydantic import BaseModel, Field
 CLIENT_INPUT_SPECS: tuple[dict[str, Any], ...] = (
     {
         "id": "mars_pct",
-        "canonical_label": "Mars carve-out % of prior-year Group FCF",
+        "canonical_label": "Lunar/Mars carve-out % of prior-year Group FCF",
         "min": 0.0,
         "max": 0.20,
         "default": 0.05,
@@ -67,6 +67,8 @@ CLIENT_INPUT_SPECS: tuple[dict[str, Any], ...] = (
 )
 
 CLIENT_SCENARIO_IDS = ("base_case", "bear", "bull")
+# All scenarios with committed 5k-trial MC + deterministic precache (Milestone 3.2)
+PRECACHE_SCENARIO_IDS = ("base_case", "bear", "bull", "mars_share")
 
 _SPEC_BY_ID = {s["id"]: s for s in CLIENT_INPUT_SPECS}
 

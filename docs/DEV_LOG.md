@@ -11,6 +11,32 @@ Chronological record of material changes to the Python port. Read this after `co
 
 ---
 
+## 2026-06-10 — Milestone 3 complete: precache CI + 5k MC + defer custom MC (audit 2026-06-10)
+
+**Trigger:** `SpaceX_Modeler_Repo_Audit_2026-06-10.md` §5 Milestone 3 tasks 3.1–3.3 (Themes B, C).
+
+### Shipped
+
+| Task | Change | Primary files |
+|------|--------|---------------|
+| 3.1 | Precompute moved to GitHub Actions (`precache.yml` matrix); Vercel build = `npm ci && vite build` only; `static/ui/` no longer committed; 15 min CI build budget | `.github/workflows/precache.yml`, `vercel.json`, `frontend/package.json`, `.gitignore`, `.github/workflows/ci.yml` |
+| 3.2 | 5,000-trial precache for `base_case`, `bear`, `bull`, `mars_share`; generalized `scripts/precompute_*` + `check_precache_artifacts.py`; frontend `scenario-artifacts.ts` hydrates all preset scenarios | `scripts/precache_config.py`, `frontend/src/shared/scenario-artifacts.ts`, `frontend/public/data/*.json` |
+| 3.3 | Custom MC deferred on serverless: `POST /api/runs/mc` → 501 unless `SPACEX_MODEL_ENABLE_CUSTOM_MC=1`; UI hides run controls when precache covers the view | `config/settings.py`, `service/api.py`, `MonteCarloPanel.tsx`, `McAuditPanel.tsx` |
+
+### Future custom MC (recorded — do not re-derive)
+
+When custom MC returns: Vercel Sandbox executor (~8 vCPU per job, progress to Blob/Redis, ~35 min per 5k-trial run) with GitHub Actions `workflow_dispatch` fallback. Precache artifact JSON schema is the custom-run result contract. Poll-driven `mc_store.py` stays dormant behind the feature flag.
+
+### Verify
+
+```bash
+uv run python scripts/check_precache_artifacts.py
+cd frontend && VITE_DEPLOY_SHA=$(git rev-parse HEAD) npm run build
+uv run pytest tests/service/test_serverless_smoke.py -m slow -q
+```
+
+---
+
 ## 2026-06-10 — Milestone 2 complete: versioned ingestion engine (audit 2026-06-10)
 
 **Trigger:** `SpaceX_Modeler_Repo_Audit_2026-06-10.md` §5 Milestone 2 tasks 2.1–2.4 (Theme A).

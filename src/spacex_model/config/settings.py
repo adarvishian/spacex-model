@@ -83,10 +83,19 @@ class Settings(BaseSettings):
     # Serverless (Vercel): MC runs in small batches per poll to avoid FUNCTION_INVOCATION_TIMEOUT
     mc_serverless_batch_trials: int = 3
     mc_serverless_max_trials: int = 200
+    # Milestone 3.3 — custom MC deferred on serverless; precache-only until Sandbox executor
+    enable_custom_mc: bool = False
 
 
 def get_settings() -> Settings:
     return Settings()
+
+
+def is_custom_mc_enabled() -> bool:
+    """Local dev keeps live MC; serverless defaults to precache-only."""
+    if not is_serverless():
+        return True
+    return get_settings().enable_custom_mc
 
 
 def parsed_allowed_origins() -> list[str]:

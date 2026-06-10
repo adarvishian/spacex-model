@@ -3,16 +3,18 @@ import { useSearchParams } from "react-router-dom";
 import { fetchHealth, fetchMcJob, submitMc } from "../api";
 import {
   canHydrateMcFromArtifact,
-  loadBaseCaseMcArtifact,
-} from "../shared/base-case-mc-artifact";
+  isInstantPrecacheView,
+  isPrecachedScenario,
+  loadScenarioMcArtifact,
+  resolveDeploySha,
+} from "../shared/scenario-artifacts";
 import { formatBillions } from "../shared/format";
 import { TornadoChart } from "../shared/TornadoChart";
 import type { McAggregationPayload, McJobResult, TornadoBar } from "../shared/types";
 import { EvDistributionChart } from "./EvDistributionChart";
 import { FcfFanChart } from "./FcfFanChart";
 
-const DEFAULT_TRIALS = 2000;
-const SERVERLESS_MAX_TRIALS = 200;
+const PRECACHE_MC_TRIALS = 5000;
 
 type McSource = "precache" | "live";
 
@@ -45,34 +47,32 @@ export function MonteCarloPanel({ scenario, overrides }: Props) {
   const [tornado, setTornado] = useState<TornadoBar[]>([]);
   const [jobId, setJobId] = useState<string | null>(null);
   const [source, setSource] = useState<McSource | null>(null);
+  const [precacheSha, setPrecacheSha] = useState<string | null>(null);
   const [status, setStatus] = useState<string | null>(null);
   const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
   const [etaSec, setEtaSec] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [trials, setTrials] = useState(DEFAULT_TRIALS);
-  const [serverless, setServerless] = useState(false);
+  const [trials, setTrials] = useState(PRECACHE_MC_TRIALS);
+  const [customMcEnabled, setCustomMcEnabled] = useState(true);
   const [gitSha, setGitSha] = useState<string | null>(null);
   const [artifactReady, setArtifactReady] = useState(false);
   const pollStart = useRef<number | null>(null);
 
-  const isInstantBase =
-    scenario === "base_case" && Object.keys(overrides).length === 0;
-
-  const maxTrials = serverless ? SERVERLESS_MAX_TRIALS : DEFAULT_TRIALS;
+  const isInstantPrecache = isInstantPrecacheView(scenario, overrides);
 
   useEffect(() => {
     fetchHealth()
       .then((h) => {
         setGitSha(h.git_sha);
-        setServerless(Boolean(h.serverless));
-        if (h.serverless) setTrials(Math.min(DEFAULT_TRIALS, SERVERLESS_MAX_TRIALS));
+        setCustomMcEnabled(Boolean(h.custom_mc_enabled ?? !h.serverless));
+        if (h.precache_mc_trials) setTrials(h.precache_mc_trials);
       })
       .catch(() => undefined);
   }, []);
 
   useEffect(() => {
     let cancelled = false;
-    loadBaseCaseMcArtifact()
+    void loadScenarioMcArtifact(scenario)
       .then(() => {
         if (!cancelled) setArtifactReady(true);
       })
@@ -82,7 +82,7 @@ export function MonteCarloPanel({ scenario, overrides }: Props) {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [scenario]);
 
   const applyAggregation = useCallback(
     (agg: McAggregationPayload, src: McSource, id: string | null, bars: TornadoBar[] = []) => {
@@ -98,22 +98,24 @@ export function MonteCarloPanel({ scenario, overrides }: Props) {
   );
 
   useEffect(() => {
-    if (!artifactReady || !isInstantBase) return;
+    if (!artifactReady || !isInstantPrecache) return;
     if (!canHydrateMcFromArtifact(scenario, overrides, gitSha)) return;
-    void loadBaseCaseMcArtifact().then((artifact) => {
-      applyAggregation(artifact.aggregation, "precache", artifact.job_id);
+    void loadScenarioMcArtifact(scenario).then((artifact) => {
+      setPrecacheSha(artifact.git_sha);
+      applyAggregation(artifact.aggregation, "precache", artifact.job_id, artifact.tornado ?? []);
     });
-  }, [artifactReady, isInstantBase, scenario, overrides, gitSha, applyAggregation]);
+  }, [artifactReady, isInstantPrecache, scenario, overrides, gitSha, applyAggregation]);
 
   useEffect(() => {
-    if (isInstantBase) return;
+    if (isInstantPrecache) return;
     setAggregation(null);
     setTornado([]);
     setSource(null);
     setJobId(null);
+    setPrecacheSha(null);
     setStatus(null);
     setProgress(null);
-  }, [scenario, overrides, isInstantBase]);
+  }, [scenario, overrides, isInstantPrecache]);
 
   const pollJob = useCallback(
     async (id: string) => {
@@ -143,10 +145,10 @@ export function MonteCarloPanel({ scenario, overrides }: Props) {
         return;
       }
       if (job.status === "queued" || job.status === "running") {
-        setTimeout(() => void pollJob(id), serverless ? 800 : 1500);
+        setTimeout(() => void pollJob(id), 1500);
       }
     },
-    [applyAggregation, serverless],
+    [applyAggregation],
   );
 
   const runMc = useCallback(async () => {
@@ -157,7 +159,7 @@ export function MonteCarloPanel({ scenario, overrides }: Props) {
     pollStart.current = Date.now();
     try {
       const { job_id } = await submitMc({
-        trials: Math.min(trials, maxTrials),
+        trials,
         scenario,
         base_seed: 42,
         include_tornado: true,
@@ -173,7 +175,7 @@ export function MonteCarloPanel({ scenario, overrides }: Props) {
       setError(String(e));
       setStatus(null);
     }
-  }, [trials, maxTrials, scenario, pollJob, searchParams, setSearchParams]);
+  }, [trials, scenario, pollJob, searchParams, setSearchParams]);
 
   useEffect(() => {
     const mcParam = searchParams.get("mc");
@@ -199,9 +201,9 @@ export function MonteCarloPanel({ scenario, overrides }: Props) {
 
   const visibleAggregation = useMemo(() => {
     if (!aggregation) return null;
-    if (source === "precache" && !isInstantBase) return null;
+    if (source === "precache" && !isInstantPrecache) return null;
     return aggregation;
-  }, [aggregation, source, isInstantBase]);
+  }, [aggregation, source, isInstantPrecache]);
 
   const evMetrics = visibleAggregation?.metrics?.group_ev_2025_b;
   const histogram = visibleAggregation?.group_ev_histogram;
@@ -232,6 +234,9 @@ export function MonteCarloPanel({ scenario, overrides }: Props) {
     status === "running" ||
     status === "loading";
 
+  const showCustomMcControls = customMcEnabled && !isInstantPrecache;
+  const deploySha = resolveDeploySha();
+
   return (
     <section className="client-mc panel" aria-label="Monte Carlo" data-testid="mc-panel">
       <div className="client-mc-header">
@@ -239,6 +244,12 @@ export function MonteCarloPanel({ scenario, overrides }: Props) {
         {source === "precache" && (
           <span className="audit-badge mc-badge-precache" data-testid="mc-provenance">
             precomputed
+            {precacheSha && (
+              <>
+                {" "}
+                @ {deploySha ?? precacheSha}
+              </>
+            )}
           </span>
         )}
         {source === "live" && jobId && (
@@ -249,34 +260,38 @@ export function MonteCarloPanel({ scenario, overrides }: Props) {
       </div>
 
       <p className="muted client-mc-intro">
-        {isInstantBase
-          ? "Base-case distribution loads instantly from precomputed trials. Re-run when you change scenario or inputs."
-          : "Run a Monte Carlo study for this scenario to see the Group EV distribution and sensitivity drivers."}
+        {isInstantPrecache
+          ? `${scenario.replace("_", " ")} distribution loads instantly from ${PRECACHE_MC_TRIALS.toLocaleString()} precomputed trials.`
+          : isPrecachedScenario(scenario)
+            ? "Custom overrides require a live deterministic run; Monte Carlo for bespoke inputs is coming in a later release."
+            : "Run a Monte Carlo study for this scenario to see the Group EV distribution and sensitivity drivers."}
       </p>
 
-      <div className="client-mc-controls">
-        <label className="client-mc-trials">
-          Trials
-          <input
-            type="number"
-            min={50}
-            max={maxTrials}
-            step={50}
-            value={Math.min(trials, maxTrials)}
-            onChange={(e) => setTrials(Number(e.target.value) || DEFAULT_TRIALS)}
-            data-testid="mc-trials-input"
-          />
-        </label>
-        <button
-          type="button"
-          className="secondary-btn"
-          onClick={() => void runMc()}
-          disabled={showProgress}
-          data-testid="mc-run-btn"
-        >
-          Run Monte Carlo
-        </button>
-      </div>
+      {showCustomMcControls && (
+        <div className="client-mc-controls">
+          <label className="client-mc-trials">
+            Trials
+            <input
+              type="number"
+              min={50}
+              max={trials}
+              step={50}
+              value={trials}
+              onChange={(e) => setTrials(Number(e.target.value) || PRECACHE_MC_TRIALS)}
+              data-testid="mc-trials-input"
+            />
+          </label>
+          <button
+            type="button"
+            className="secondary-btn"
+            onClick={() => void runMc()}
+            disabled={showProgress}
+            data-testid="mc-run-btn"
+          >
+            Run Monte Carlo
+          </button>
+        </div>
+      )}
 
       {showProgress && (
         <div className="mc-progress" data-testid="mc-progress" role="status">
@@ -331,8 +346,8 @@ export function MonteCarloPanel({ scenario, overrides }: Props) {
         </>
       )}
 
-      {!visibleAggregation && !showProgress && !error && !isInstantBase && (
-        <p className="muted">Click Run Monte Carlo to generate a distribution for this scenario.</p>
+      {!visibleAggregation && !showProgress && !error && !isInstantPrecache && !showCustomMcControls && (
+        <p className="muted">Precached Monte Carlo covers Base, Bear, and Bull without overrides.</p>
       )}
     </section>
   );

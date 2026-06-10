@@ -1,0 +1,88 @@
+name: Precache artifacts
+
+on:
+  push:
+    branches: [main, dev]
+    paths:
+      - "src/spacex_model/**"
+      - "SpaceX V*.xlsx"
+      - "scenarios/**"
+      - "scripts/precompute_*"
+      - "scripts/precache_*"
+      - "scripts/regenerate_precache.sh"
+      - "scripts/check_precache_artifacts.py"
+
+permissions:
+  contents: write
+
+jobs:
+  precache:
+    strategy:
+      fail-fast: false
+      matrix:
+        scenario: [base_case, bear, bull, mars_share]
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: uv sync --frozen --extra dev --extra service
+
+      - name: Precompute deterministic grids
+        env:
+          SPACEX_MODEL_FORCE_PRECOMPUTE: "1"
+          SPACEX_MODEL_PRECOMPUTE_SCENARIO: ${{ matrix.scenario }}
+        run: uv run python scripts/precompute_base_case.py "${{ matrix.scenario }}"
+
+      - name: Precompute Monte Carlo (5000 trials)
+        env:
+          SPACEX_MODEL_FORCE_PRECOMPUTE: "1"
+          SPACEX_MODEL_PRECOMPUTE_SCENARIO: ${{ matrix.scenario }}
+          SPACEX_MODEL_MC_PRECOMPUTE_TRIALS: "5000"
+        run: uv run python scripts/precompute_base_case_mc.py "${{ matrix.scenario }}"
+
+      - name: Upload scenario artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: precache-${{ matrix.scenario }}
+          path: |
+            frontend/public/data/${{ matrix.scenario }}_run.json
+            frontend/public/data/${{ matrix.scenario }}_mc.json
+
+  commit-artifacts:
+    needs: precache
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download all scenario artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: precache-*
+          path: artifacts
+          merge-multiple: true
+
+      - name: Copy artifacts into tree
+        run: |
+          mkdir -p frontend/public/data
+          find artifacts -name '*.json' -exec cp {} frontend/public/data/ \;
+          ls -la frontend/public/data/
+
+      - name: Commit updated precache JSON
+        run: |
+          if git diff --quiet frontend/public/data; then
+            echo "No precache changes to commit"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add frontend/public/data/*.json
+          git commit -m "chore: regenerate precache artifacts [skip ci]"
+          git push

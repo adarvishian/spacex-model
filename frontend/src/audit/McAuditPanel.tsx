@@ -5,15 +5,17 @@ import { FcfFanChart } from "../client/FcfFanChart";
 import { fetchHealth, fetchMcJob, submitMc } from "../api";
 import {
   canHydrateMcFromArtifact,
-  loadBaseCaseMcArtifact,
-} from "../shared/base-case-mc-artifact";
+  isInstantPrecacheView,
+  isPrecachedScenario,
+  loadScenarioMcArtifact,
+  resolveDeploySha,
+} from "../shared/scenario-artifacts";
 import { formatBillions, formatGridNumber } from "../shared/format";
 import type { McOutputKind } from "../shared/mc-headline";
 import { TornadoChart } from "../shared/TornadoChart";
 import type { McAggregationPayload, McJobResult, McMetricSummary, TornadoBar } from "../shared/types";
 
-const AUDIT_DEFAULT_TRIALS = 5000;
-const SERVERLESS_MAX_TRIALS = 200;
+const PRECACHE_MC_TRIALS = 5000;
 
 type McSource = "precache" | "live";
 
@@ -92,30 +94,28 @@ export function McAuditPanel({ outputKind, label, year, scenario, overrides }: P
   const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
   const [etaSec, setEtaSec] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [trials, setTrials] = useState(AUDIT_DEFAULT_TRIALS);
-  const [serverless, setServerless] = useState(false);
+  const [trials, setTrials] = useState(PRECACHE_MC_TRIALS);
+  const [customMcEnabled, setCustomMcEnabled] = useState(true);
   const [gitSha, setGitSha] = useState<string | null>(null);
+  const [precacheSha, setPrecacheSha] = useState<string | null>(null);
   const [artifactReady, setArtifactReady] = useState(false);
   const pollStart = useRef<number | null>(null);
 
-  const isInstantBase =
-    scenario === "base_case" && Object.keys(overrides).length === 0;
-
-  const maxTrials = serverless ? SERVERLESS_MAX_TRIALS : AUDIT_DEFAULT_TRIALS;
+  const isInstantPrecache = isInstantPrecacheView(scenario, overrides);
 
   useEffect(() => {
     fetchHealth()
       .then((h) => {
         setGitSha(h.git_sha);
-        setServerless(Boolean(h.serverless));
-        if (h.serverless) setTrials(Math.min(AUDIT_DEFAULT_TRIALS, SERVERLESS_MAX_TRIALS));
+        setCustomMcEnabled(Boolean(h.custom_mc_enabled ?? !h.serverless));
+        if (h.precache_mc_trials) setTrials(h.precache_mc_trials);
       })
       .catch(() => undefined);
   }, []);
 
   useEffect(() => {
     let cancelled = false;
-    loadBaseCaseMcArtifact()
+    void loadScenarioMcArtifact(scenario)
       .then(() => {
         if (!cancelled) setArtifactReady(true);
       })
@@ -125,7 +125,7 @@ export function McAuditPanel({ outputKind, label, year, scenario, overrides }: P
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [scenario]);
 
   const applyAggregation = useCallback(
     (agg: McAggregationPayload, src: McSource, id: string | null, bars: TornadoBar[] = []) => {
@@ -141,42 +141,29 @@ export function McAuditPanel({ outputKind, label, year, scenario, overrides }: P
   );
 
   useEffect(() => {
-    if (!artifactReady || !isInstantBase) return;
+    if (!artifactReady || !isInstantPrecache) return;
     if (!canHydrateMcFromArtifact(scenario, overrides, gitSha)) return;
-    void (async () => {
-      const artifact = await loadBaseCaseMcArtifact();
-      try {
-        const job = await fetchMcJob(artifact.job_id);
-        if (job.status === "completed" && job.result) {
-          applyAggregation(
-            aggregationFromJob(job.result),
-            "precache",
-            artifact.job_id,
-            job.result.tornado ?? artifact.tornado ?? [],
-          );
-          return;
-        }
-      } catch {
-        /* fall back to static artifact */
-      }
+    void loadScenarioMcArtifact(scenario).then((artifact) => {
+      setPrecacheSha(artifact.git_sha);
       applyAggregation(
         artifact.aggregation,
         "precache",
         artifact.job_id,
         artifact.tornado ?? [],
       );
-    })();
-  }, [artifactReady, isInstantBase, scenario, overrides, gitSha, applyAggregation]);
+    });
+  }, [artifactReady, isInstantPrecache, scenario, overrides, gitSha, applyAggregation]);
 
   useEffect(() => {
-    if (isInstantBase) return;
+    if (isInstantPrecache) return;
     setAggregation(null);
     setTornado([]);
     setSource(null);
     setJobId(null);
+    setPrecacheSha(null);
     setStatus(null);
     setProgress(null);
-  }, [scenario, overrides, isInstantBase]);
+  }, [scenario, overrides, isInstantPrecache]);
 
   const pollJob = useCallback(
     async (id: string) => {
@@ -206,10 +193,10 @@ export function McAuditPanel({ outputKind, label, year, scenario, overrides }: P
         return;
       }
       if (job.status === "queued" || job.status === "running") {
-        setTimeout(() => void pollJob(id), serverless ? 800 : 1500);
+        setTimeout(() => void pollJob(id), 1500);
       }
     },
-    [applyAggregation, serverless],
+    [applyAggregation],
   );
 
   const runMc = useCallback(async () => {
@@ -220,7 +207,7 @@ export function McAuditPanel({ outputKind, label, year, scenario, overrides }: P
     pollStart.current = Date.now();
     try {
       const { job_id } = await submitMc({
-        trials: Math.min(trials, maxTrials),
+        trials,
         scenario,
         base_seed: 42,
         include_tornado: true,
@@ -236,7 +223,7 @@ export function McAuditPanel({ outputKind, label, year, scenario, overrides }: P
       setError(String(e));
       setStatus(null);
     }
-  }, [trials, maxTrials, scenario, pollJob, searchParams, setSearchParams]);
+  }, [trials, scenario, pollJob, searchParams, setSearchParams]);
 
   useEffect(() => {
     const mcParam = searchParams.get("mc");
@@ -262,9 +249,9 @@ export function McAuditPanel({ outputKind, label, year, scenario, overrides }: P
 
   const visibleAggregation = useMemo(() => {
     if (!aggregation) return null;
-    if (source === "precache" && !isInstantBase) return null;
+    if (source === "precache" && !isInstantPrecache) return null;
     return aggregation;
-  }, [aggregation, source, isInstantBase]);
+  }, [aggregation, source, isInstantPrecache]);
 
   const evMetrics = visibleAggregation?.metrics?.group_ev_2025_b;
   const histogram = visibleAggregation?.group_ev_histogram;
@@ -289,6 +276,9 @@ export function McAuditPanel({ outputKind, label, year, scenario, overrides }: P
     status === "running" ||
     status === "loading";
 
+  const showCustomMcControls = customMcEnabled && !isInstantPrecache;
+  const deploySha = resolveDeploySha();
+
   const outputCaption =
     outputKind === "group_ev"
       ? "Stochastic distribution of Group EV (2025)"
@@ -307,6 +297,7 @@ export function McAuditPanel({ outputKind, label, year, scenario, overrides }: P
         {source === "precache" && (
           <span className="audit-badge mc-badge-precache" data-testid="audit-mc-provenance">
             precomputed
+            {precacheSha && <> @ {deploySha ?? precacheSha}</>}
           </span>
         )}
         {source === "live" && jobId && (
@@ -318,29 +309,31 @@ export function McAuditPanel({ outputKind, label, year, scenario, overrides }: P
 
       <p className="muted audit-mc-intro">{outputCaption}</p>
 
-      <div className="audit-mc-controls">
-        <label className="audit-mc-trials">
-          Trials
-          <input
-            type="number"
-            min={50}
-            max={maxTrials}
-            step={50}
-            value={Math.min(trials, maxTrials)}
-            onChange={(e) => setTrials(Number(e.target.value) || AUDIT_DEFAULT_TRIALS)}
-            data-testid="audit-mc-trials-input"
-          />
-        </label>
-        <button
-          type="button"
-          className="secondary-btn"
-          onClick={() => void runMc()}
-          disabled={showProgress}
-          data-testid="audit-mc-run-btn"
-        >
-          Run Monte Carlo
-        </button>
-      </div>
+      {showCustomMcControls && (
+        <div className="audit-mc-controls">
+          <label className="audit-mc-trials">
+            Trials
+            <input
+              type="number"
+              min={50}
+              max={trials}
+              step={50}
+              value={trials}
+              onChange={(e) => setTrials(Number(e.target.value) || PRECACHE_MC_TRIALS)}
+              data-testid="audit-mc-trials-input"
+            />
+          </label>
+          <button
+            type="button"
+            className="secondary-btn"
+            onClick={() => void runMc()}
+            disabled={showProgress}
+            data-testid="audit-mc-run-btn"
+          >
+            Run Monte Carlo
+          </button>
+        </div>
+      )}
 
       {showProgress && (
         <div className="mc-progress" data-testid="audit-mc-progress" role="status">
@@ -434,8 +427,12 @@ export function McAuditPanel({ outputKind, label, year, scenario, overrides }: P
         </>
       )}
 
-      {!visibleAggregation && !showProgress && !error && !isInstantBase && (
-        <p className="muted">Click Run Monte Carlo to generate a distribution for this scenario.</p>
+      {!visibleAggregation && !showProgress && !error && !isInstantPrecache && !showCustomMcControls && (
+        <p className="muted">
+          {isPrecachedScenario(scenario)
+            ? "Precached Monte Carlo covers preset scenarios without overrides."
+            : "Click Run Monte Carlo to generate a distribution for this scenario."}
+        </p>
       )}
     </section>
   );

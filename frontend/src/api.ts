@@ -73,6 +73,9 @@ export function fetchHealth() {
     status: string;
     git_sha: string | null;
     serverless?: boolean;
+    custom_mc_enabled?: boolean;
+    precached_scenarios?: string[];
+    precache_mc_trials?: number;
   }>("/health");
 }
 

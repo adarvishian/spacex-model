@@ -117,23 +117,35 @@ test("A4: base case grid visible before runDeterministic response", async ({ pag
   await expect(page.getByTestId("run-provenance")).toHaveText("precomputed");
 });
 
-/** FRONTEND_UX_PRD A4 — non-base scenario shows skeleton + status, not a blank pane. */
+/** FRONTEND_UX_PRD A4 — non-precached scenario shows skeleton + status, not a blank pane. */
 test("A4: non-base scenario shows progress skeleton", async ({ page }) => {
   await installMockApi(page);
+
+  await page.route("**/api/scenarios", async (route) => {
+    return route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify([
+        { name: "base_case", description: "Base", path: "scenarios/base_case.yaml" },
+        { name: "bear", description: "Bear", path: "scenarios/bear.yaml" },
+        { name: "s1_adherence", description: "S-1", path: "scenarios/s1_adherence.yaml" },
+      ]),
+    });
+  });
 
   await page.route("**/api/runs/deterministic", async (route) => {
     if (route.request().method() !== "POST") {
       return route.continue();
     }
     const body = route.request().postDataJSON() as { scenario?: string } | undefined;
-    if (body?.scenario === "bear") {
+    if (body?.scenario === "s1_adherence") {
       await new Promise((r) => setTimeout(r, 5_000));
       return route.fulfill({
         status: 200,
         contentType: "application/json",
         body: JSON.stringify({
-          run_id: "e2e_bear_run",
-          scenario: "bear",
+          run_id: "e2e_s1_run",
+          scenario: "s1_adherence",
           cached: false,
           solver: { iterations: 42, converged: true, max_residual: 0.001 },
           override_warnings: [],
@@ -144,7 +156,7 @@ test("A4: non-base scenario shows progress skeleton", async ({ page }) => {
   });
 
   await page.goto("/audit/starlink");
-  await page.getByLabel("Scenario").selectOption("bear");
+  await page.getByLabel("Scenario").selectOption("s1_adherence");
   await expect(page.getByTestId("audit-run-status")).toBeVisible({ timeout: 3_000 });
   await expect(page.getByTestId("audit-grid-skeleton")).toBeVisible();
 });
@@ -432,7 +444,7 @@ test("MC3: audit MC panel opens from module FCF with distribution and provenance
   await expect(page.getByTestId("mc-ev-distribution")).toBeVisible({ timeout: 5_000 });
   await expect(page.getByTestId("mc-percentile-table")).toBeVisible();
   await expect(page.getByTestId("tornado-chart")).toBeVisible();
-  await expect(page.getByTestId("audit-mc-provenance-detail")).toContainText(/2,000/);
+  await expect(page.getByTestId("audit-mc-provenance-detail")).toContainText(/5,000/);
   await expect(page.getByTestId("audit-mc-provenance-detail")).toContainText(/Seed:\s*42/i);
   await expect(page.getByTestId("audit-mc-provenance-detail")).toContainText(/Convergence:\s*converged/i);
   await expect(page.getByTestId("mc-p5")).toHaveText("$220B");

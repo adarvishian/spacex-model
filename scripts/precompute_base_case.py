@@ -12,15 +12,22 @@ Usage (from repo root):
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-OUT_PATH = REPO_ROOT / "frontend" / "public" / "data" / "base_case_run.json"
 
 sys.path.insert(0, str(REPO_ROOT / "scripts"))
+from precache_config import run_artifact_path  # noqa: E402
 from precache_skip import should_skip_precache  # noqa: E402
+
+
+def _scenario_from_argv() -> str:
+    if len(sys.argv) > 1 and sys.argv[1].strip():
+        return sys.argv[1].strip()
+    return os.environ.get("SPACEX_MODEL_PRECOMPUTE_SCENARIO", "base_case").strip() or "base_case"
 
 
 def _git_sha() -> str:
@@ -37,7 +44,9 @@ def _git_sha() -> str:
 
 
 def main() -> int:
-    if should_skip_precache(OUT_PATH, repo_root=REPO_ROOT, label="base-case precompute"):
+    scenario = _scenario_from_argv()
+    out_path = run_artifact_path(REPO_ROOT, scenario)
+    if should_skip_precache(out_path, repo_root=REPO_ROOT, label=f"{scenario} run precompute"):
         return 0
 
     sys.path.insert(0, str(REPO_ROOT / "src"))
@@ -53,8 +62,6 @@ def main() -> int:
     if not settings.workbook_path.exists():
         print(f"Workbook not found: {settings.workbook_path}", file=sys.stderr)
         return 1
-
-    scenario = "base_case"
     scenario_path = settings.scenarios_dir / f"{scenario}.yaml"
     if not scenario_path.exists():
         print(f"Scenario not found: {scenario_path}", file=sys.stderr)
@@ -88,10 +95,10 @@ def main() -> int:
         },
     }
 
-    OUT_PATH.parent.mkdir(parents=True, exist_ok=True)
-    OUT_PATH.write_text(json.dumps(artifact, indent=2), encoding="utf-8")
-    size_mb = OUT_PATH.stat().st_size / (1024 * 1024)
-    print(f"Wrote {OUT_PATH} ({size_mb:.1f} MB, git_sha={artifact['git_sha']})")
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    out_path.write_text(json.dumps(artifact, indent=2), encoding="utf-8")
+    size_mb = out_path.stat().st_size / (1024 * 1024)
+    print(f"Wrote {out_path} ({size_mb:.1f} MB, git_sha={artifact['git_sha']})")
     return 0
 
 

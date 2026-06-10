@@ -11,6 +11,14 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
+sys.path.insert(0, str(REPO_ROOT / "scripts"))
+from precache_config import (  # noqa: E402
+    DEFAULT_MC_TRIALS,
+    PRECACHE_SCENARIOS,
+    mc_artifact_path,
+    run_artifact_path,
+)
+
 RUN_REQUIRED_KEYS = ("git_sha", "scenario", "run_id", "audit_grids", "run_audit", "deterministic")
 MC_REQUIRED_KEYS = (
     "git_sha",
@@ -39,13 +47,15 @@ def _git_sha() -> str:
         sys.exit(1)
 
 
-def _validate_run_artifact(data: object) -> list[str]:
+def _validate_run_artifact(data: object, scenario: str) -> list[str]:
     if not isinstance(data, dict):
         return ["root must be a JSON object"]
     errors: list[str] = []
     for key in RUN_REQUIRED_KEYS:
         if key not in data:
             errors.append(f"missing key: {key}")
+    if data.get("scenario") != scenario:
+        errors.append(f"scenario must be {scenario!r}")
     det = data.get("deterministic")
     if isinstance(det, dict):
         for key in ("run_id", "scenario", "solver"):
@@ -59,16 +69,21 @@ def _validate_run_artifact(data: object) -> list[str]:
     return errors
 
 
-def _validate_mc_artifact(data: object) -> list[str]:
+def _validate_mc_artifact(data: object, scenario: str) -> list[str]:
     if not isinstance(data, dict):
         return ["root must be a JSON object"]
     errors: list[str] = []
     for key in MC_REQUIRED_KEYS:
         if key not in data:
             errors.append(f"missing key: {key}")
+    if data.get("scenario") != scenario:
+        errors.append(f"scenario must be {scenario!r}")
     trials = data.get("trials")
-    if isinstance(trials, int) and trials < 1:
-        errors.append("trials must be >= 1")
+    if isinstance(trials, int):
+        if trials < 1:
+            errors.append("trials must be >= 1")
+        if trials != DEFAULT_MC_TRIALS:
+            errors.append(f"trials must be {DEFAULT_MC_TRIALS} (got {trials})")
     agg = data.get("aggregation")
     if isinstance(agg, dict):
         for key in MC_AGG_REQUIRED_KEYS:
@@ -81,17 +96,29 @@ def _validate_mc_artifact(data: object) -> list[str]:
     return errors
 
 
-ARTIFACTS: list[tuple[Path, Callable[[object], list[str]]]] = [
-    (REPO_ROOT / "frontend/public/data/base_case_run.json", _validate_run_artifact),
-    (REPO_ROOT / "frontend/public/data/base_case_mc.json", _validate_mc_artifact),
-]
+def _artifact_specs() -> list[tuple[Path, Callable[[object], list[str]]]]:
+    specs: list[tuple[Path, Callable[[object], list[str]]]] = []
+    for scenario in PRECACHE_SCENARIOS:
+        specs.append(
+            (
+                run_artifact_path(REPO_ROOT, scenario),
+                lambda data, s=scenario: _validate_run_artifact(data, s),
+            )
+        )
+        specs.append(
+            (
+                mc_artifact_path(REPO_ROOT, scenario),
+                lambda data, s=scenario: _validate_mc_artifact(data, s),
+            )
+        )
+    return specs
 
 
 def main() -> int:
     head = _git_sha()
     failed = False
 
-    for path, validator in ARTIFACTS:
+    for path, validator in _artifact_specs():
         rel = path.relative_to(REPO_ROOT)
         if not path.exists():
             print(f"ERROR: {rel}: file missing", file=sys.stderr)
@@ -124,7 +151,7 @@ def main() -> int:
         )
         return 1
 
-    print(f"Precache artifacts OK (git_sha={head})")
+    print(f"Precache artifacts OK ({len(PRECACHE_SCENARIOS)} scenarios, git_sha={head})")
     return 0
 
 

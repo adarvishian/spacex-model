@@ -27,3 +27,4 @@ frontend/public/data/*
 *.docx
 .vercel
 public/             # local Vite build output (canonical deploy: static/ui)
+static/ui/          # Vite build output — rebuilt each deploy (Milestone 3.1)

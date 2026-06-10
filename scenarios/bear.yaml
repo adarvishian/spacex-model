@@ -6,6 +6,6 @@ description: >
 baseline_workbook: "SpaceX V4.131.xlsx"
 overrides:
   "TAM inflation rate (annual)": 0.015
-  "Real GNI growth rate (% per year)": 0.01
-  "Mars carve-out % of prior-year Group FCF": 0.25
+  "GNI per capita growth rate (annual)": 0.01
+  "Lunar/Mars carve-out % of prior-year Group FCF": 0.25
   "Starship manufacturing WL learning rate (% reduction per doubling cum stacks)": 0.05

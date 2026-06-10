@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import os
 import stat
-import time
 from pathlib import Path
 
 import pytest
@@ -116,24 +115,12 @@ def test_serverless_api_smoke_deterministic_mc_lineage(serverless_client) -> Non
         json={"trials": 3, "base_seed": 42, "n_jobs": 1, "include_tornado": False},
         headers=headers,
     )
-    assert mc.status_code == 200, mc.text
-    assert mc.json().get("execution") == "batched"
-    job_id = mc.json()["job_id"]
-
-    poll_body: dict = {}
-    status = "queued"
-    deadline = time.monotonic() + 120.0
-    while time.monotonic() < deadline:
-        poll = serverless_client.get(f"/api/runs/mc/{job_id}", headers=headers)
-        assert poll.status_code == 200, poll.text
-        poll_body = poll.json()
-        status = poll_body["status"]
-        if status in ("completed", "failed"):
-            break
-        time.sleep(0.25)
-
-    assert status == "completed", poll_body
-    assert poll_body["progress"]["trials_done"] == 3
+    assert mc.status_code == 501, mc.text
+    detail = mc.json().get("detail")
+    if isinstance(detail, dict):
+        assert "deferred" in detail.get("message", "").lower()
+    else:
+        assert "deferred" in str(detail).lower()
 
     hist = serverless_client.get(
         "/api/lineage/group.group_revenue_net/history",

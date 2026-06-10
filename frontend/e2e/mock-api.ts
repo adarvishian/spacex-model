@@ -72,8 +72,8 @@ const ARTIFACT = patchArtifact(RAW_ARTIFACT);
 
 /** Sprint 6 — instant base-case MC distribution (matches e2e percentile assertions). */
 export const MOCK_MC_AGGREGATION = {
-  n_trials: 2000,
-  n_converged: 1988,
+  n_trials: 5000,
+  n_converged: 4988,
   base_seed: 42,
   convergence_status: "converged",
   metrics: {
@@ -131,12 +131,12 @@ export const MOCK_MC_ARTIFACT = {
   scenario: "base_case",
   job_id: "precache",
   run_id: "e2e_mc_precache",
-  trials: 2000,
+  trials: 5000,
   base_seed: 42,
-  trials_completed: 2000,
-  trials_converged: 1988,
-  n_trials: 2000,
-  n_converged: 1988,
+  trials_completed: 5000,
+  trials_converged: 4988,
+  n_trials: 5000,
+  n_converged: 4988,
   convergence_status: "converged",
   aggregation: MOCK_MC_AGGREGATION,
   tornado: MOCK_MC_TORNADO,
@@ -524,19 +524,28 @@ export function assertArtifactUnitCoverage(): void {
 export async function installMockApi(page: Page) {
   assertArtifactUnitCoverage();
 
-  await page.route("**/data/base_case_run.json", async (route) => {
+  await page.route("**/data/*_run.json", async (route) => {
+    const url = route.request().url();
+    const scenario = url.match(/\/([^/]+)_run\.json/)?.[1] ?? "base_case";
     return route.fulfill({
       status: 200,
       contentType: "application/json",
-      body: JSON.stringify(ARTIFACT),
+      body: JSON.stringify({ ...ARTIFACT, scenario }),
     });
   });
 
-  await page.route("**/data/base_case_mc.json", async (route) => {
+  await page.route("**/data/*_mc.json", async (route) => {
+    const url = route.request().url();
+    const scenario = url.match(/\/([^/]+)_mc\.json/)?.[1] ?? "base_case";
     return route.fulfill({
       status: 200,
       contentType: "application/json",
-      body: JSON.stringify(MOCK_MC_ARTIFACT),
+      body: JSON.stringify({
+        ...MOCK_MC_ARTIFACT,
+        scenario,
+        aggregation: MOCK_MC_AGGREGATION,
+        tornado: MOCK_MC_TORNADO,
+      }),
     });
   });
 
@@ -552,7 +561,14 @@ export async function installMockApi(page: Page) {
       });
 
     if (path === "/health") {
-      return json({ status: "ok", git_sha: ARTIFACT.git_sha, serverless: true });
+      return json({
+        status: "ok",
+        git_sha: ARTIFACT.git_sha,
+        serverless: true,
+        custom_mc_enabled: false,
+        precached_scenarios: ["base_case", "bear", "bull", "mars_share"],
+        precache_mc_trials: 5000,
+      });
     }
     if (path === "/scenarios") {
       return json([

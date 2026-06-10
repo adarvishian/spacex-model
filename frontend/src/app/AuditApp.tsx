@@ -16,12 +16,13 @@ import { ScenarioSidebar } from "../audit/ScenarioSidebar";
 import { SheetTabs } from "../audit/SheetTabs";
 import { SourcesPanel } from "../audit/SourcesPanel";
 import { parseCellAddress, sheetSlugFromName } from "../shared/cell-ref";
+import type { RunProvenance } from "../shared/base-case-artifact";
 import {
-  canHydrateFromArtifact,
-  getBaseCaseArtifact,
-  loadBaseCaseArtifact,
-  type RunProvenance,
-} from "../shared/base-case-artifact";
+  canHydrateRunFromArtifact,
+  getScenarioRunArtifact,
+  isInstantPrecacheView,
+  preloadScenarioRunArtifacts,
+} from "../shared/scenario-artifacts";
 import {
   cacheFromDeterministicRun,
   getCachedRun,
@@ -59,7 +60,7 @@ export default function AuditApp() {
 
   const isRunAudit = sheetSlug === RUN_AUDIT_SLUG;
 
-  const [artifactReady, setArtifactReady] = useState(Boolean(getBaseCaseArtifact()));
+  const [artifactReady, setArtifactReady] = useState(false);
   const [selectedScenario, setSelectedScenario] = useState("base_case");
   const [overrideLabel, setOverrideLabel] = useState("");
   const [overrideValue, setOverrideValue] = useState("");
@@ -94,7 +95,7 @@ export default function AuditApp() {
 
   useEffect(() => {
     let cancelled = false;
-    void loadBaseCaseArtifact()
+    void preloadScenarioRunArtifacts()
       .then(() => {
         if (!cancelled) setArtifactReady(true);
       })
@@ -119,8 +120,7 @@ export default function AuditApp() {
       : embeddedGrids[sheetSlug] ?? gridQ.data ?? null;
 
   const waitingForArtifact =
-    selectedScenario === "base_case" &&
-    Object.keys(overrides).length === 0 &&
+    isInstantPrecacheView(selectedScenario, overrides) &&
     !artifactReady &&
     !getCachedRun(selectedScenario, overrides);
 
@@ -206,8 +206,8 @@ export default function AuditApp() {
     }
 
     const gitSha = healthQ.data?.git_sha;
-    const artifact = getBaseCaseArtifact();
-    if (artifact && canHydrateFromArtifact(selectedScenario, overrides, gitSha)) {
+    const artifact = getScenarioRunArtifact(selectedScenario);
+    if (artifact && canHydrateRunFromArtifact(selectedScenario, overrides, gitSha)) {
       setRunId(artifact.run_id);
       setEmbeddedGrids(artifact.audit_grids);
       setRunAuditPayload(artifact.run_audit);
@@ -234,7 +234,7 @@ export default function AuditApp() {
   useEffect(() => {
     const gitSha = healthQ.data?.git_sha;
     if (!gitSha || provenance !== "precomputed") return;
-    if (!canHydrateFromArtifact(selectedScenario, overrides, gitSha)) {
+    if (!canHydrateRunFromArtifact(selectedScenario, overrides, gitSha)) {
       setRunId(null);
       setEmbeddedGrids({});
       setRunAuditPayload(null);
