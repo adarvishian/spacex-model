@@ -13,13 +13,22 @@ from spacex_model.config.constants import (
     SOLVER_TOLERANCE,
 )
 from spacex_model.config.settings import get_settings
-from spacex_model.engine.conservation import check_allocation_bounds, check_kg_allocation_bounds
+from spacex_model.engine.conservation import (
+    check_allocation_bounds,
+    check_kg_allocation_bounds,
+)
 from spacex_model.engine.pipeline import run_base_case
+from spacex_model.inputs.block_b_anchors import BLOCK_B_CALIBRATION_PENDING_BUDGET
 from spacex_model.inputs.v4_113_2025_anchors import V4_113_INGEST_ANCHORS_2025
 from spacex_model.io.divergence import build_divergence_report, finalize_triage
-from spacex_model.linters.architecture_coverage import find_uncovered_architecture_sections
+from spacex_model.linters.architecture_coverage import (
+    find_uncovered_architecture_sections,
+)
 from spacex_model.linters.docstrings import find_missing_docstring_tags
-from spacex_model.testing.block_b_anchors import BLOCK_B_CALIBRATION_PENDING, load_block_b_anchors_v1
+from spacex_model.testing.block_b_anchors import (
+    BLOCK_B_CALIBRATION_PENDING,
+    load_block_b_anchors_v1,
+)
 
 REPO = Path(__file__).resolve().parents[1]
 WORKBOOK = get_settings().workbook_path
@@ -78,15 +87,21 @@ def test_r4_block_b_ingest_anchors(base_case) -> None:
             assert actual == pytest.approx(anchor.target, rel=anchor.tolerance_pct)
 
 
+def test_r4_block_b_pending_budget_shrink_only() -> None:
+    """Pending anchor list may shrink but must not grow without explicit budget approval (M1.2)."""
+    assert len(BLOCK_B_CALIBRATION_PENDING) <= BLOCK_B_CALIBRATION_PENDING_BUDGET
+    assert BLOCK_B_CALIBRATION_PENDING_BUDGET == 11
+
+
 def test_r4_block_b_s1_hard_anchors(base_case) -> None:
     """Non-xfail S-1 disclosure anchors that must halt if broken."""
     for anchor in load_block_b_anchors_v1():
         if anchor.name in BLOCK_B_CALIBRATION_PENDING:
             continue
         actual = base_case.lookup_anchor(anchor.name)
-        assert anchor.halt_low <= actual <= anchor.halt_high, (
-            f"{anchor.name}: {actual} not in [{anchor.halt_low}, {anchor.halt_high}]"
-        )
+        assert (
+            anchor.halt_low <= actual <= anchor.halt_high
+        ), f"{anchor.name}: {actual} not in [{anchor.halt_low}, {anchor.halt_high}]"
 
 
 def test_r4_block_c_no_nan_inf(base_case) -> None:
@@ -114,9 +129,7 @@ def test_r4_divergence_all_triaged(base_case) -> None:
     assert len(report.open_type_a) == 0
     assert len(report.open_type_d) == 0
     untriaged_open = [
-        e
-        for e in report.entries
-        if not e.within_tolerance and e.triage.value == "open"
+        e for e in report.entries if not e.within_tolerance and e.triage.value == "open"
     ]
     assert untriaged_open == []
 

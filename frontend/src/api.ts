@@ -55,11 +55,14 @@ export type DeterministicRun = {
 };
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? "/api";
+const API_KEY = import.meta.env.VITE_API_KEY as string | undefined;
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  if (API_KEY) headers["X-API-Key"] = API_KEY;
   const res = await fetch(`${API_BASE}${path}`, {
     ...init,
-    headers: { "Content-Type": "application/json", ...init?.headers },
+    headers: { ...headers, ...init?.headers },
   });
   if (!res.ok) throw new Error(await res.text() || `HTTP ${res.status}`);
   return res.json() as Promise<T>;
@@ -175,6 +178,18 @@ export function submitMc(body: {
     method: "POST",
     body: JSON.stringify({ scenario: "base_case", ...body }),
   });
+}
+
+export type CalibrationStatus = {
+  calibrated: boolean;
+  pending_count: number;
+  enforced_count: number;
+  total_count: number;
+  pending_anchors: string[];
+};
+
+export function fetchClientCalibrationStatus() {
+  return request<CalibrationStatus>("/client/calibration-status");
 }
 
 export function fetchClientScenarios() {

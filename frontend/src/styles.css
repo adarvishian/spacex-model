@@ -1275,6 +1275,12 @@ table.data-table tbody tr.clickable:hover {
   color: var(--red);
 }
 
+.audit-alert.warning {
+  background: var(--amber-subtle);
+  color: var(--amber);
+  border-bottom: 1px solid var(--amber-border);
+}
+
 .audit-placeholder {
   display: flex;
   flex-direction: column;

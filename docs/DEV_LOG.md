@@ -7,7 +7,35 @@ Chronological record of material changes to the Python port. Read this after `co
 1. Read `context.md` (architecture locks) and `role.md` (operating persona).
 2. Scan **latest entry first** below for what changed and what is still open.
 3. Run `python -m spacex_model.cli.run_model --base-case` to regenerate `docs/reconciliation_report.md`.
-4. Block B tests: `pytest tests/reconciliation/test_block_b.py -v` — S-1 anchors; items marked xfail are documented gaps, not regressions.
+4. Block B tests: `pytest tests/reconciliation/test_block_b.py -v` — S-1 anchors; pending items are **strict xfail** (fix without delisting fails CI).
+
+---
+
+## 2026-06-10 — Milestone 1: calibration visibility + service hardening (audit 2026-06-09)
+
+**Trigger:** `SpaceX_Modeler_Repo_Audit_2026-06-09.md` Milestone 1 (1.2–1.5 shipped; 1.1 burn-down remains open).
+
+### Shipped
+
+| Area | Change | Primary files |
+|------|--------|---------------|
+| Calibration loud | Strict xfails; shrink-only pending budget (11); burn-down table in reconciliation report; Client Mode uncalibrated banner | `testing/block_b_anchors.py`, `inputs/block_b_anchors.py`, `io/reconciliation_report.py`, `frontend/src/app/ClientApp.tsx` |
+| Anchor provenance | S-1 disclosure vs V4.113 ingest sections labeled separately in report | `io/reconciliation_report.py`, `inputs/v4_113_2025_anchors.py` |
+| Service hardening | Fail-closed POST on serverless; `hmac.compare_digest`; CORS allowlist; scenario name regex + path containment; sanitized errors; logged cache-rehydration failures | `service/auth.py`, `service/api.py`, `config/settings.py` |
+| Frontend auth | `VITE_API_KEY` header on API requests | `frontend/src/api.ts`, `frontend/src/shared/api.ts` |
+| Constitution | V4.113 deferral header + decision-log entries in `context.md` | `context.md` |
+| Tests | `tests/test_milestone1_service_hardening.py`; pending budget gate in R4 | `tests/test_r4_reconciliation_calibration.py` |
+
+### Still open (M1.1)
+
+11/15 Block B S-1 anchors remain in `BLOCK_B_CALIBRATION_PENDING`. Burn-down requires per-cluster calibration work (Revenue → OpEx/EBITDA → CapEx/FCF → Cash) per §11.6 triage.
+
+### Verify
+
+```bash
+pytest tests/test_milestone1_service_hardening.py tests/test_r4_reconciliation_calibration.py -v
+pytest tests/reconciliation/test_block_b.py -v  # 4 pass, 11 xfail strict
+```
 
 Override source of truth for disclosed inputs: `src/spacex_model/inputs/s1_overrides.py` (applied on every `run_pipeline()` after V4.113 ingest). Mirror file: `scenarios/s1_adherence.yaml`.
 

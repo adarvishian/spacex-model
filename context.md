@@ -2,6 +2,8 @@
 
 **Status**: Living context document. Read in full before any code is written. Every code module references this doc; every PR cites the section it implements.
 
+> **V4.113 re-base (2026-06-04):** Horizon, solver contract, and workbook baseline in §2.2 below describe the **V2.16-era** snapshot. The active port uses **V4.113** per `PRD_V4.113_Unified_Allocation_2026-06-04.md` and `src/spacex_model/config/constants.py` (horizon 2025–2040, 1000 iter / 1e-7 tol). Where this document conflicts with constants.py or the V4.113 PRD, **the PRD + constants.py win**.
+
 **Companion documents** (repo root + package):
 - `docs/DEV_LOG.md` — append-only agent handoff log (what changed, Block B xfail status, how to verify). **Read after this file when resuming work.**
 - `role.md` — operating persona; requires dev log updates on material changes.
@@ -76,8 +78,8 @@ The model is the product Mach33 ships to clients/consumers; the Excel rebuild ha
 | Claude Log | Per-sprint change log | 15 | 6 | 84 | 2 |
 | **TOTAL** | | | | **21,448** | **10,905** |
 
-- **Iterative calculation**: ON, 100 iterations / 0.001 tolerance (Memory 1.6, load-bearing for Starlink↔Starlink Capacity %×Revenue cycle).
-- **Year horizon**: `D:AC` = 2025-2050 (26 columns). Year header in row 4 (hardcoded ints); year-offset helper in row 5 (`D5=0 ... AC5=25`). Locked; no extension to AD or beyond.
+- **Iterative calculation**: ON, 100 iterations / 0.001 tolerance (Memory 1.6, load-bearing for Starlink↔Starlink Capacity %×Revenue cycle). **Amended for V4.113 port:** 1000 iterations / 1e-7 tolerance (`constants.py`; V4.113 `iterateCount`).
+- **Year horizon**: `D:AC` = 2025-2050 (26 columns). Year header in row 4 (hardcoded ints); year-offset helper in row 5 (`D5=0 ... AC5=25`). Locked; no extension to AD or beyond. **Amended for V4.113 port:** horizon 2025–2040 (16 years) per V4.113 Assumptions layout and `constants.py`.
 - **Defined names**: none. All cross-references are `Sheet!Cell` or `INDEX/MATCH`-by-label.
 - **VBA**: archive present in the .xlsx (`vba_archive` non-null). No defined names attached to VBA; macros appear to be record/playback helpers, not load-bearing. **Action**: extract and inspect `vbaProject.bin` during ingest; treat as evidence only unless a macro is shown to drive a calc.
 - **External links**: none.
@@ -1010,6 +1012,8 @@ Total onboarding: ~3 hours before writing any code.
 | 2026-05-28 | Pass criteria reframed into 4 blocks (Structural invariants / External anchors / Sense checks / Spec coverage); xlsx cell-by-cell match is diagnostic, not pass/fail | Direct consequence of the user's amendment above. The xlsx may contain bugs; pass criteria therefore measure (a) the code's adherence to internal invariants the model is supposed to obey, (b) reproduction of external real-world calibration anchors, (c) sense / sanity, (d) coverage of the spec. Divergence vs xlsx is investigated via the §11.6 triage workflow, not asserted as a test failure. |
 | 2026-05-28 | Web UI v1 scope = scenario picker + Group/per-module EV + FCF tables + tornado + audit lineage panel; charts/comparables/animations deferred to v2 | Scope control; UI scope creep is the documented v1 risk |
 | 2026-05-28 | S-1 adherence P0 backlog (audit §7.2): `apply_s1_adherence_overrides()` on every pipeline run; Block B tests use S-1 2025 anchors; AI Stack populated with S-1 AI + Anthropic lines + terrestrial CapEx | `SpaceX_Modeler_S1_Adherence_Audit_2026-05-28.docx`; see `docs/DEV_LOG.md` |
+| 2026-06-04 | V4.113 re-base: workbook `SpaceX V4.113.xlsx`; horizon 2025–2040; solver 1000 iter / 1e-7 tol; unified allocator (Phases R/U) | `PRD_V4.113_Unified_Allocation_2026-06-04.md`; supersedes V2.16 horizon/solver locks in §2.2 for the active port |
+| 2026-06-10 | Block B anchor provenance split: S-1 disclosure targets (`block_b_anchors.py`) vs V4.113 ingest frozen inputs (`v4_113_2025_anchors.py`); pending list shrink-only with strict xfails | Repo audit Milestone 1; reconciliation report burn-down table; Client Mode uncalibrated banner |
 
 ---
 

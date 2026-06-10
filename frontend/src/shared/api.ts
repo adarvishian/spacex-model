@@ -7,14 +7,14 @@ import type {
 } from "./types";
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? "/api";
+const API_KEY = import.meta.env.VITE_API_KEY as string | undefined;
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  if (API_KEY) headers["X-API-Key"] = API_KEY;
   const res = await fetch(`${API_BASE}${path}`, {
     ...init,
-    headers: {
-      "Content-Type": "application/json",
-      ...init?.headers,
-    },
+    headers: { ...headers, ...init?.headers },
   });
   if (!res.ok) {
     const detail = await res.text();

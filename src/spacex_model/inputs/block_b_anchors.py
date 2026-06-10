@@ -34,6 +34,9 @@ def _anchor(
     return BlockBAnchor(name, target, tolerance, halt_low, halt_high)
 
 
+# Shrink-only CI budget — increase only with explicit approval (M1.2).
+BLOCK_B_CALIBRATION_PENDING_BUDGET: int = 11
+
 # Full model may not yet reconcile every S-1 line after P0 inputs-only pass.
 BLOCK_B_CALIBRATION_PENDING: frozenset[str] = frozenset(
     {

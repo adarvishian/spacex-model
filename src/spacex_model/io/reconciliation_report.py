@@ -2,13 +2,28 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
-from spacex_model.config.constants import FIRST_YEAR, LAST_YEAR, SOLVER_MAX_ITERATIONS, SOLVER_TOLERANCE
+from spacex_model.config.constants import (
+    FIRST_YEAR,
+    LAST_YEAR,
+    SOLVER_MAX_ITERATIONS,
+    SOLVER_TOLERANCE,
+)
 from spacex_model.engine.conservation import check_allocation_bounds
 from spacex_model.engine.pipeline import ModelResult
+from spacex_model.inputs.block_b_anchors import (
+    BLOCK_B_CALIBRATION_PENDING,
+    load_block_b_anchors_v1,
+)
+from spacex_model.inputs.v4_113_2025_anchors import V4_113_INGEST_ANCHORS_2025
 from spacex_model.io.divergence import DivergenceReport, TriageClass
+
+
+def _anchor_pass(actual: float, anchor: object) -> bool:
+    """True when actual is within anchor halt band (Block BAnchor)."""
+    return anchor.halt_low <= actual <= anchor.halt_high  # type: ignore[attr-defined]
 
 
 def write_reconciliation_report(
@@ -19,11 +34,15 @@ def write_reconciliation_report(
     stress_summary: dict[str, dict[str, bool]] | None = None,
 ) -> None:
     """Write docs/reconciliation_report.md from a ModelResult."""
-    now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+    now = datetime.now(UTC).strftime("%Y-%m-%d %H:%M UTC")
     y = FIRST_YEAR
-    g = result.group_pnl
-    bounds = check_allocation_bounds(result.allocator.cash, result.allocator.available_cash)
+    bounds = check_allocation_bounds(
+        result.allocator.cash, result.allocator.available_cash
+    )
     div = divergence or result.audit.get("divergence")
+    s1_anchors = load_block_b_anchors_v1()
+    pending = BLOCK_B_CALIBRATION_PENDING
+    enforced = [a for a in s1_anchors if a.name not in pending]
 
     def _status(ok: bool) -> str:
         return "PASS" if ok else "FAIL"
@@ -33,7 +52,7 @@ def write_reconciliation_report(
         "",
         f"**Generated:** {now}  ",
         f"**Run ID:** `{result.run_id}`  ",
-        f"**Phase:** R4 (V4.113 reconciliation + divergence triage)",
+        "**Phase:** R4 (V4.113 reconciliation + divergence triage)",
         f"**Horizon:** {FIRST_YEAR}–{LAST_YEAR}",
         "",
         f"- Solver: **{result.solver_trace.iterations}** iterations, "
@@ -44,8 +63,11 @@ def write_reconciliation_report(
         "",
         "| Invariant | Status | Notes |",
         "|---|---|---|",
-        f"| Conservation ALL-OK ({FIRST_YEAR}–{LAST_YEAR}) | {_status(result.conservation.all_ok)} | "
-        f"2025 = {result.conservation.r108_ok_by_year.get(y, 'N/A')} |",
+        (
+            f"| Conservation ALL-OK ({FIRST_YEAR}–{LAST_YEAR}) | "
+            f"{_status(result.conservation.all_ok)} | "
+            f"2025 = {result.conservation.r108_ok_by_year.get(y, 'N/A')} |"
+        ),
         f"| Module allocation bounds | {_status(bounds.all_ok)} | Σ cash alloc ≤ available cash |",
         f"| Iterative solver convergence | {_status(result.solver_trace.converged)} | "
         f"< {SOLVER_MAX_ITERATIONS} iter, < {SOLVER_TOLERANCE:g} residual |",
@@ -70,16 +92,63 @@ def write_reconciliation_report(
 
     lines.extend(
         [
-            "## Block B — External calibration anchors (V4.113 ingest + S-1 2025)",
+            "## Block B — Calibration burn-down (S-1 disclosure)",
+            "",
+            f"**Enforced:** {len(enforced)}/{len(s1_anchors)} anchors  ",
+            f"**Pending:** {len(pending)} anchors (xfail strict-on-fix in CI)",
+            "",
+            "| Anchor | Target | Actual | Status | Enforcement |",
+            "|---|---:|---:|---|---|",
+        ]
+    )
+    for anchor in s1_anchors:
+        try:
+            actual = result.lookup_anchor(anchor.name)
+        except KeyError:
+            actual = float("nan")
+        if anchor.name in pending:
+            enforcement = "pending (xfail)"
+            row_status = "PENDING"
+        else:
+            enforcement = "strict"
+            row_status = _status(_anchor_pass(actual, anchor))
+        lines.append(
+            f"| {anchor.name} | ${anchor.target:,.0f}M | ${actual:,.0f} | "
+            f"{row_status} | {enforcement} |"
+        )
+    lines.extend(
+        [
+            "",
+            "> Provenance: S-1 audited 2025 disclosure (`inputs/block_b_anchors.py`). "
+            "Pending anchors are work-in-progress, not regressions.",
+            "",
+            "## Block B — V4.113 ingest anchors (Assumptions frozen inputs)",
             "",
             "| Anchor | Target | Actual | Status |",
             "|---|---:|---:|---|",
-            f"| Group Revenue 2025 | $14,650M ±5% | ${g.group_revenue_net.at(y):,.0f} | see tests |",
-            f"| Group EBITDA 2025 | $4,904M ±5% | ${g.group_ebitda.at(y):,.0f} | see tests |",
-            f"| Group FCF 2025 | −$2,569M ±10% | ${g.group_fcf.at(y):,.0f} | see tests |",
-            f"| Total OpEx 2025 | $4,476M ±5% | ${g.total_opex.at(y):,.0f} | see tests |",
-            f"| Total Group CapEx 2025 | $6,345M ±5% | ${g.total_group_capex.at(y):,.0f} | see tests |",
-            f"| Mars carve-out 2025 | $1,000M exact | ${g.mars_carveout.at(y):,.0f} | see tests |",
+        ]
+    )
+    for anchor in V4_113_INGEST_ANCHORS_2025:
+        if not anchor.assumptions_label:
+            continue
+        row = result.assumptions.by_label[anchor.assumptions_label]
+        actual = row.scalar()
+        if actual is None and row.year_values.get(FIRST_YEAR) is not None:
+            actual = float(row.year_values[FIRST_YEAR])
+        if anchor.tolerance_pct == 0:
+            ok = actual == anchor.target
+        else:
+            low = anchor.target * (1 - anchor.tolerance_pct)
+            high = anchor.target * (1 + anchor.tolerance_pct)
+            ok = low <= actual <= high
+        lines.append(
+            f"| {anchor.name} | {anchor.target:,.4g} | {actual:,.4g} | {_status(ok)} |"
+        )
+    lines.extend(
+        [
+            "",
+            "> Provenance: V4.113 Assumptions tab (`inputs/v4_113_2025_anchors.py`). "
+            "Input-freeze checks, distinct from S-1 disclosure roll-ups above.",
             "",
             "## Block C — Sense checks",
             "",
@@ -125,7 +194,9 @@ def write_reconciliation_report(
                 f"| {e.sheet} | {e.label[:40]} | {e.year} | "
                 f"{e.xlsx_value:,.1f} | {e.code_value:,.1f} | {e.delta:,.1f} | {e.triage.value} |"
             )
-        lines.extend(["", "### By sheet", "", "| Sheet | Match | Diverge |", "|---|---:|---:|"])
+        lines.extend(
+            ["", "### By sheet", "", "| Sheet | Match | Diverge |", "|---|---:|---:|"]
+        )
         for sheet, counts in sorted(div.by_sheet_summary().items()):
             lines.append(f"| {sheet} | {counts['match']} | {counts['diverge']} |")
     elif isinstance(div, dict):
@@ -137,7 +208,9 @@ def write_reconciliation_report(
             ]
         )
     else:
-        lines.append("Divergence report not generated — run Base Case with write_outputs=True.")
+        lines.append(
+            "Divergence report not generated — run Base Case with write_outputs=True."
+        )
 
     lines.extend(
         [
@@ -153,7 +226,9 @@ def write_reconciliation_report(
 
     type_c_count = 0
     if isinstance(div, DivergenceReport):
-        type_c_count = sum(1 for e in div.entries if e.triage == TriageClass.TYPE_C_INTENTIONAL)
+        type_c_count = sum(
+            1 for e in div.entries if e.triage == TriageClass.TYPE_C_INTENTIONAL
+        )
         lines.append(f"- Auto-triaged type (C) entries: **{type_c_count}**")
         lines.append("")
 

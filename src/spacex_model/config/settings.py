@@ -63,6 +63,7 @@ class Settings(BaseSettings):
     cache_max_entries: int = 128
     cache_ttl_sec: int = 3600
     api_key: str | None = None
+    allowed_origins: str = "http://localhost:5173,http://localhost:3000,http://127.0.0.1:5173"
     # Serverless (Vercel): MC runs in small batches per poll to avoid FUNCTION_INVOCATION_TIMEOUT
     mc_serverless_batch_trials: int = 3
     mc_serverless_max_trials: int = 200
@@ -70,3 +71,11 @@ class Settings(BaseSettings):
 
 def get_settings() -> Settings:
     return Settings()
+
+
+def parsed_allowed_origins() -> list[str]:
+    """CORS allowlist from SPACEX_MODEL_ALLOWED_ORIGINS (comma-separated)."""
+    raw = get_settings().allowed_origins.strip()
+    if not raw:
+        return []
+    return [part.strip() for part in raw.split(",") if part.strip()]

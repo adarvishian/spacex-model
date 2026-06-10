@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import hashlib
 import json
+import logging
+import re
 import subprocess
 from pathlib import Path
 from typing import Any
@@ -13,30 +15,29 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, Response
 from fastapi.staticfiles import StaticFiles
 
-from spacex_model.config.settings import get_repo_root, get_settings, is_serverless
+from spacex_model.config.settings import (
+    get_repo_root,
+    get_settings,
+    is_serverless,
+    parsed_allowed_origins,
+)
 from spacex_model.engine.iterative_solver import NonConvergenceError
 from spacex_model.engine.pipeline import ModelResult, run_pipeline
 from spacex_model.inputs.assumptions import assumptions_from_ingest
 from spacex_model.inputs.demand_curves import demand_curves_from_ingest
 from spacex_model.inputs.scenarios import load_scenario
 from spacex_model.io.excel_ingest import ingest_workbook
-from spacex_model.mc.distributions import reference_percentiles
-from spacex_model.mc.sensitivity import tornado_sensitivity
-from spacex_model.service.auth import require_api_key
-from spacex_model.service.cache import get_cache
-from spacex_model.service.jobs import JobStatus, get_job_manager
-from spacex_model.service.mc_store import serverless_job_progress
-from spacex_model.service.grid import build_grid_payload
-from spacex_model.service.lineage import lookup_lineage
-from spacex_model.service.lineage_enrich import enrich_lineage
-from spacex_model.service.lineage_graph import build_lineage_graph
-from spacex_model.service.lineage_history import fetch_change_history, history_cache_key
-from spacex_model.service.run_audit_payload import build_run_audit_payload
 from spacex_model.io.scenario_export import (
     export_active_scenario_xlsx,
-    export_scenario_pack_xlsx as build_scenario_pack_xlsx,
     run_for_export,
 )
+from spacex_model.io.scenario_export import (
+    export_scenario_pack_xlsx as build_scenario_pack_xlsx,
+)
+from spacex_model.mc.distributions import reference_percentiles
+from spacex_model.mc.sensitivity import tornado_sensitivity
+from spacex_model.service.auth import require_read_auth, require_write_auth
+from spacex_model.service.cache import get_cache
 from spacex_model.service.client_config import (
     CLIENT_SCENARIO_IDS,
     client_overrides_to_canonical,
@@ -46,6 +47,13 @@ from spacex_model.service.client_config import (
     serialize_input_whitelist,
     validate_client_overrides,
 )
+from spacex_model.service.grid import build_grid_payload
+from spacex_model.service.jobs import JobStatus, get_job_manager
+from spacex_model.service.lineage import lookup_lineage
+from spacex_model.service.lineage_enrich import enrich_lineage
+from spacex_model.service.lineage_graph import build_lineage_graph
+from spacex_model.service.lineage_history import fetch_change_history, history_cache_key
+from spacex_model.service.mc_store import serverless_job_progress
 from spacex_model.service.models import (
     ClientShareValidateRequest,
     DeterministicRunRequest,
@@ -53,6 +61,7 @@ from spacex_model.service.models import (
     ExportScenarioRequest,
     McSubmitRequest,
 )
+from spacex_model.service.run_audit_payload import build_run_audit_payload
 from spacex_model.service.run_store import get_run_store
 from spacex_model.service.serializers import (
     serialize_assumption_catalog,
@@ -72,11 +81,14 @@ router = APIRouter(prefix="/api")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=parsed_allowed_origins(),
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_headers=["Content-Type", "X-API-Key"],
 )
+
+_logger = logging.getLogger(__name__)
+_SCENARIO_NAME_RE = re.compile(r"^[A-Za-z0-9_-]+$")
 
 
 def _repo_root() -> Path:
@@ -97,11 +109,27 @@ def _git_sha() -> str | None:
 
 
 def _scenario_path(name: str) -> Path:
+    if not _SCENARIO_NAME_RE.match(name):
+        raise HTTPException(status_code=400, detail="Invalid scenario name")
     settings = get_settings()
-    path = settings.scenarios_dir / f"{name}.yaml"
+    scenarios_dir = settings.scenarios_dir.resolve()
+    path = (settings.scenarios_dir / f"{name}.yaml").resolve()
+    if not path.is_relative_to(scenarios_dir):
+        raise HTTPException(status_code=400, detail="Invalid scenario name")
     if not path.exists():
         raise HTTPException(status_code=404, detail=f"Scenario not found: {name}")
     return path
+
+
+def _client_error_detail(exc: Exception, *, fallback: str = "Request failed") -> str:
+    """Sanitized client-facing error — no raw exception internals (M1.4)."""
+    if isinstance(exc, NonConvergenceError):
+        return "Model did not converge"
+    if isinstance(exc, KeyError):
+        return "Invalid request parameter"
+    if isinstance(exc, ValueError):
+        return str(exc)
+    return fallback
 
 
 def _cache_key(scenario: str, overrides: dict[str, Any]) -> str:
@@ -132,7 +160,8 @@ def _validate_overrides(
                 n_samples=5000,
                 seed=0,
             )
-        except Exception:
+        except Exception as exc:
+            _logger.warning("Override percentile check skipped for %s: %s", label, exc)
             continue
         val = float(raw) if isinstance(raw, (int, float)) else base
         if val < pct["p10"]:
@@ -177,7 +206,7 @@ def health() -> dict[str, Any]:
     }
 
 
-@router.get("/scenarios", dependencies=[Depends(require_api_key)])
+@router.get("/scenarios", dependencies=[Depends(require_read_auth)])
 def list_scenarios() -> list[dict[str, str]]:
     settings = get_settings()
     out: list[dict[str, str]] = []
@@ -193,7 +222,7 @@ def list_scenarios() -> list[dict[str, str]]:
     return out
 
 
-@router.get("/assumptions/catalog", dependencies=[Depends(require_api_key)])
+@router.get("/assumptions/catalog", dependencies=[Depends(require_read_auth)])
 def assumptions_catalog() -> list[dict[str, Any]]:
     settings = get_settings()
     if not settings.workbook_path.exists():
@@ -203,7 +232,7 @@ def assumptions_catalog() -> list[dict[str, Any]]:
     return serialize_assumption_catalog(assumptions)
 
 
-@router.get("/lineage", dependencies=[Depends(require_api_key)])
+@router.get("/lineage", dependencies=[Depends(require_read_auth)])
 def lineage_index() -> list[dict[str, Any]]:
     return serialize_lineage_index()
 
@@ -254,12 +283,12 @@ def _embed_audit_grids(result: ModelResult, payload: dict[str, Any]) -> None:
     cache.set(f"grid:{result.run_id}:starlink", grid, ttl_sec=3600)
 
 
-@router.get("/sheets", dependencies=[Depends(require_api_key)])
+@router.get("/sheets", dependencies=[Depends(require_read_auth)])
 def list_sheets() -> list[dict[str, Any]]:
     return serialize_sheets_list()
 
 
-@router.get("/sheets/{sheet_slug}/grid", dependencies=[Depends(require_api_key)])
+@router.get("/sheets/{sheet_slug}/grid", dependencies=[Depends(require_read_auth)])
 def sheet_grid(
     sheet_slug: str,
     run_id: str = Query(..., description="Deterministic run id"),
@@ -281,7 +310,7 @@ def sheet_grid(
     return payload
 
 
-@router.get("/lineage/{key}/history", dependencies=[Depends(require_api_key)])
+@router.get("/lineage/{key}/history", dependencies=[Depends(require_read_auth)])
 def lineage_history(
     key: str,
     limit: int = Query(default=20, ge=1, le=100),
@@ -299,7 +328,7 @@ def lineage_history(
     return payload
 
 
-@router.get("/lineage/{key}/graph", dependencies=[Depends(require_api_key)])
+@router.get("/lineage/{key}/graph", dependencies=[Depends(require_read_auth)])
 def lineage_graph(
     key: str,
     run_id: str = Query(..., description="Deterministic run id"),
@@ -323,7 +352,7 @@ def lineage_graph(
         raise HTTPException(status_code=404, detail=f"Unknown lineage key: {key}") from None
 
 
-@router.get("/runs/{run_id}/audit-dashboard", dependencies=[Depends(require_api_key)])
+@router.get("/runs/{run_id}/audit-dashboard", dependencies=[Depends(require_read_auth)])
 def run_audit_dashboard(
     run_id: str,
     scenario: str | None = Query(default=None, description="Scenario fallback for serverless"),
@@ -340,7 +369,7 @@ def run_audit_dashboard(
     return payload
 
 
-@router.get("/lineage/{key}", dependencies=[Depends(require_api_key)])
+@router.get("/lineage/{key}", dependencies=[Depends(require_read_auth)])
 def lineage_detail(
     key: str,
     run_id: str | None = Query(default=None),
@@ -368,7 +397,7 @@ def lineage_detail(
     return entry.to_dict()
 
 
-@router.post("/runs/deterministic", dependencies=[Depends(require_api_key)])
+@router.post("/runs/deterministic", dependencies=[Depends(require_write_auth)])
 def run_deterministic(body: DeterministicRunRequest) -> dict[str, Any]:
     settings = get_settings()
     if not settings.workbook_path.exists():
@@ -399,8 +428,8 @@ def run_deterministic(body: DeterministicRunRequest) -> dict[str, Any]:
                     get_run_store().put(rid, result)
                     if is_serverless() and "audit_grids" not in out:
                         _embed_audit_grids(result, out)
-                except Exception:
-                    pass
+                except Exception as exc:
+                    _logger.warning("Cache rehydration failed for run %s: %s", rid, exc)
             return out
 
     ingest = ingest_workbook(settings.workbook_path)
@@ -414,9 +443,11 @@ def run_deterministic(body: DeterministicRunRequest) -> dict[str, Any]:
             write_outputs=not is_serverless(),
         )
     except NonConvergenceError as exc:
-        raise HTTPException(status_code=422, detail=str(exc)) from exc
+        _logger.warning("Pipeline non-convergence: %s", exc)
+        raise HTTPException(status_code=422, detail=_client_error_detail(exc)) from exc
     except KeyError as exc:
-        raise HTTPException(status_code=400, detail=str(exc)) from exc
+        _logger.warning("Pipeline key error: %s", exc)
+        raise HTTPException(status_code=400, detail=_client_error_detail(exc)) from exc
 
     payload = serialize_model_result(result, cached=False)
     payload["override_warnings"] = override_warnings
@@ -426,7 +457,7 @@ def run_deterministic(body: DeterministicRunRequest) -> dict[str, Any]:
     return payload
 
 
-@router.get("/runs/{run_id}", dependencies=[Depends(require_api_key)])
+@router.get("/runs/{run_id}", dependencies=[Depends(require_read_auth)])
 def get_run(run_id: str) -> dict[str, Any]:
     settings = get_settings()
     audit_path = settings.outputs_dir / run_id / "audit.json"
@@ -436,7 +467,7 @@ def get_run(run_id: str) -> dict[str, Any]:
     return {"run_id": run_id, "audit": audit}
 
 
-@router.get("/runs/{run_id}/audit", dependencies=[Depends(require_api_key)])
+@router.get("/runs/{run_id}/audit", dependencies=[Depends(require_read_auth)])
 def get_run_audit(run_id: str) -> dict[str, Any]:
     settings = get_settings()
     out_dir = settings.outputs_dir / run_id
@@ -451,7 +482,7 @@ def get_run_audit(run_id: str) -> dict[str, Any]:
     return {"run_id": run_id, "audit": audit, "solver_trace": solver}
 
 
-@router.get("/runs/{run_id}/tornado", dependencies=[Depends(require_api_key)])
+@router.get("/runs/{run_id}/tornado", dependencies=[Depends(require_read_auth)])
 def get_run_tornado(
     run_id: str,
     top_n: int = Query(default=10, ge=1, le=50),
@@ -466,7 +497,7 @@ def get_run_tornado(
     return {"run_id": run_id, "tornado": serialize_tornado(bars)}
 
 
-@router.post("/runs/mc", dependencies=[Depends(require_api_key)])
+@router.post("/runs/mc", dependencies=[Depends(require_write_auth)])
 def submit_mc(body: McSubmitRequest) -> dict[str, Any]:
     settings = get_settings()
     if not settings.workbook_path.exists():
@@ -493,7 +524,7 @@ def submit_mc(body: McSubmitRequest) -> dict[str, Any]:
     return out
 
 
-@router.get("/runs/mc/{job_id}", dependencies=[Depends(require_api_key)])
+@router.get("/runs/mc/{job_id}", dependencies=[Depends(require_read_auth)])
 def get_mc_job(job_id: str) -> dict[str, Any]:
     job = get_job_manager().get(job_id)
     if job is None:
@@ -512,7 +543,7 @@ def get_mc_job(job_id: str) -> dict[str, Any]:
     return response
 
 
-@router.get("/runs/mc/{job_id}/distribution", dependencies=[Depends(require_api_key)])
+@router.get("/runs/mc/{job_id}/distribution", dependencies=[Depends(require_read_auth)])
 def get_mc_distribution(job_id: str) -> dict[str, Any]:
     """Distribution shape (histogram + FCF fan) and provenance for a completed MC job."""
     job = get_job_manager().get(job_id)
@@ -547,7 +578,26 @@ def _preview_ev_for_scenario(scenario: str, overrides: dict[str, Any] | None = N
     return None
 
 
-@router.get("/client/scenarios", dependencies=[Depends(require_api_key)])
+@router.get("/client/calibration-status")
+def client_calibration_status() -> dict[str, Any]:
+    """Block B calibration burn-down — public so Client Mode can show uncalibrated banner."""
+    from spacex_model.inputs.block_b_anchors import (
+        BLOCK_B_CALIBRATION_PENDING,
+        load_block_b_anchors_v1,
+    )
+
+    anchors = load_block_b_anchors_v1()
+    pending = sorted(BLOCK_B_CALIBRATION_PENDING)
+    return {
+        "calibrated": len(pending) == 0,
+        "pending_count": len(pending),
+        "enforced_count": len(anchors) - len(pending),
+        "total_count": len(anchors),
+        "pending_anchors": pending,
+    }
+
+
+@router.get("/client/scenarios", dependencies=[Depends(require_read_auth)])
 def client_scenarios() -> list[dict[str, Any]]:
     """Curated Base / Bear / Bull cards for Client Mode."""
     out: list[dict[str, Any]] = []
@@ -567,12 +617,12 @@ def client_scenarios() -> list[dict[str, Any]]:
     return out
 
 
-@router.get("/client/inputs/whitelist", dependencies=[Depends(require_api_key)])
+@router.get("/client/inputs/whitelist", dependencies=[Depends(require_read_auth)])
 def client_inputs_whitelist() -> list[dict[str, Any]]:
     return serialize_input_whitelist()
 
 
-@router.post("/client/validate-share", dependencies=[Depends(require_api_key)])
+@router.post("/client/validate-share", dependencies=[Depends(require_write_auth)])
 def client_validate_share(body: ClientShareValidateRequest) -> dict[str, Any]:
     errors = validate_client_overrides(body.overrides)
     if errors:
@@ -586,7 +636,7 @@ def client_validate_share(body: ClientShareValidateRequest) -> dict[str, Any]:
     }
 
 
-@router.get("/client/decode-share", dependencies=[Depends(require_api_key)])
+@router.get("/client/decode-share", dependencies=[Depends(require_read_auth)])
 def client_decode_share(s: str = Query(..., min_length=1)) -> dict[str, Any]:
     try:
         payload = decode_share_state(s)
@@ -599,7 +649,7 @@ def client_decode_share(s: str = Query(..., min_length=1)) -> dict[str, Any]:
     }
 
 
-@router.get("/client/methodology", dependencies=[Depends(require_api_key)])
+@router.get("/client/methodology", dependencies=[Depends(require_read_auth)])
 def client_methodology_download() -> Response:
     """Methodology one-pager (text until tagged-release PDF asset ships)."""
     text = (
@@ -623,7 +673,7 @@ def client_methodology_download() -> Response:
     )
 
 
-@router.post("/exports/scenario.xlsx", dependencies=[Depends(require_api_key)])
+@router.post("/exports/scenario.xlsx", dependencies=[Depends(require_write_auth)])
 def export_scenario_xlsx(body: ExportScenarioRequest) -> Response:
     settings = get_settings()
     if not settings.workbook_path.exists():
@@ -644,7 +694,8 @@ def export_scenario_xlsx(body: ExportScenarioRequest) -> Response:
                 overrides=canonical_ov or None,
             )
         except Exception as exc:
-            raise HTTPException(status_code=404, detail=str(exc)) from exc
+            _logger.warning("Export run resolve failed: %s", exc)
+            raise HTTPException(status_code=404, detail="Run not found") from exc
     else:
         path = _scenario_path(body.scenario)
         spec = load_scenario(path)
@@ -666,7 +717,7 @@ def export_scenario_xlsx(body: ExportScenarioRequest) -> Response:
     )
 
 
-@router.post("/exports/scenario_pack.xlsx", dependencies=[Depends(require_api_key)])
+@router.post("/exports/scenario_pack.xlsx", dependencies=[Depends(require_write_auth)])
 def export_scenario_pack_xlsx(body: ExportScenarioPackRequest) -> Response:
     settings = get_settings()
     if not settings.workbook_path.exists():

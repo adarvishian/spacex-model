@@ -5,6 +5,7 @@ import {
   decodeClientShare,
   downloadScenarioPackXlsx,
   downloadScenarioXlsx,
+  fetchClientCalibrationStatus,
   fetchClientInputWhitelist,
   fetchClientScenarios,
   runDeterministic,
@@ -64,6 +65,10 @@ export default function ClientApp() {
   const [fieldWarnings, setFieldWarnings] = useState<Record<string, string>>({});
 
   const scenariosQ = useQuery({ queryKey: ["client-scenarios"], queryFn: fetchClientScenarios });
+  const calibrationQ = useQuery({
+    queryKey: ["client-calibration-status"],
+    queryFn: fetchClientCalibrationStatus,
+  });
   const inputsQ = useQuery({
     queryKey: ["client-whitelist"],
     queryFn: fetchClientInputWhitelist,
@@ -208,6 +213,13 @@ export default function ClientApp() {
       </header>
 
       <main className="client-main">
+        {calibrationQ.data && !calibrationQ.data.calibrated && (
+          <div className="audit-alert warning" data-testid="uncalibrated-banner">
+            Model calibration in progress — {calibrationQ.data.pending_count} of{" "}
+            {calibrationQ.data.total_count} S-1 disclosure anchors pending. Outputs are
+            work-in-progress, not audit-grade.
+          </div>
+        )}
         {error && <div className="audit-alert error">{error}</div>}
 
         <ScenarioCards

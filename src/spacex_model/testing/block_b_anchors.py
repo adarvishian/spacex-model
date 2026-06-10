@@ -28,7 +28,7 @@ def load_block_b_parametrize_args() -> list:
                     *row,
                     marks=pytest.mark.xfail(
                         reason="S-1 full-segment reconciliation pending — P0 inputs landed",
-                        strict=False,
+                        strict=True,
                     ),
                 )
             )
