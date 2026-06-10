@@ -135,17 +135,7 @@ def compute_customer_launch_exogenous_kg_demand(
     if np.any(sub_demands.customer_launch_kg.values > 0.0):
         return sub_demands.customer_launch_kg
 
-    upmass = assumption_scalar(
-        assumptions,
-        cl.STARSHIP_PAYLOAD_2025_BASELINE_KG_TO_LEO_FULLY_REUSABLE_MODE,
-    )
-    launches = assumption_year_vector(
-        assumptions, cl.CUSTOMER_LAUNCH_EXTERNAL_STARSHIP_LAUNCHES_STUB, default=0.0
-    ).values
-    kg_traj = assumption_year_vector(
-        assumptions, cl.CUSTOMER_LAUNCH_EXTERNAL_STARSHIP_KG_DEMAND_STUB_KG, default=0.0
-    ).values
-    return YearVector(np.maximum(kg_traj, launches * upmass))
+    return YearVector.zeros()
 
 
 def compute_ai_compute_exogenous_kg_demand(

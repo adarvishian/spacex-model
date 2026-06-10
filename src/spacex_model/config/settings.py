@@ -23,7 +23,7 @@ def _find_repo_root() -> Path:
 
 
 _REPO_ROOT = _find_repo_root()
-_DEFAULT_WORKBOOK = _REPO_ROOT / "SpaceX V4.113.xlsx"
+_DEFAULT_WORKBOOK = _REPO_ROOT / "SpaceX V4.131.xlsx"
 _LEGACY_V216_WORKBOOK = (
     _REPO_ROOT
     / "Pre Existing Model Package"

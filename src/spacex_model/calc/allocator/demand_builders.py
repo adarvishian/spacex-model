@@ -43,7 +43,7 @@ def _v2_vehicle_cash_demand(
     mass_kg: float,
 ) -> tuple[YearVector, np.ndarray]:
     """Anchor launches × learning × (unit cost + facility) — Sprint 11f Option A."""
-    anchor = assumption_scalar(assumptions, launch_anchor_label)
+    anchor = assumptions.lookup_scalar(launch_anchor_label, default=default_anchor)
     unit_cost = _unit_cost_mm_vec(
         assumptions, unit_cost_label, cost_kg=cost_kg, mass_kg=mass_kg
     )
@@ -92,7 +92,7 @@ def compute_exogenous_demands(assumptions: Assumptions) -> QueueSubBlockDemands:
     learn = _learning_multiplier(a)
 
     cost_kg = assumption_scalar(a, cl.SATELLITE_COST_PER_KG_BASE_YEAR_KG)
-    v2_mass = assumption_scalar(a, cl.V2_MINI_MASS_KG)
+    v2_mass = a.lookup_scalar(cl.V2_BB_SAT_MASS_KG)
 
     v2_bb_cash, v2_bb_launches = _v2_vehicle_cash_demand(
         a,
@@ -113,7 +113,7 @@ def compute_exogenous_demands(assumptions: Assumptions) -> QueueSubBlockDemands:
         mass_kg=v2_mass,
     )
 
-    v3_mass = assumption_scalar(a, cl.V3_MASS_KG)
+    v3_mass = a.lookup_scalar(cl.V3_BB_SAT_MASS_KG)
     v3_bb_cash, v3_bb_kg, _ = _v3_vehicle_cash_kg_demand(
         a,
         stub_trajectory_label=cl.V3_BB_LAUNCHES_PER_YEAR_STUB_TRAJECTORY,
@@ -132,27 +132,14 @@ def compute_exogenous_demands(assumptions: Assumptions) -> QueueSubBlockDemands:
     cl_cash_default = assumption_year_vector(
         a, cl.CUSTOMER_LAUNCH_CASH_DEMAND_LARGE_DEFAULT_MM, default=0.0
     )
-    cl_rev_pct = assumption_scalar(
-        a,
-        "Customer Launch ground equipment CapEx % of revenue",
-    )
+    cl_rev_pct = assumption_scalar(a, cl.CUSTOMER_LAUNCH_MODULE_SG_A_OF_EXTERNAL_REV)
     cl_rev_traj = assumption_year_vector(
         a, cl.CUSTOMER_LAUNCH_REVENUE_TRAJECTORY_STUB_MM, default=0.0
     )
     cl_from_rev = cl_rev_traj.values * cl_rev_pct
     cl_cash = YearVector(np.where(cl_from_rev > 0, cl_from_rev, cl_cash_default.values))
 
-    cl_kg_traj = assumption_year_vector(
-        a, cl.CUSTOMER_LAUNCH_EXTERNAL_STARSHIP_KG_DEMAND_STUB_KG, default=0.0
-    )
-    upmass = assumption_scalar(
-        a,
-        cl.STARSHIP_PAYLOAD_2025_BASELINE_KG_TO_LEO_FULLY_REUSABLE_MODE,
-    )
-    cl_launches = assumption_year_vector(
-        a, cl.CUSTOMER_LAUNCH_EXTERNAL_STARSHIP_LAUNCHES_STUB, default=0.0
-    )
-    cl_kg = YearVector(np.maximum(cl_kg_traj.values, cl_launches.values * upmass))
+    cl_kg = YearVector.zeros()
 
     odc_cash = assumption_year_vector(
         a, cl.ODC_CASH_DEMAND_LARGE_DEFAULT_MM, default=0.0

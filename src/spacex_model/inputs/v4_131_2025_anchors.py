@@ -1,4 +1,4 @@
-"""V4.113 Assumptions 2025 calibration anchors — frozen anchor year per PRD §1."""
+"""V4.131 Assumptions 2025 calibration anchors — frozen anchor year per PRD §1."""
 
 from __future__ import annotations
 
@@ -15,13 +15,7 @@ class AnchorSpec:
     assumptions_label: str | None = None
 
 
-V4_113_INGEST_ANCHORS_2025: tuple[AnchorSpec, ...] = (
-    AnchorSpec(
-        "Starting cash EoY 2024",
-        11_385.0,
-        0.0,
-        cl.STARTING_CASH_POSITION_EOY_2024_MM,
-    ),
+V4_131_INGEST_ANCHORS_2025: tuple[AnchorSpec, ...] = (
     AnchorSpec(
         "Tax rate",
         0.21,
@@ -44,6 +38,6 @@ V4_113_INGEST_ANCHORS_2025: tuple[AnchorSpec, ...] = (
         "AI segment total revenue 2025",
         3_201.0,
         0.02,
-        cl.MEMO_AI_SEGMENT_TOTAL_REVENUE_2025_M,
+        cl.S1_AI_SEGMENT_REVENUE_YEAR_ROW,
     ),
 )

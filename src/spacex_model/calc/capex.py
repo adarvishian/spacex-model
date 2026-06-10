@@ -27,7 +27,7 @@ _CORPORATE_LINES: tuple[tuple[str, str, str, float, float, float], ...] = (
     (
         cl.HQ_BUILDINGS_CAPEX_MM_YR_FLAT,
         cl.HQ_BUILDINGS_USEFUL_LIFE_YEARS,
-        cls.CORPORATE_HISTORICAL_CAPITAL_BASE_MM,
+        "",
         0.45,
         50.0,
         30.0,
@@ -35,7 +35,7 @@ _CORPORATE_LINES: tuple[tuple[str, str, str, float, float, float], ...] = (
     (
         cl.CORPORATE_IT_CAPEX_MM_YR_FLAT,
         cl.CORPORATE_IT_USEFUL_LIFE_YEARS,
-        cls.CORPORATE_HISTORICAL_CAPITAL_BASE_MM,
+        "",
         0.15,
         30.0,
         7.0,
@@ -43,7 +43,7 @@ _CORPORATE_LINES: tuple[tuple[str, str, str, float, float, float], ...] = (
     (
         cl.GENERAL_ENGINEERING_FACILITIES_CAPEX_MM_YR_FLAT,
         cl.GENERAL_ENGINEERING_FACILITIES_LIFE_YEARS,
-        cls.CORPORATE_HISTORICAL_CAPITAL_BASE_MM,
+        "",
         0.20,
         20.0,
         20.0,
@@ -51,7 +51,7 @@ _CORPORATE_LINES: tuple[tuple[str, str, str, float, float, float], ...] = (
     (
         cl.OTHER_CORPORATE_CAPEX_MM_YR_FLAT,
         cl.OTHER_CORPORATE_USEFUL_LIFE_YEARS,
-        cls.CORPORATE_HISTORICAL_CAPITAL_BASE_MM,
+        "",
         0.20,
         10.0,
         20.0,
@@ -98,8 +98,10 @@ def _module_capex(outputs: dict[str, AllocatorOut], key: str) -> YearVector:
     return YearVector.zeros()
 
 
-def _flat_annual_capex(assumptions: Assumptions, label: str) -> YearVector:
-    annual = assumption_scalar(assumptions, label)
+def _flat_annual_capex(
+    assumptions: Assumptions, label: str, *, default: float = 0.0
+) -> YearVector:
+    annual = assumptions.lookup_scalar(label, default=default)
     return YearVector.constant(annual)
 
 
@@ -154,10 +156,11 @@ def compute_corporate_capex(
 
     """
     a = inputs.assumptions
-    hq = _flat_annual_capex(a, cl.HQ_BUILDINGS_CAPEX_MM_YR_FLAT)
-    it = _flat_annual_capex(a, cl.CORPORATE_IT_CAPEX_MM_YR_FLAT)
-    gen = _flat_annual_capex(a, cl.GENERAL_ENGINEERING_FACILITIES_CAPEX_MM_YR_FLAT)
-    other = _flat_annual_capex(a, cl.OTHER_CORPORATE_CAPEX_MM_YR_FLAT)
+    lines = _CORPORATE_LINES
+    hq = _flat_annual_capex(a, lines[0][0], default=lines[0][4])
+    it = _flat_annual_capex(a, lines[1][0], default=lines[1][4])
+    gen = _flat_annual_capex(a, lines[2][0], default=lines[2][4])
+    other = _flat_annual_capex(a, lines[3][0], default=lines[3][4])
     total = YearVector(hq.values + it.values + gen.values + other.values)
     return hq, it, gen, other, total
 
@@ -174,7 +177,7 @@ def compute_corporate_da(inputs: CapExInputs) -> YearVector:
 
     """
     a = inputs.assumptions
-    hist_base = assumption_scalar(a, cls.CORPORATE_HISTORICAL_CAPITAL_BASE_MM)
+    hist_base = 0.0
     da_total = np.zeros(HORIZON_YEARS, dtype=np.float64)
 
     for (
@@ -185,8 +188,8 @@ def compute_corporate_da(inputs: CapExInputs) -> YearVector:
         default_annual,
         default_life,
     ) in _CORPORATE_LINES:
-        annual = assumption_scalar(a, capex_label)
-        life = assumption_scalar(a, life_label)
+        annual = a.lookup_scalar(capex_label, default=default_annual)
+        life = a.lookup_scalar(life_label, default=default_life)
         if life <= 0:
             continue
         initial = hist_base * share + annual
@@ -232,7 +235,7 @@ def compute_spectrum_amortization(
     Formula: Cumulative spectrum intangible and annual amortization ÷ useful life.
 
     """
-    life = assumption_scalar(assumptions, cl.SPECTRUM_USEFUL_LIFE_YEARS)
+    life = assumptions.lookup_scalar(cl.SPECTRUM_USEFUL_LIFE_YEARS, default=15.0)
     cumulative = year_chained_cumulative(spectrum_capex.values)
     if life <= 0:
         z = YearVector.zeros()

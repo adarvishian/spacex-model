@@ -61,15 +61,11 @@ def compute_bv_engine(
     )
     hardware_cost = assumption_year_vector(
         assumptions,
-        "Hardware replacement cost factor ($/kg landed) — declining",
+        cl.HARDWARE_REPLACEMENT_COST_FACTOR_KG_LANDED_DECLINING,
         default=1000.0,
     )
-    lunar_labour_share = assumption_year_vector(
-        assumptions, cl.LUNAR_LABOUR_SHARE_SURFACE_PAYLOAD_YEAR_ROW, default=0.3
-    )
-    mars_labour_share = assumption_year_vector(
-        assumptions, cl.MARS_LABOUR_SHARE_SURFACE_PAYLOAD_YEAR_ROW, default=0.3
-    )
+    lunar_labour_share = YearVector.constant(0.3)
+    mars_labour_share = YearVector.constant(0.3)
 
     lunar_bv = np.zeros(HORIZON_YEARS, dtype=np.float64)
     mars_bv = np.zeros(HORIZON_YEARS, dtype=np.float64)

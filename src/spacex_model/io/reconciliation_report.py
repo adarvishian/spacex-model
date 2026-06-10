@@ -17,7 +17,7 @@ from spacex_model.inputs.block_b_anchors import (
     BLOCK_B_CALIBRATION_PENDING,
     load_block_b_anchors_v1,
 )
-from spacex_model.inputs.v4_113_2025_anchors import V4_113_INGEST_ANCHORS_2025
+from spacex_model.inputs.v4_131_2025_anchors import V4_131_INGEST_ANCHORS_2025
 from spacex_model.io.divergence import DivergenceReport, TriageClass
 
 
@@ -52,7 +52,7 @@ def write_reconciliation_report(
         "",
         f"**Generated:** {now}  ",
         f"**Run ID:** `{result.run_id}`  ",
-        "**Phase:** R4 (V4.113 reconciliation + divergence triage)",
+        "**Phase:** R4 (V4.131 reconciliation + divergence triage)",
         f"**Horizon:** {FIRST_YEAR}–{LAST_YEAR}",
         "",
         f"- Solver: **{result.solver_trace.iterations}** iterations, "
@@ -122,13 +122,13 @@ def write_reconciliation_report(
             "> Provenance: S-1 audited 2025 disclosure (`inputs/block_b_anchors.py`). "
             "Pending anchors are work-in-progress, not regressions.",
             "",
-            "## Block B — V4.113 ingest anchors (Assumptions frozen inputs)",
+            "## Block B — V4.131 ingest anchors (Assumptions frozen inputs)",
             "",
             "| Anchor | Target | Actual | Status |",
             "|---|---:|---:|---|",
         ]
     )
-    for anchor in V4_113_INGEST_ANCHORS_2025:
+    for anchor in V4_131_INGEST_ANCHORS_2025:
         if not anchor.assumptions_label:
             continue
         row = result.assumptions.by_label[anchor.assumptions_label]
@@ -147,7 +147,7 @@ def write_reconciliation_report(
     lines.extend(
         [
             "",
-            "> Provenance: V4.113 Assumptions tab (`inputs/v4_113_2025_anchors.py`). "
+            "> Provenance: V4.131 Assumptions tab (`inputs/v4_131_2025_anchors.py`). "
             "Input-freeze checks, distinct from S-1 disclosure roll-ups above.",
             "",
             "## Block C — Sense checks",
@@ -219,7 +219,7 @@ def write_reconciliation_report(
             "",
             "- D4: Customer Launch F9 IRR high — expected disposition (type C)",
             "- F1–F6: CAE allocator defects reproduced as-is — remediation U0–U4 (type C)",
-            "- V4.113 cached-value divergences: spec-first / first-principles (type C)",
+            "- V4.131 cached-value divergences: spec-first / first-principles (type C)",
             "",
         ]
     )

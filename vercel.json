@@ -1,6 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "curl -LsSf https://astral.sh/uv/install.sh | sh && export PATH=\"$HOME/.local/bin:$PATH\" && uv sync --frozen --extra service && cd frontend && npm ci && npm run build",
+  "buildCommand": "curl -LsSf https://astral.sh/uv/install.sh | sh && export PATH=\"$HOME/.local/bin:$PATH\" && uv sync --frozen --extra service && cd frontend && npm ci && SPACEX_MODEL_SKIP_PRECOMPUTE=1 npm run build",
   "env": {
     "SPACEX_MODEL_SKIP_PRECOMPUTE": "1"
   },

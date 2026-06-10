@@ -104,14 +104,7 @@ def internal_transfer_revenue(
     rate = rate_per_unit(inputs)
     if internal_pflop_hrs is None:
         fleet_hrs = _fleet_pflop_hrs(inputs)
-        internal_share = assumption_year_vector(
-            inputs.assumptions,
-            cl.ODC_EXTERNAL_COMPUTE_SHARE_CUSTOMERS_YEAR_ROW,
-            default=0.05,
-        )
-        internal_pflop_hrs = YearVector(
-            fleet_hrs.values * (1.0 - internal_share.values)
-        )
+        internal_pflop_hrs = YearVector(fleet_hrs.values * 0.95)
     values = internal_pflop_hrs.values * rate.values / 1e6
     return YearVector(values)
 

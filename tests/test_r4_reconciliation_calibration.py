@@ -1,4 +1,4 @@
-"""Sprint R4 gate — reconciliation blocks A/B/C/D + divergence triage vs V4.113."""
+"""Sprint R4 gate — reconciliation blocks A/B/C/D + divergence triage vs V4.131."""
 
 from __future__ import annotations
 
@@ -19,7 +19,7 @@ from spacex_model.engine.conservation import (
 )
 from spacex_model.engine.pipeline import run_base_case
 from spacex_model.inputs.block_b_anchors import BLOCK_B_CALIBRATION_PENDING_BUDGET
-from spacex_model.inputs.v4_113_2025_anchors import V4_113_INGEST_ANCHORS_2025
+from spacex_model.inputs.v4_131_2025_anchors import V4_131_INGEST_ANCHORS_2025
 from spacex_model.io.divergence import build_divergence_report, finalize_triage
 from spacex_model.linters.assumption_defaults import find_assumption_scalar_defaults
 from spacex_model.linters.architecture_coverage import (
@@ -38,12 +38,12 @@ WORKBOOK = get_settings().workbook_path
 @pytest.fixture(scope="module")
 def base_case():
     if not WORKBOOK.exists():
-        pytest.skip("V4.113 workbook not present")
+        pytest.skip("V4.131 workbook not present")
     return run_base_case(WORKBOOK, write_outputs=False)
 
 
-def test_r4_workbook_is_v4_113() -> None:
-    assert WORKBOOK.name == "SpaceX V4.113.xlsx"
+def test_r4_workbook_is_v4_131() -> None:
+    assert WORKBOOK.name == "SpaceX V4.131.xlsx"
     assert WORKBOOK.exists()
 
 
@@ -74,8 +74,8 @@ def test_r4_block_a_conservation_all_years(base_case) -> None:
 
 
 def test_r4_block_b_ingest_anchors(base_case) -> None:
-    """V4.113 Assumptions 2025 frozen anchors (PRD §1 / §2)."""
-    for anchor in V4_113_INGEST_ANCHORS_2025:
+    """V4.131 Assumptions 2025 frozen anchors (PRD §1 / §2)."""
+    for anchor in V4_131_INGEST_ANCHORS_2025:
         if not anchor.assumptions_label:
             continue
         row = base_case.assumptions.by_label[anchor.assumptions_label]

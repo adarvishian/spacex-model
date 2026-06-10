@@ -1,19 +1,19 @@
-"""S-1 / V4.113 2025 calibration anchors.
+"""S-1 / V4.131 2025 calibration anchors.
 
-V4.113 re-baseline (R0): ingest-time checks use V4.113 Assumptions labels.
+V4.131 re-baseline (R0): ingest-time checks use V4.131 Assumptions labels.
 Legacy tuples retained for Block B diagnostic comparison (R4).
 """
 
 from __future__ import annotations
 
 from spacex_model.config import canonical_labels as cl
-from spacex_model.inputs.v4_113_2025_anchors import (
+from spacex_model.inputs.v4_131_2025_anchors import (
     AnchorSpec,
-    V4_113_INGEST_ANCHORS_2025,
+    V4_131_INGEST_ANCHORS_2025,
 )
 
-# Active ingest-time anchor set (V4.113).
-S1_INGEST_ANCHORS_2025 = V4_113_INGEST_ANCHORS_2025
+# Active ingest-time anchor set (V4.131).
+S1_INGEST_ANCHORS_2025 = V4_131_INGEST_ANCHORS_2025
 
 # Legacy Q4'25 anchors retained for diagnostic comparison only.
 Q4_25_HISTORICAL_ANCHORS_2025: tuple[AnchorSpec, ...] = (

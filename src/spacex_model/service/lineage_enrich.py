@@ -15,7 +15,7 @@ from spacex_model.engine.label_lookup import (
 )
 from spacex_model.engine.pipeline import ModelResult
 from spacex_model.inputs.s1_2025_anchors import S1_INGEST_ANCHORS_2025
-from spacex_model.inputs.v4_113_2025_anchors import AnchorSpec
+from spacex_model.inputs.v4_131_2025_anchors import AnchorSpec
 from spacex_model.io.divergence import tolerance_for
 from spacex_model.service.grid import (
     _INPUT_LABEL_PATTERNS,

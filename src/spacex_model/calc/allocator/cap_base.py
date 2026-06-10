@@ -20,6 +20,7 @@ from spacex_model.config.constants import HORIZON_YEARS
 from spacex_model.domain.assumption_helpers import (
     assumption_scalar,
     assumption_year_vector,
+    derived_sat_unit_cost_mm,
 )
 from spacex_model.domain.year_vector import YearVector
 from spacex_model.inputs.assumptions import Assumptions
@@ -81,10 +82,9 @@ def _starlink_blended_slug_mm(inputs: CapBaseInputs) -> np.ndarray:
     ).values
     if np.any(vec > 0.0):
         return vec
-    v3_slug = assumption_year_vector(
-        inputs.assumptions, cl.V3_BB_CAPEX_SLUG_PER_SAT_MM, default=1.0
-    ).values
-    return np.where(vec > 0.0, vec, v3_slug)
+    mass = inputs.assumptions.lookup_scalar(cl.V3_MASS_KG)
+    fallback = derived_sat_unit_cost_mm(inputs.assumptions, mass)
+    return np.full(HORIZON_YEARS, fallback, dtype=np.float64)
 
 
 def compute_chip_at_cost_per_sat(
@@ -101,16 +101,16 @@ def compute_chip_at_cost_per_sat(
 
     """
     a = assumptions
-    chips_per_sat = assumption_scalar(a, cl.CHIPS_PER_SAT)
+    chips_per_sat = a.lookup_scalar(cl.CHIPS_PER_SAT, default=0.0)
     if chips_per_sat <= 0.0:
         compute_kw = assumption_scalar(a, cl.COMPUTE_POWER_PER_SAT_KW)
-        chip_tdp = assumption_year_vector(
-            a, cl.CHIP_TDP_PER_CHIP_W_YEAR_ROW, default=700.0
-        ).at(2025)
+        chip_tdp = 700.0
         if chip_tdp > 0:
             chips_per_sat = max(1.0, np.floor(compute_kw * 1000.0 / chip_tdp))
 
-    asp_anchor = assumption_scalar(a, cl.CHIP_COST_ASP_CHIP_DERIVED)
+    asp_anchor = a.lookup_scalar(
+        "Chip cost basis ($/TFLOPS, gen anchor @2025)", default=0.0
+    )
     prod_frac = assumption_scalar(
         a, cl.TERAFAB_PRODUCTION_COST_FRAC_CHIP_AT_COST_DC_CAPEX
     )
@@ -142,7 +142,8 @@ def _odc_target_sats(inputs: CapBaseInputs) -> np.ndarray:
     if inputs.odc_target_sats is not None:
         return inputs.odc_target_sats.values
     odc_cash = inputs.sub_demands.odc_cash.values
-    cost = assumption_scalar(inputs.assumptions, cl.V3_BB_SAT_UNIT_COST_MM_SAT)
+    mass = assumption_scalar(inputs.assumptions, cl.V3_MASS_KG)
+    cost = derived_sat_unit_cost_mm(inputs.assumptions, mass)
     if cost > 0 and np.any(odc_cash > 0):
         return odc_cash / cost
     kg = inputs.sub_demands.odc_kg.values
@@ -156,7 +157,7 @@ def _terr_target_mw(inputs: CapBaseInputs) -> np.ndarray:
     if inputs.terr_target_mw is not None:
         return inputs.terr_target_mw.values
     cash = inputs.sub_demands.ai_stack_cash.values
-    slug = assumption_scalar(inputs.assumptions, cl.CAPEX_SLUG_PER_MW_MM)
+    slug = assumption_scalar(inputs.assumptions, cl.TERRESTRIAL_MW_BUILD) / 1e6
     if slug > 0 and np.any(cash > 0):
         return cash / slug
     return assumption_year_vector(
@@ -170,14 +171,12 @@ def _subsystem_cost_per_sat(assumptions: Assumptions) -> np.ndarray:
     ).values
     if np.any(wl > 0.0):
         return wl
-    pre_wl = assumption_scalar(assumptions, cl.SUBSYSTEM_COST_PRE_WL_SAT)
-    if pre_wl > 0.0:
-        floor = assumption_scalar(
-            assumptions, cl.WRIGHT_S_LAW_FLOOR_PCT_OF_BASE_SUBSYSTEM_COST
-        )
-        return np.full(HORIZON_YEARS, pre_wl * max(floor, 0.71), dtype=np.float64)
-    slug_mm = assumption_scalar(assumptions, cl.V3_BB_SAT_UNIT_COST_MM_SAT)
-    return np.full(HORIZON_YEARS, slug_mm * 1e6 * 0.5, dtype=np.float64)
+    mass = assumptions.lookup_scalar(cl.V3_MASS_KG)
+    slug_mm = derived_sat_unit_cost_mm(assumptions, mass)
+    floor = assumptions.lookup_scalar(
+        cl.WRIGHT_S_LAW_FLOOR_PCT_OF_BASE_SUBSYSTEM_COST, default=0.2
+    )
+    return np.full(HORIZON_YEARS, slug_mm * 1e6 * max(floor, 0.5), dtype=np.float64)
 
 
 def compute_ai_demand_buildable(
@@ -200,8 +199,6 @@ def compute_ai_demand_buildable(
 
     mw = _terr_target_mw(inputs)
     slug_mw = assumption_scalar(a, cl.TERRESTRIAL_MW_BUILD) / 1e6
-    if slug_mw <= 0.0:
-        slug_mw = assumption_scalar(a, cl.CAPEX_SLUG_PER_MW_MM)
     wl = assumption_scalar(a, cl.TERRESTRIAL_FACILITY_COST_CAGR)
     offsets = np.arange(HORIZON_YEARS, dtype=np.float64)
     slug_vec = slug_mw * np.power(1.0 + wl, offsets)
@@ -232,11 +229,7 @@ def compute_maintenance_claim(inputs: CapBaseInputs) -> YearVector:
     repl_rate = assumption_scalar(a, cl.TERMINAL_REPLACEMENT_RATE_INSTALLED_YR)
     starlink_maint = headroom * slug * repl_rate
 
-    cl_capex = _module_capex(inputs.module_outputs, "customer_launch")
-    cl_rate = assumption_scalar(
-        a, "Customer Launch maintenance CapEx % of module CapEx"
-    )
-    cl_maint = cl_capex * cl_rate
+    cl_maint = np.zeros(HORIZON_YEARS, dtype=np.float64)
 
     return YearVector(starlink_maint + cl_maint)
 

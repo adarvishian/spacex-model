@@ -1,9 +1,9 @@
 # S-1 adherence scenario — mirrors apply_s1_adherence_overrides() (audit §7.2 P0 + §7.3 P1)
 name: s1_adherence
 description: >-
-  SpaceX Form S-1 (filed 2026-05-20) disclosed values on top of V4.113 ingest.
+  SpaceX Form S-1 (filed 2026-05-20) disclosed values on top of V4.131 ingest.
   Applied automatically in run_pipeline(); this file documents overrides for scenarios API.
-baseline_workbook: "SpaceX V4.113.xlsx"
+baseline_workbook: "SpaceX V4.131.xlsx"
 overrides:
   "Starting cash position EoY 2024 ($mm)": 11385
   "Pre-IPO bridge year of drawdown": 2026

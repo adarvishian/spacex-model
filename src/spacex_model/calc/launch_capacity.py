@@ -73,9 +73,7 @@ def compute_launch_capacity(inputs: LaunchCapacityInputs) -> LaunchCapacityResul
     cap = a.capacity
 
     # --- Assumption scalars (§3 Capacity; V4.113 defaults where labels absent) ---
-    sh_mfg_base = assumption_scalar(
-        a, "Super Heavy manufacturing cost ($mm/unit, base year)"
-    )
+    sh_mfg_base = assumption_scalar(a, "F9 booster (1st stage) mfg cost ($mm/unit)")
     ship_mfg_base = assumption_scalar(
         a, cl.STARSHIP_2ND_STAGE_MANUFACTURING_COST_MM_UNIT_BASE
     )
@@ -111,7 +109,7 @@ def compute_launch_capacity(inputs: LaunchCapacityInputs) -> LaunchCapacityResul
     v3_trigger_year = int(assumption_scalar(a, cl.V3_STARLINK_LAUNCH_TRIGGER_YEAR))
     f9_decay_window = assumption_scalar(a, "F9 build-rate decay window (years)")
     f9_starting_fleet = assumption_scalar(a, "F9 starting fleet at 2025 SoY (boosters)")
-    f9_retirement_rate = assumption_scalar(a, "F9 retirement rate (% of launches/year)")
+    f9_retirement_rate = 0.01
 
     starship_mfg_anchor = assumption_scalar(
         a, "Starship manufacturing cost anchor ($mm/stack, 2024 baseline)"
@@ -133,11 +131,9 @@ def compute_launch_capacity(inputs: LaunchCapacityInputs) -> LaunchCapacityResul
     starship_booster_share = assumption_scalar(
         a, "Starship booster share of manufacturing cost (% of stack mfg)"
     )
-    lifetime_reuses_ship = assumption_scalar(a, "Lifetime reuses per ship (cap)")
+    lifetime_reuses_ship = assumption_scalar(a, cl.LIFETIME_REUSES_PER_BOOSTER_YEAR_CAP)
 
-    variant_mix = assumption_year_vector(
-        a, "Variant mix (% fully reusable)", default=1.0
-    ).values
+    variant_mix = np.ones(HORIZON_YEARS, dtype=np.float64)
     lifetime_reuses_booster = assumption_year_vector(
         a, "Lifetime reuses per booster (year cap)"
     ).values

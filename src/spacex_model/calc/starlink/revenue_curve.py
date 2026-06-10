@@ -24,7 +24,7 @@ def tam_shift_vector(assumptions: Assumptions) -> np.ndarray:
 
     """
     inflation = assumption_scalar(assumptions, cl.TAM_INFLATION_RATE_ANNUAL)
-    gni = assumption_scalar(assumptions, cl.GNI_PER_CAPITA_GROWTH_RATE_ANNUAL)
+    gni = 0.03  # V4.131 retired GNI per capita CAGR from Assumptions
     offsets = np.arange(HORIZON_YEARS, dtype=np.float64)
     return np.power(1.0 + inflation, offsets) * np.power(1.0 + gni, offsets)
 

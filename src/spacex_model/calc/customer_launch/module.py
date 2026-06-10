@@ -185,9 +185,9 @@ def compute_cogs(inputs: CustomerLaunchInputs) -> YearVector:
     )
 
     revenue = compute_revenue(inputs)
-    insurance_pct = assumption_scalar(a, "Launch insurance % of external revenue")
-    other_pct = assumption_scalar(a, "Launch other COGS % of external revenue")
-    ground_ops_pct = assumption_scalar(a, "Customer Launch ground ops % of revenue")
+    insurance_pct = assumption_scalar(a, cl.LAUNCH_INSURANCE_OF_EXTERNAL_REV)
+    other_pct = assumption_scalar(a, cl.LAUNCH_OTHER_COGS_OF_EXTERNAL_REV)
+    ground_ops_pct = a.lookup_scalar(cl.CUSTOMER_LAUNCH_MODULE_SG_A_OF_EXTERNAL_REV, default=0.0)
 
     external_rev = (
         f9_cust.values * _f9_customer_price(inputs).values
@@ -229,12 +229,8 @@ def compute_capex(inputs: CustomerLaunchInputs) -> YearVector:
     Formula: Ground equipment + integration CapEx; excludes vehicle build.
 
     """
-    revenue = compute_revenue(inputs)
-    capex_pct = assumption_scalar(
-        inputs.assumptions,
-        "Customer Launch ground equipment CapEx % of revenue",
-    )
-    return YearVector(revenue.values * capex_pct)
+    # V4.131 retired ground-equipment CapEx %; vehicle build books at queue gate.
+    return YearVector.zeros()
 
 
 def compute_fcf(inputs: CustomerLaunchInputs) -> YearVector:
@@ -280,10 +276,7 @@ def compute_launch_services_revenue_memo(inputs: CustomerLaunchInputs) -> YearVe
     external = (
         f9_launches.values * f9_price.values + ship_launches.values * ship_price.values
     )
-    share = assumption_year_vector(
-        inputs.assumptions, cl.LAUNCH_SERVICES_REVENUE_SHARE_YEAR_ROW, default=0.63
-    )
-    return YearVector(external * share.values)
+    return YearVector(external * 0.63)
 
 
 def compute_launch_development_revenue_memo(inputs: CustomerLaunchInputs) -> YearVector:
@@ -304,10 +297,7 @@ def compute_launch_development_revenue_memo(inputs: CustomerLaunchInputs) -> Yea
     external = (
         f9_launches.values * f9_price.values + ship_launches.values * ship_price.values
     )
-    share = assumption_year_vector(
-        inputs.assumptions, cl.LAUNCH_SERVICES_REVENUE_SHARE_YEAR_ROW, default=0.63
-    )
-    return YearVector(external * (1.0 - share.values))
+    return YearVector(external * 0.37)
 
 
 def _compute_f9_irr(inputs: CustomerLaunchInputs) -> YearVector:
@@ -318,8 +308,8 @@ def _compute_f9_irr(inputs: CustomerLaunchInputs) -> YearVector:
     cost_slug = f9_booster_cost
     f9_price = _f9_customer_price(inputs).at(FIRST_YEAR)
     at_cost = lc.f9_at_cost_rate.at(FIRST_YEAR)
-    insurance_pct = assumption_scalar(a, "Launch insurance % of external revenue")
-    other_pct = assumption_scalar(a, "Launch other COGS % of external revenue")
+    insurance_pct = assumption_scalar(a, cl.LAUNCH_INSURANCE_OF_EXTERNAL_REV)
+    other_pct = assumption_scalar(a, cl.LAUNCH_OTHER_COGS_OF_EXTERNAL_REV)
     f9_cadence = assumption_scalar(a, "F9 cadence per booster (flights/year, flat)")
     margin_per_launch = f9_price - at_cost - f9_price * (insurance_pct + other_pct)
     annual_margin = margin_per_launch * f9_cadence

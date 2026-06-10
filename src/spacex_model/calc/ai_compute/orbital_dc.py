@@ -12,6 +12,7 @@ from spacex_model.config.constants import FIRST_YEAR, HORIZON_YEARS
 from spacex_model.domain.assumption_helpers import (
     assumption_scalar,
     assumption_year_vector,
+    derived_sat_unit_cost_mm,
 )
 from spacex_model.domain.irr import compute_irr_engine
 from spacex_model.domain.year_vector import YearVector
@@ -89,7 +90,7 @@ def per_sat_combined_revenue_mm(assumptions: Assumptions, year_index: int) -> fl
     Formula: Credence-weighted Model A/B per-sat revenue ($mm/yr).
 
     """
-    pr_a = assumption_scalar(assumptions, cl.CREDENCE_ON_MODEL_A_PR_A)
+    pr_a = 0.5  # V4.131 retired Model A credence Pr(A)
     a = _per_sat_model_a_revenue_mm(assumptions, year_index)
     b = _per_sat_model_b_revenue_mm(assumptions, year_index)
     return pr_a * a + (1.0 - pr_a) * b
@@ -191,11 +192,7 @@ def compute_orbital_revenue(inputs: OrbitalDcInputs) -> YearVector:
 
     """
     deployed = inputs.sats_deployed or YearVector.zeros()
-    external_share = assumption_year_vector(
-        inputs.assumptions,
-        cl.ODC_EXTERNAL_COMPUTE_SHARE_CUSTOMERS_YEAR_ROW,
-        default=0.05,
-    )
+    external_share = YearVector.constant(0.05)
     values = np.zeros(HORIZON_YEARS, dtype=np.float64)
     for t in range(HORIZON_YEARS):
         if deployed.values[t] <= 0:
@@ -243,9 +240,9 @@ def per_sat_blended_irr(inputs: OrbitalDcInputs) -> float:
 
     """
     a = inputs.assumptions
-    subsystem = assumption_scalar(a, cl.SUBSYSTEM_COST_PRE_WL_SAT) / 1e6
-    if subsystem <= 0.0:
-        subsystem = assumption_scalar(a, cl.V3_BB_SAT_UNIT_COST_MM_SAT) * 0.5
+    mass = a.lookup_scalar(cl.V3_MASS_KG)
+    slug_mm = derived_sat_unit_cost_mm(a, mass)
+    subsystem = slug_mm * 0.5
     chip = (
         inputs.chip_at_cost_per_sat.at(2025) / 1e6
         if inputs.chip_at_cost_per_sat is not None
@@ -253,7 +250,7 @@ def per_sat_blended_irr(inputs: OrbitalDcInputs) -> float:
     )
     cost = subsystem + chip
     if cost <= 0.0:
-        cost = assumption_scalar(a, cl.V3_BB_SAT_UNIT_COST_MM_SAT)
+        cost = slug_mm
     n = int(assumption_scalar(a, cl.ODC_FLEET_DESIGN_LIFE_YEARS))
     rev = np.array(
         [

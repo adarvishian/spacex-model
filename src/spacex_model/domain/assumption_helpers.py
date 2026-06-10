@@ -4,9 +4,19 @@ from __future__ import annotations
 
 import numpy as np
 
+from spacex_model.config import canonical_labels as cl
 from spacex_model.config.constants import FIRST_YEAR, HORIZON_YEARS
 from spacex_model.domain.year_vector import YearVector
 from spacex_model.inputs.assumptions import Assumptions
+
+
+def derived_sat_unit_cost_mm(
+    assumptions: Assumptions, mass_kg: float, *, year_index: int = 0
+) -> float:
+    """Mass × satellite $/kg learning curve when per-sat slug rows are absent."""
+    cost_kg = assumptions.lookup_scalar(cl.SATELLITE_COST_PER_KG_BASE_YEAR_KG)
+    lr = assumptions.lookup_scalar(cl.SATELLITE_COST_PER_KG_LEARNING_RATE, default=0.0)
+    return cost_kg * mass_kg / 1e6 * (1.0 + lr) ** year_index
 
 
 def assumption_scalar(assumptions: Assumptions, label: str) -> float:

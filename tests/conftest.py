@@ -16,5 +16,5 @@ REPO = Path(__file__).resolve().parents[1]
 def model_result() -> ModelResult:
     workbook = get_settings().workbook_path
     if not workbook.exists():
-        pytest.skip(f"V4.113 workbook not present: {workbook}")
+        pytest.skip(f"V4.131 workbook not present: {workbook}")
     return run_base_case(workbook, write_outputs=False)

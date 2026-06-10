@@ -30,7 +30,7 @@ def _repo_root() -> Path:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Run Mach33 SpaceX Monte Carlo study")
-    parser.add_argument("--workbook", type=Path, default=None, help="Path to V4.113 xlsx")
+    parser.add_argument("--workbook", type=Path, default=None, help="Path to V4.131 xlsx")
     parser.add_argument("--trials", type=int, default=10_000, help="Number of MC trials")
     parser.add_argument("--seed", type=int, default=42, help="Base random seed")
     parser.add_argument("--jobs", type=int, default=-1, help="joblib parallel workers (-1 = all cores)")

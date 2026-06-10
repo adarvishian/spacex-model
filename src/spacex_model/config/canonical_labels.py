@@ -1,6 +1,6 @@
 """Canonical label registry — append-only per PRD §2.4 / Rule 10.
 
-Extracted from: SpaceX V4.113.xlsx
+Extracted from: SpaceX V4.131.xlsx
 Regenerate via: python scripts/extract_canonical_labels.py
 """
 
@@ -14,9 +14,11 @@ BY_MODULE: Final[str] = "(by module)"
 COLS_C_F_AS_OF: Final[str] = "(cols C:F = as-of)"
 RETIRED: Final[str] = "(retired)"
 RETIRED_NBV_REPORTED_AS_TOTAL_ON_R115_OUTPUT_BV_MEMO_ON_R76_R77: Final[str] = "(retired: NBV reported as total on R115; output-BV memo on R76/R77)"
+L_2025_IS_STAMPED_TO_THE_S_1_REPORTED_BASIS_3_SEGMENT_SPACE_CONN_AI_D_A_INSIDE_COST_OF_REVENUE_XAI_CONSOLIDATED_FOR_AI_THE_MODEL_S_NATIVE_CONSERVATION_IDENTITIES_ASSUME_THE_4_SEGMENT_COMPUTED_BASIS_LUNAR_INCL_D_A_IN_THE_EBITDA_EBIT_BRIDGE_SO_CHECKS_D8_D11_NET_AGAINST_THE_STAMP_AND_READ_FAIL_FOR_2025_ONLY_2026_RECOMPUTE_FROM_DRIVERS_AND_REMAIN_OK_BASIS_DIFFERENCE_NOT_CORRUPTION: Final[str] = "2025 is stamped to the S-1 reported basis (3-segment Space/Conn/AI; D&A inside Cost of revenue; xAI consolidated for AI). The model's native conservation identities assume the 4-segment computed basis (Lunar incl.; D&A in the EBITDA→EBIT bridge), so checks D8–D11 net against the stamp and read FAIL for 2025 only. 2026+ recompute from drivers and remain OK. Basis difference, not corruption."
 L_7_BUCKETS_SAT_MFG_REDMOND_STARSHIP_VEHICLE_GIGABAY_100_YR_PADS_ENGINES_TERMINALS_TOGGLE_OFF_GROUND_STATIONS_HQ_GROUP_EXPOSES_CAPEX_D_A_TOTALS_BY_LABEL: Final[str] = "7 buckets: sat-mfg (Redmond), Starship-vehicle (Gigabay @100/yr), pads, engines, terminals (toggle-OFF), ground stations, HQ→Group. Exposes CapEx + D&A totals by label."
 ADCS_AVIONICS_SAT: Final[str] = "ADCS+avionics $/sat"
 AI_COMPUTE: Final[str] = "AI - Compute"
+AI_COMPUTE_MODULE_ORBITAL_TERRESTRIAL_DATACENTER_BUILD_COMPUTE_REVENUE_WATERFALL: Final[str] = "AI - Compute module — orbital + terrestrial datacenter build, compute revenue & waterfall"
 AI_COMPUTE_AI_APPS_EXTERNAL: Final[str] = "AI - Compute — AI Apps (external)"
 AI_COMPUTE_ORBITAL_DC_EXTERNAL: Final[str] = "AI - Compute — Orbital DC (external)"
 AI_COMPUTE_TERRESTRIAL_DC_EXTERNAL: Final[str] = "AI - Compute — Terrestrial DC (external)"
@@ -33,7 +35,6 @@ AI_APPS_TOKENS_PER_QUERY_INTENSITY_CAGR: Final[str] = "AI Apps tokens-per-query 
 AI_APPS_PAYING_USERS_M: Final[str] = "AI Apps: paying users (M)"
 AI_APPS_TOTAL_REVENUE_MM: Final[str] = "AI Apps: total revenue ($mm)"
 AI_APPS_TOTAL_TOKENS_T: Final[str] = "AI Apps: total tokens (T)"
-AI_STACK_RETIRED_SUPERSEDED_BY_THE_AI_COMPUTE_SECTION_MEMOS_BELOW_RETAINED: Final[str] = "AI STACK — RETIRED, superseded by the AI/Compute section. Memos below retained."
 AI_STACK_R_D_CAGR: Final[str] = "AI Stack R&D CAGR"
 AI_STACK_R_D_FLOOR_PCT: Final[str] = "AI Stack R&D floor pct"
 AI_STACK_R_D_START_PCT: Final[str] = "AI Stack R&D start pct"
@@ -133,7 +134,7 @@ ATTRIBUTED_R_D_MM_ALLOCATOR_OUT: Final[str] = "Attributed R&D ($mm)   ◄ Alloca
 ATTRIBUTED_R_D_MM_COMPONENT_OF_MODULE_OPEX_TOTAL_ROW_87: Final[str] = "Attributed R&D ($mm): component of Module OpEx total (row 87)"
 ATTRIBUTED_R_D_AI_COMPUTE: Final[str] = "Attributed R&D: AI - Compute"
 ATTRIBUTED_R_D_CUSTOMER_LAUNCH: Final[str] = "Attributed R&D: Customer Launch"
-ATTRIBUTED_R_D_CUSTOMER_LAUNCH_STARSHIP_R_D_LIFTED_TO_SHARED: Final[str] = "Attributed R&D: Customer Launch (Starship R&D lifted to Shared)"
+ATTRIBUTED_R_D_CUSTOMER_LAUNCH_SUSTAINING_FLOOR_STARSHIP_LAUNCH_SHARE_PLATFORM_R_D_NET_IN_SHARED: Final[str] = "Attributed R&D: Customer Launch (sustaining floor + Starship launch-share; platform R&D net in Shared)"
 ATTRIBUTED_R_D_LUNAR_MARS: Final[str] = "Attributed R&D: Lunar - Mars"
 AVG_GBPS_BB_AT_Q_PRICE_AT_Q: Final[str] = "Avg $/Gbps BB at Q (price-at-Q)"
 AVG_GBPS_DTC_AT_Q_PRICE_AT_Q: Final[str] = "Avg $/Gbps DTC at Q (price-at-Q)"
@@ -223,16 +224,18 @@ BOOSTER_CADENCE_FLOOR_FLIGHTS_YR_OPERATIONAL: Final[str] = "Booster cadence floo
 BOOSTER_FLEET_BOY_UNITS: Final[str] = "Booster fleet BoY (units)"
 BOOSTER_FLEET_EOY_UNITS: Final[str] = "Booster fleet EoY (units)"
 BOOSTER_MFG_PER_STACK_MM: Final[str] = "Booster mfg per stack ($mm)"
+BOOSTER_REUSE_CAP_LEVEL: Final[str] = "Booster reuse cap level ×"
 BOOSTERS_BUILT_FLEET: Final[str] = "Boosters built (fleet)"
 BOOSTERS_BUILT_THIS_YEAR_VEHICLE_BUILD_BOOSTERS_BUILT_FLEET: Final[str] = "Boosters built this year (= Vehicle Build Boosters built (fleet))"
 BOOSTERS_NEEDED_FLEET: Final[str] = "Boosters needed (fleet)"
 BOOSTERS_RETIRED_FLEET: Final[str] = "Boosters retired (fleet)"
 BOUNDARY_TIE_FACILITIES_BUILD_CHIPS_ODC_R55_TERR_R94_TOGGLE_MUST_0: Final[str] = "Boundary tie: 'Facilities Build' chips − (ODC R55 + Terr R94)×toggle; must = 0"
 BROADBAND_ARPU_SUB_MO_YEAR_ROW: Final[str] = "Broadband ARPU ($/sub/mo): year-row"
+BROADBAND_ARPU_CAGR: Final[str] = "Broadband ARPU CAGR"
+BROADBAND_ARPU_FLOOR_MO: Final[str] = "Broadband ARPU floor ($/mo)"
 CAC_SLUG_PER_CUSTOMER: Final[str] = "CAC slug per customer ($)"
 CAPACITY_STARSHIP_F9: Final[str] = "CAPACITY (Starship + F9)"
 CAPACITY_CAPEX_TRANSFER_REVENUE: Final[str] = "CAPACITY + CapEx + TRANSFER REVENUE"
-CAPEX_CORPORATE_SPECTRUM_MODULE_AGGREGATION: Final[str] = "CAPEX (corporate + spectrum + module aggregation)"
 COGS: Final[str] = "COGS"
 COGS_MM: Final[str] = "COGS ($mm)"
 COGS_TOTAL: Final[str] = "COGS total"
@@ -263,6 +266,7 @@ CAPEX_STARLINK: Final[str] = "CapEx: Starlink"
 CAPACITY_GBPS: Final[str] = "Capacity (Gbps)"
 CAPACITY_AVAILABLE_AFTER_LM_KG: Final[str] = "Capacity available after LM (kg)"
 CAPITAL_DEPLOYED_CUMULATIVE: Final[str] = "Capital Deployed (cumulative)"
+CAPITAL_EXPENDITURES: Final[str] = "Capital expenditures"
 CAPITAL_LIFETIME_BV_STRAIGHT_LINE_DEP_YRS: Final[str] = "Capital lifetime: BV straight-line dep (yrs)"
 CAPITAL_LIFETIME_BV_STRAIGHT_LINE_DEPRECIATION_YEARS: Final[str] = "Capital lifetime: BV straight-line depreciation (years)"
 CAPPED_AI_COMPUTE_MM: Final[str] = "Capped: AI-Compute ($mm)"
@@ -279,6 +283,7 @@ CARVE_OUT_CASH_RECEIPT_MM: Final[str] = "Carve-out cash receipt ($mm)"
 CARVE_OUT_EFFECTIVE_IRR_RESPONSIVE: Final[str] = "Carve-out effective % (IRR-responsive)"
 CARVE_OUT_FLOOR_MM_YR: Final[str] = "Carve-out floor ($mm/yr)"
 CARVE_OUT_PRE_2028_R_D_ONLY_OVERRIDE_MM_YR: Final[str] = "Carve-out pre-2028 R&D-only override ($mm/yr)"
+CASH_ALLOCATION_ENGINE_CASH_POOL_WATERFALL_MODULE_FUNDING_ALLOCATOR: Final[str] = "Cash Allocation Engine — cash pool waterfall + module funding allocator"
 CASH_BOY_MM: Final[str] = "Cash BoY ($mm)"
 CASH_EOY_MM: Final[str] = "Cash EoY ($mm)"
 CASH_AVAILABLE_FOR_YEAR_MM: Final[str] = "Cash available for year ($mm)"
@@ -304,15 +309,13 @@ CHIP_FAB_FACILITY_D_A_TOTAL_MM_AI_COMPUTE: Final[str] = "Chip-fab facility D&A t
 CHIPS_DEMANDED_THIS_YEAR_COUNT_AI_COMPUTE: Final[str] = "Chips demanded this year (count)  ◄ AI-Compute"
 CHIPS_DEPLOYED_COUNT: Final[str] = "Chips deployed (count)"
 CHIPS_PER_SAT: Final[str] = "Chips per sat"
+COMMERCIAL_LAUNCH_MARKET_CAGR: Final[str] = "Commercial launch market CAGR"
 COMMERCIAL_LAUNCH_MARKET_SIZE_MM_YEAR_YEAR_ROW: Final[str] = "Commercial launch market size ($mm/year): year-row"
 COMMERCIAL_LAUNCH_MARKET_SIZE_MM_YR: Final[str] = "Commercial launch market size ($mm/yr)"
 COMMS_ISL_SET_SAT: Final[str] = "Comms ISL set $/sat"
-COMP_ANCHOR_AI_STACK_STANDALONE: Final[str] = "Comp anchor: AI Stack standalone"
 COMP_ANCHOR_AI_COMPUTE_STANDALONE_COREWEAVE_ANCHORED: Final[str] = "Comp anchor: AI/Compute standalone (CoreWeave-anchored)"
 COMP_ANCHOR_CUSTOMER_LAUNCH_STANDALONE_ROCKET_LAB: Final[str] = "Comp anchor: Customer Launch standalone (Rocket Lab)"
-COMP_ANCHOR_GROUP_EV_BRANT_INTERNAL: Final[str] = "Comp anchor: Group EV (Brant internal)"
 COMP_ANCHOR_GROUP_EV_MORGAN_STANLEY_PUBLIC: Final[str] = "Comp anchor: Group EV (Morgan Stanley public)"
-COMP_ANCHOR_LUNAR_MARS_NASA_HLS_LIFETIME: Final[str] = "Comp anchor: Lunar / Mars (NASA HLS lifetime)"
 COMP_ANCHOR_STARLINK_STANDALONE_BERNSTEIN_JPM: Final[str] = "Comp anchor: Starlink standalone (Bernstein/JPM)"
 COMPUTE_BUILD_HEADROOM_BUFFER_FRAC: Final[str] = "Compute build headroom buffer (frac)"
 COMPUTE_POWER_PER_SAT_KW: Final[str] = "Compute power per sat (kW)"
@@ -332,6 +335,7 @@ CORPORATE_SG_A: Final[str] = "Corporate SG&A"
 CORPORATE_SG_A_MM: Final[str] = "Corporate SG&A ($mm)"
 CORPORATE_IT_HQ_CAPEX_MM: Final[str] = "Corporate, IT & HQ CapEx ($mm)"
 CORPORATE_IT_HQ_CAPEX_OF_GROUP_REVENUE: Final[str] = "Corporate, IT & HQ CapEx (% of Group revenue)"
+COST_OF_REVENUE: Final[str] = "Cost of revenue"
 CUM_STARSHIP_BOOSTERS_BUILT_CUMULATIVE_FROM_0: Final[str] = "Cum Starship boosters built (cumulative, from 0)"
 CUM_STARSHIP_BOOSTERS_RETIRED_CUMULATIVE_FROM_0: Final[str] = "Cum Starship boosters retired (cumulative, from 0)"
 CUM_STARSHIP_EXPERIENCE_UNITS_WRIGHT_S_LAW_COST_BASIS_INCL_2024_BASELINE_F9_INHERITED_SEED_NOT_THE_STANDING_FLEET: Final[str] = "Cum Starship experience units (Wright's-Law cost basis, incl. 2024 baseline + F9-inherited seed; NOT the standing fleet)"
@@ -345,11 +349,9 @@ CUMULATIVE_SATS_TARGET_WL: Final[str] = "Cumulative sats (target, WL)"
 CUSTOMER_LAUNCH_2: Final[str] = "Customer Launch"
 CUSTOMER_LAUNCH_COMMERCIAL: Final[str] = "Customer Launch (commercial)"
 CUSTOMER_LAUNCH_F9: Final[str] = "Customer Launch F9"
-CUSTOMER_LAUNCH_R_D_CAGR: Final[str] = "Customer Launch R&D % (CAGR)"
-CUSTOMER_LAUNCH_R_D_FLOOR: Final[str] = "Customer Launch R&D % (floor)"
+CUSTOMER_LAUNCH_R_D_CAGR_RETIRED_FLAT_SUSTAINING_RATE_SEE_A111: Final[str] = "Customer Launch R&D % (CAGR) — retired (flat sustaining rate, see A111)"
+CUSTOMER_LAUNCH_R_D_FLOOR_RETIRED_FLAT_SUSTAINING_RATE_SEE_A111: Final[str] = "Customer Launch R&D % (floor) — retired (flat sustaining rate, see A111)"
 CUSTOMER_LAUNCH_R_D_START: Final[str] = "Customer Launch R&D % (start)"
-CUSTOMER_LAUNCH_R_D_CAGR_TAPER: Final[str] = "Customer Launch R&D: CAGR (taper)"
-CUSTOMER_LAUNCH_R_D_END_STATE_FLOOR: Final[str] = "Customer Launch R&D: end-state % (floor)"
 CUSTOMER_LAUNCH_R_D_START_OF_EXTERNAL_REV: Final[str] = "Customer Launch R&D: start % of external rev"
 CUSTOMER_LAUNCH_MODULE_SG_A_OF_EXTERNAL_REV: Final[str] = "Customer Launch module SG&A (% of external rev)"
 CUSTOMER_LAUNCH_MODULE_MODULE_SPACE_SEGMENT_2_STREAM_REVENUE_4_086M_FULL_WATERFALL_R_D_ABOVE_EBITDA_SEPARATE_F9_STARSHIP_D_A_SPOT_IRR_PER_LAUNCH_D_A_INTERFACE: Final[str] = "Customer Launch module — module = Space segment · 2-stream revenue $4,086M · full waterfall, R&D above EBITDA · separate F9 + Starship D&A · Spot IRR · per-launch D&A interface"
@@ -374,7 +376,6 @@ DF_AS_OF_2026: Final[str] = "DF: as-of 2026"
 DF_AS_OF_2030: Final[str] = "DF: as-of 2030"
 DF_AS_OF_2035: Final[str] = "DF: as-of 2035"
 DF_AS_OF_2040: Final[str] = "DF: as-of 2040"
-DTC_ARPU_SUB_MO_YEAR_ROW: Final[str] = "DTC ARPU ($/sub/mo): year-row"
 DTC_DEMAND_CURVE_PIECEWISE_LINEAR_Q_REVENUE_LOOKUP: Final[str] = "DTC DEMAND CURVE (piecewise-linear Q→Revenue lookup)"
 DTC_FLEET_BANDWIDTH: Final[str] = "DTC FLEET + BANDWIDTH"
 DTC_GBPS_AVAILABLE_FOR_EXTERNAL_STARLINK_REVENUE: Final[str] = "DTC Gbps available for external Starlink revenue"
@@ -443,7 +444,6 @@ DTC_TAM_UPLIFT_MULTIPLIER_STARLINK_MOBILE_DERIVED_YEAR_ROW: Final[str] = "DTC TA
 DTC_TAM_UPLIFT_RAMP_END_YRS_FROM_2025: Final[str] = "DTC TAM uplift ramp-end (yrs from 2025)"
 DTC_TAM_UPLIFT_TARGET_STARLINK_MOBILE_PREMIUM: Final[str] = "DTC TAM uplift target: Starlink Mobile premium (×)"
 DTC_ACTIVE_GBPS_V2_V3_COMBINED: Final[str] = "DTC active Gbps (V2+V3 combined)"
-DTC_AVG_SUBSCRIBERS_IMPLIED_M: Final[str] = "DTC avg subscribers (implied, M)"
 DTC_DEMAND_CURVE_LEVEL_MULTIPLIER: Final[str] = "DTC demand curve level multiplier"
 DTC_POOL_AT_COST_GBPS_YR: Final[str] = "DTC pool at-cost $/Gbps/yr"
 DEMAND_CURVES_STARLINK_BB_DTC_PIECEWISE_LINEAR_LOOKUP: Final[str] = "Demand Curves: Starlink BB + DTC piecewise-linear lookup"
@@ -455,6 +455,7 @@ DEMAND_SATURATION_DEPLOYMENT_HEADROOM_SATS: Final[str] = "Demand-saturation depl
 DEMAND_VS_SUPPLY_CHECK_NOT_A_CAP: Final[str] = "Demand-vs-supply CHECK (not a cap)"
 DEPLOYABLE_AREA_PENALTY_KG_M: Final[str] = "Deployable area penalty (kg/m²)"
 DEPLOYMENT_CAP_MIN_DEMAND_LAUNCH_PACING_SATS: Final[str] = "Deployment cap: MIN(demand, launch, pacing) (sats)"
+DEPRECIATION_AMORTIZATION: Final[str] = "Depreciation & amortization"
 DESIRED_BB_SATS_PRE_CAP: Final[str] = "Desired BB sats (pre-cap)"
 DESIRED_DTC_SATS_PRE_CAP: Final[str] = "Desired DTC sats (pre-cap)"
 DESIRED_STARSHIP_LAUNCHES_CURRENT_YR: Final[str] = "Desired Starship launches (current yr)"
@@ -532,6 +533,7 @@ F9_CADENCE_PER_BOOSTER_FLIGHTS_YEAR: Final[str] = "F9 cadence per booster (fligh
 F9_CADENCE_PER_BOOSTER_FLIGHTS_YEAR_FLAT: Final[str] = "F9 cadence per booster (flights/year, flat)"
 F9_CADENCE_PER_BOOSTER_FLIGHTS_YR: Final[str] = "F9 cadence per booster (flights/yr)"
 F9_CUSTOMER_LAUNCH_PRICE_MM_LAUNCH: Final[str] = "F9 customer launch price ($mm/launch)"
+F9_CUSTOMER_LAUNCH_PRICE_CAGR: Final[str] = "F9 customer launch price CAGR"
 F9_CUSTOMER_LAUNCHES_RESIDUAL: Final[str] = "F9 customer launches (residual)"
 F9_CUSTOMER_LAUNCHES_PER_YEAR: Final[str] = "F9 customer launches per year"
 F9_FAIRING_COST_NET_OF_75_RECOVERY_MM_FLIGHT: Final[str] = "F9 fairing cost net of 75% recovery ($mm/flight)"
@@ -540,6 +542,7 @@ F9_FLEET_EOY_BOOSTERS: Final[str] = "F9 fleet EoY (boosters)"
 F9_INTERNAL_LAUNCHES_PER_YEAR_STARLINK_DRIVEN: Final[str] = "F9 internal launches per year (Starlink-driven)"
 F9_LAUNCH_CAPACITY_LAUNCHES_YR: Final[str] = "F9 launch capacity (launches/yr)"
 F9_LAUNCHES_V2_STARLINK_FINAL_YEAR: Final[str] = "F9 launches V2-Starlink final year"
+F9_LAUNCHES_GLIDE_LEVEL: Final[str] = "F9 launches glide level ×"
 F9_LAUNCHES_GLIDE_PATH_PER_YEAR: Final[str] = "F9 launches glide path (per year)"
 F9_LAUNCHES_PER_YEAR: Final[str] = "F9 launches per year"
 F9_LIFETIME_REUSES_PER_BOOSTER: Final[str] = "F9 lifetime reuses per booster"
@@ -553,6 +556,7 @@ F9_PER_LAUNCH_OPS_COST_MM: Final[str] = "F9 per-launch ops cost ($mm)"
 F9_SATS_PER_LAUNCH_V2_PACKING: Final[str] = "F9 sats per launch (V2 packing)"
 F9_STARTING_FLEET_AT_2025_SOY_BOOSTERS: Final[str] = "F9 starting fleet at 2025 SoY (boosters)"
 F9_TOTAL_LAUNCH_CAPACITY_LAUNCHES_YR: Final[str] = "F9 total launch capacity (launches/yr)"
+F9_VARIABLE_COST_CAGR: Final[str] = "F9 variable cost CAGR"
 F9_VARIABLE_COST_PER_LAUNCH_MM_LAUNCH: Final[str] = "F9 variable cost per launch ($mm/launch)"
 F9_VEHICLE_LIFE_L_YEARS: Final[str] = "F9 vehicle life L (years)"
 F9_CAPEX_SLUG_PER_VEHICLE_MM: Final[str] = "F9: CapEx slug per vehicle ($mm)"
@@ -565,7 +569,6 @@ FCF_REPAYMENT_SWEEP_OF_EXCESS_FCF: Final[str] = "FCF repayment sweep (% of exces
 FCF_AI_COMPUTE: Final[str] = "FCF: AI - Compute"
 FCF_CORPORATE_COST_CENTRE: Final[str] = "FCF: Corporate (cost centre)"
 FCF_CUSTOMER_LAUNCH: Final[str] = "FCF: Customer Launch"
-FCF_CUSTOMER_LAUNCH_EX_STARSHIP_R_D_LIFTED_TO_CORPORATE: Final[str] = "FCF: Customer Launch (ex-Starship R&D; lifted to corporate)"
 FCF_GROUP_DCF_SUBTOTAL_SL_CL_AI_CORP_EXCL_L_M: Final[str] = "FCF: Group DCF subtotal (SL+CL+AI+Corp; excl L/M)"
 FCF_LUNAR_MARS: Final[str] = "FCF: Lunar - Mars"
 FCF_STARLINK: Final[str] = "FCF: Starlink"
@@ -585,7 +588,6 @@ FACILITY_REPAYMENT_MM: Final[str] = "Facility repayment ($mm)"
 FINAL_BB_SATS: Final[str] = "Final BB sats"
 FINAL_DTC_SATS: Final[str] = "Final DTC sats"
 FIRST_MISSION_YEAR_LUNAR_MARS: Final[str] = "First mission year (Lunar Mars)"
-FLAG_REV_MODULE_SOTP_0_AS_OF2026_EBITDA_CNT_EXPECT_0: Final[str] = "Flag: rev-module SoTP<0, as-of2026 EBITDA (cnt, expect 0)"
 FLAG_REV_MODULE_SOTP_0_AS_OF2026_EXIT_CNT_EXPECT_0: Final[str] = "Flag: rev-module SoTP<0, as-of2026 Exit (cnt, expect 0)"
 FLAG_REV_MODULE_SOTP_0_AS_OF2026_GORDON_CNT_EXPECT_0: Final[str] = "Flag: rev-module SoTP<0, as-of2026 Gordon (cnt, expect 0)"
 FLEET_ENERGY_GWH_YR: Final[str] = "Fleet energy (GWh/yr)"
@@ -619,6 +621,7 @@ GENERAL_ADMINISTRATIVE_END_STATE_FLOOR: Final[str] = "General & Administrative: 
 GENERAL_ADMINISTRATIVE_START_OF_GROUP_REV: Final[str] = "General & Administrative: start % of group rev"
 GIGABAY_BASE_CAPACITY_2025_SHIPS_YR: Final[str] = "Gigabay base capacity 2025 (ships/yr)"
 GIGABAY_INSTALLED_STARSHIP_BUILD_CAPACITY_SHIPS_YR_ASSUMPTIONS: Final[str] = "Gigabay installed Starship build capacity (ships/yr)  ◄ Assumptions"
+GOVERNMENT_LAUNCH_MARKET_CAGR: Final[str] = "Government launch market CAGR"
 GOVERNMENT_LAUNCH_MARKET_SIZE_MM_YEAR_YEAR_ROW: Final[str] = "Government launch market size ($mm/year): year-row"
 GOVERNMENT_LAUNCH_MARKET_SIZE_MM_YR: Final[str] = "Government launch market size ($mm/yr)"
 GRAND_TOTAL: Final[str] = "Grand total"
@@ -630,6 +633,7 @@ GROSS_PROFIT_CUSTOMER_LAUNCH: Final[str] = "Gross Profit: Customer Launch"
 GROSS_PROFIT_LUNAR_MARS: Final[str] = "Gross Profit: Lunar - Mars"
 GROSS_PROFIT_STARLINK: Final[str] = "Gross Profit: Starlink"
 GROSS_COMPUTE_REVENUE_MM: Final[str] = "Gross compute revenue ($mm)"
+GROSS_KIT_SHIPMENTS_M: Final[str] = "Gross kit shipments (M)"
 GROUND_NETWORK: Final[str] = "Ground / network"
 GROUND_STATION_CAPEX_THIS_YEAR_MM: Final[str] = "Ground station CapEx this year ($mm)"
 GROUND_STATION_BUILD_CAPEX_PER_STATION_MM: Final[str] = "Ground station build CapEx per station ($mm)"
@@ -647,8 +651,6 @@ GROUP_CAPEX_ACCRUAL_MM: Final[str] = "Group CapEx: accrual ($mm)"
 GROUP_D_A_MM: Final[str] = "Group D&A ($mm)"
 GROUP_EBIT_MM: Final[str] = "Group EBIT ($mm)"
 GROUP_EBITDA_MM: Final[str] = "Group EBITDA ($mm)"
-GROUP_EV_ANCHOR_BRANT_INTERNAL: Final[str] = "Group EV anchor: Brant (internal)"
-GROUP_EV_ANCHOR_MORGAN_STANLEY_PUBLIC: Final[str] = "Group EV anchor: Morgan Stanley (public)"
 GROUP_EV_EBITDA_MULTIPLE: Final[str] = "Group EV: EBITDA-multiple"
 GROUP_EV_EXIT_MULTIPLE: Final[str] = "Group EV: Exit-multiple"
 GROUP_EV_EXIT_MULTIPLE_REVENUE: Final[str] = "Group EV: Exit-multiple (revenue)"
@@ -686,6 +688,8 @@ HOURS_PER_YEAR_AI_COMPUTE_UTILIZATION: Final[str] = "Hours per year (AI/Compute 
 IPO_INJECTION_MM: Final[str] = "IPO injection ($mm)"
 IPO_INJECTION_AMOUNT_MM: Final[str] = "IPO injection amount ($mm)"
 IPO_INJECTION_YEAR: Final[str] = "IPO injection year"
+IMPAIRMENT: Final[str] = "Impairment"
+INCOME_LOSS_FROM_OPERATIONS: Final[str] = "Income (loss) from operations"
 INDIVIDUAL_PAID_ARPU_USER_YR: Final[str] = "Individual paid: ARPU ($/user/yr)"
 INDIVIDUAL_PAID_REVENUE_MM: Final[str] = "Individual paid: revenue ($mm)"
 INDIVIDUAL_PAID_TOKENS_T: Final[str] = "Individual paid: tokens (T)"
@@ -731,6 +735,7 @@ LABOUR_UNIT_PRODUCTIVITY_FACTOR: Final[str] = "Labour unit productivity factor"
 LABOUR_UNIT_PRODUCTIVITY_FACTOR_VS_HUMAN_BASELINE: Final[str] = "Labour unit productivity factor vs human baseline"
 LABOUR_UNIT_PRODUCTIVITY_LEARNING_RATE_YR: Final[str] = "Labour unit productivity learning rate (%/yr)"
 LABOUR_UNIT_USEFUL_LIFE_YRS: Final[str] = "Labour unit useful life (yrs)"
+LAUNCH_DEV_REVENUE_CAGR: Final[str] = "Launch & Dev revenue CAGR"
 LAUNCH_DEVELOPMENT_REVENUE_MM: Final[str] = "Launch & Development revenue ($mm)"
 LAUNCH_DEVELOPMENT_REVENUE_MM_YR: Final[str] = "Launch & Development revenue ($mm/yr)"
 LAUNCH_DEVELOPMENT_REVENUE_MM_YR_YEAR_ROW: Final[str] = "Launch & Development revenue ($mm/yr): year-row"
@@ -781,14 +786,18 @@ LEGACY_V1_5_BASE_DEORBIT_END_YEAR: Final[str] = "Legacy V1.5 base deorbit end ye
 LEGACY_V1_5_BASE_DEORBIT_START_YEAR: Final[str] = "Legacy V1.5 base deorbit start year"
 LEGACY_V1_5_SAT_MASS_KG: Final[str] = "Legacy V1.5 sat mass (kg)"
 LIFETIME_REUSES_PER_BOOSTER_YEAR_CAP: Final[str] = "Lifetime reuses per booster (year cap)"
+LINE_MM: Final[str] = "Line ($mm)"
 LOOKUP_FORM_INDEX_MATCH_1_BRACKET_FIND_MANUAL_LINEAR_INTERP_NO_FORECAST_TREND_PER_MEMORY_SNAPSHOT_V3_2_4: Final[str] = "Lookup form: INDEX/MATCH(..., 1) bracket-find + manual linear interp. NO FORECAST / TREND. Per Memory Snapshot v3 §2.4."
 LUNAR_PAYLOAD_AS_LABOUR_UNITS: Final[str] = "Lunar % payload as labour units"
 LUNAR_MARS: Final[str] = "Lunar - Mars"
+LUNAR_MARS_MODULE_CARVE_OUT_FUNDED_PROGRAM_CAPEX_BOOK_VALUE_WATERFALL: Final[str] = "Lunar - Mars module — carve-out funded program, CapEx & book-value waterfall"
 LUNAR_MARS_2: Final[str] = "Lunar / Mars"
 LUNAR_MARS_BV_MULT: Final[str] = "Lunar / Mars (BV×mult)"
 LUNAR_MARS_TERMINAL_BV_MULTIPLIER: Final[str] = "Lunar / Mars: terminal BV multiplier"
 LUNAR_MARS_MODULE_D_A_MM: Final[str] = "Lunar Mars Module D&A ($mm)"
 LUNAR_CARVE_OUT_CASH_THIS_YEAR_MM: Final[str] = "Lunar carve-out cash this year ($mm)"
+LUNAR_CARVE_OUT_SHARE_DECAY: Final[str] = "Lunar carve-out share decay"
+LUNAR_CARVE_OUT_SHARE_FLOOR: Final[str] = "Lunar carve-out share floor"
 LUNAR_FUEL_DEPOT_MULTIPLIER_PER_OUTBOUND_STARSHIP: Final[str] = "Lunar fuel depot multiplier per outbound Starship"
 LUNAR_HARDWARE_MASS_LANDED_THIS_YEAR_KG: Final[str] = "Lunar hardware mass landed this year (kg)"
 LUNAR_HARDWARE_MASS_PER_SHIP_KG: Final[str] = "Lunar hardware mass per ship (kg)"
@@ -834,6 +843,7 @@ MARS_SURFACE_MISSIONS_DEPLOYED_COUNT: Final[str] = "Mars surface missions deploy
 MAX_STARSHIP_BUILD_CAPACITY_ADDED_PER_YEAR_SHIPS_YR: Final[str] = "Max Starship build-capacity added per year (ships/yr)"
 MAX_STARSHIP_LAUNCH_CAPACITY_KG_YR_CEILING_0_OFF: Final[str] = "Max Starship launch capacity (kg/yr ceiling): 0 = off"
 MEMO_RETIRED_CARVE_OUT_COMPUTED_ON_CASH_ALLOCATION_ENGINE_R24: Final[str] = "Memo: (retired: carve-out computed on Cash Allocation Engine R24)"
+MEMO_2025_COL_D_CONSERVATION_FAILS_ARE_EXPECTED_NETTED_OUT_AGAINST_THE_SPACEX_S_1_STAMP: Final[str] = "Memo: 2025 (col D) conservation FAILs are EXPECTED — netted out against the SpaceX S-1 stamp."
 MEMO_2025_CAPEX_RECONCILIATION: Final[str] = "Memo: 2025 CapEx reconciliation"
 MEMO_2025_D_A_RECONCILIATION: Final[str] = "Memo: 2025 D&A reconciliation"
 MEMO_2025_DTC_SUB_LINE_RECONCILIATION: Final[str] = "Memo: 2025 DTC sub-line reconciliation"
@@ -844,65 +854,35 @@ MEMO_AI_APPS_PER_CUSTOMER_SPOT_IRR_DIAGNOSTIC_NO_ALLOCATION_CONSUMER: Final[str]
 MEMO_AI_EBITDA_TIE_GROUP_EBITDA_AI_R54_MODULE_AI_COMPUTE_R169_R168_MUST_0: Final[str] = "Memo: AI EBITDA tie: Group EBITDA-AI (R54) − module ('AI - Compute' R169+R168); must = 0"
 MEMO_AI_KG_RATION_DIAGNOSTIC_ODC_SELF_SUPPLIES_A7_1: Final[str] = "Memo: AI kg ration (diagnostic: ODC self-supplies, A7.1)"
 MEMO_AI_PLACEHOLDER_STRATEGIC_CAPEX_MM_ENGINE_TEMP: Final[str] = "Memo: AI placeholder strategic CapEx ($mm): engine, TEMP"
-MEMO_AI_SEGMENT_AI_SOLUTIONS_INFRA_2025_M: Final[str] = "Memo: AI segment AI Solutions & Infra 2025 ($M)"
-MEMO_AI_SEGMENT_ADJ_EBITDA_2025_M: Final[str] = "Memo: AI segment Adj EBITDA 2025 ($M)"
-MEMO_AI_SEGMENT_ADVERTISING_2025_M: Final[str] = "Memo: AI segment Advertising 2025 ($M)"
-MEMO_AI_SEGMENT_CAPEX_2025_M: Final[str] = "Memo: AI segment CapEx 2025 ($M)"
-MEMO_AI_SEGMENT_R_D_2025_M: Final[str] = "Memo: AI segment R&D 2025 ($M)"
-MEMO_AI_SEGMENT_NAMEPLATE_COMPUTE_DRAW_EOY_2025_GW: Final[str] = "Memo: AI segment nameplate compute draw EoY 2025 (GW)"
-MEMO_AI_SEGMENT_TOTAL_REVENUE_2025_M: Final[str] = "Memo: AI segment total revenue 2025 ($M)"
-MEMO_ACCUMULATED_DEPRECIATION_DEC_31_2025_M: Final[str] = "Memo: Accumulated depreciation Dec 31 2025 ($M)"
 MEMO_ATTRIBUTED_R_D_STARLINK_IN_MODULE_OPEX_EXCL_TOTAL_R_D: Final[str] = "Memo: Attributed R&D, Starlink (in Module OpEx; excl. Total R&D)"
 MEMO_ATTRIBUTED_R_D_STARLINK_NOW_IN_MODULE_OPEX_EXCL_FROM_TOTAL_R_D: Final[str] = "Memo: Attributed R&D, Starlink (now in Module OpEx; excl. from Total R&D)"
 MEMO_AVERAGE_GBPS_BB_FROM_CURVE: Final[str] = "Memo: Average $/Gbps BB from curve"
 MEMO_AVERAGE_GBPS_DTC_FROM_CURVE: Final[str] = "Memo: Average $/Gbps DTC from curve"
-MEMO_AVG_CUSTOMER_PAYLOAD_SIZE_MT_MISSION: Final[str] = "Memo: Avg customer payload size (mt/mission)"
 MEMO_CARVE_OUT_RESERVED_VS_MODULE_CAPEX_GAP_MM: Final[str] = "Memo: Carve-out reserved vs Module CapEx gap ($mm)"
-MEMO_CONNECTIVITY_ADJ_EBITDA_MARGIN_2025_CALIBRATION_TARGET: Final[str] = "Memo: Connectivity Adj EBITDA margin 2025: calibration target"
-MEMO_CONNECTIVITY_COGS_2025_M: Final[str] = "Memo: Connectivity COGS 2025 ($M)"
-MEMO_CONNECTIVITY_COGS_2025_M_CALIBRATION: Final[str] = "Memo: Connectivity COGS 2025 ($M): calibration"
-MEMO_CONNECTIVITY_CONSUMER_REVENUE_2025_M: Final[str] = "Memo: Connectivity Consumer revenue 2025 ($M)"
-MEMO_CONNECTIVITY_E_G_INCL_MOBILE_REVENUE_2025_M: Final[str] = "Memo: Connectivity E&G incl Mobile revenue 2025 ($M)"
-MEMO_CONNECTIVITY_R_D_2025_M: Final[str] = "Memo: Connectivity R&D 2025 ($M)"
-MEMO_CONNECTIVITY_R_D_2025_M_CALIBRATION: Final[str] = "Memo: Connectivity R&D 2025 ($M): calibration"
-MEMO_CONNECTIVITY_SG_A_2025_M: Final[str] = "Memo: Connectivity SG&A 2025 ($M)"
-MEMO_CONNECTIVITY_SG_A_2025_M_CALIBRATION: Final[str] = "Memo: Connectivity SG&A 2025 ($M): calibration"
-MEMO_CONNECTIVITY_SEGMENT_CAPEX_2025_M: Final[str] = "Memo: Connectivity segment CapEx 2025 ($M)"
-MEMO_CONNECTIVITY_SEGMENT_INCOME_FROM_OPS_2025_M_CALIBRATION: Final[str] = "Memo: Connectivity segment income from ops 2025 ($M): calibration"
-MEMO_COUNTRIES_SERVED: Final[str] = "Memo: Countries served"
-MEMO_CUSTOMER_A_CONCENTRATION_RISK_US_GOV_NASA_DOW_CONSOL: Final[str] = "Memo: Customer A concentration risk (US Gov NASA+DoW % consol)"
 MEMO_CUSTOMER_LAUNCH_SUB_LINES_MODULE_REVENUE: Final[str] = "Memo: Customer Launch sub-lines − module Revenue"
 MEMO_DC_CHIPS_DEPLOYED_ODC_R55_TERR_R94: Final[str] = "Memo: DC chips deployed (ODC R55 + Terr R94)"
-MEMO_DEFERRED_REVENUE_DEC_31_2025_M: Final[str] = "Memo: Deferred revenue (Dec 31 2025) ($M)"
 MEMO_DEMAND_DAMPENER_PRICE_AT_Q_MIN_1_DEMAND_SUPPLY_B: Final[str] = "Memo: Demand dampener (price-at-Q, =MIN(1,(demand/supply)^b))"
 MEMO_EBITDA_MARGIN: Final[str] = "Memo: EBITDA Margin %"
-MEMO_ECHOSTAR_SPECTRUM_DEAL_TOTAL_M_S_1_AUDITED: Final[str] = "Memo: EchoStar spectrum deal total ($M, S-1 audited)"
 MEMO_ENGINE_CASH_GROUP_FCF_MM: Final[str] = "Memo: Engine cash Group FCF ($mm)"
-MEMO_ENTERPRISE_CHURN_QUALITATIVE: Final[str] = "Memo: Enterprise churn: qualitative"
 MEMO_F9_AVAILABLE_CAPACITY_KG: Final[str] = "Memo: F9 available capacity (kg)"
 MEMO_F9_CUSTOMER_MODEL_VS_S_1_CUSTOMER_STARSHIELD: Final[str] = "Memo: F9 customer (model) vs S-1 customer − Starshield"
 MEMO_F9_CUSTOMER_LAUNCHES_CUSTOMER_LAUNCH: Final[str] = "Memo: F9 customer launches (Customer Launch)"
 MEMO_F9_INTERNAL_MODEL_VS_S_1_CORE_STARLINK_STARSHIELD: Final[str] = "Memo: F9 internal (model) vs S-1 core Starlink + Starshield"
 MEMO_F9_INTERNAL_LAUNCHES_STARLINK_DRIVEN: Final[str] = "Memo: F9 internal launches (Starlink-driven)"
 MEMO_F9_LAUNCH_CAPACITY_LAUNCHES_YR: Final[str] = "Memo: F9 launch capacity (launches/yr)"
-MEMO_F9_PRICE_SET_TO_54_8M_LANDS_2025_LAUNCH_SERVICES_2_575_6M_TARGET_2_576M_LAUNCH_DELIVERY_1_510M_REVENUE_4_085_6M_S_1_SPACE_4_086M: Final[str] = "Memo: F9 price set to $54.8M lands 2025 Launch Services = $2,575.6M (target $2,576M) + Launch & Delivery $1,510M → revenue $4,085.6M ≈ S-1 Space $4,086M."
 MEMO_GROSS_MARGIN: Final[str] = "Memo: Gross Margin %"
-MEMO_GROUP_D_A_2025_VARIANCE_VS_1_060M: Final[str] = "Memo: Group D&A 2025 variance vs $1,060M"
-MEMO_GROUP_EBITDA_2025_VARIANCE_VS_8_690M: Final[str] = "Memo: Group EBITDA 2025 variance vs $8,690M"
+MEMO_GROUP_D_A_2025_VARIANCE_VS_S_1_6_701M: Final[str] = "Memo: Group D&A 2025 variance vs S-1 $6,701M"
 MEMO_GROUP_EV_AS_OF2026_EXIT_B: Final[str] = "Memo: Group EV as-of2026 Exit $B"
 MEMO_GROUP_EV_AS_OF2026_GORDON_B: Final[str] = "Memo: Group EV as-of2026 Gordon $B"
-MEMO_GROUP_FCF_2025_VARIANCE_VS_3_670M: Final[str] = "Memo: Group FCF 2025 variance vs $3,670M"
 MEMO_GROUP_REVENUE_GROUP_P_L_GROUP_REVENUE: Final[str] = "Memo: Group Revenue − Group P&L Group Revenue"
 MEMO_GROUP_REVENUE_CLAIMS_BASE_MM: Final[str] = "Memo: Group revenue (claims base) ($mm)"
 MEMO_HQ_CAPEX_2025_53M_REFERENCE: Final[str] = "Memo: HQ CapEx (2025 ≈ $53M reference)"
-MEMO_INTERFACE_CONTRACT_MODULE_OUT_CANONICAL_LABELS: Final[str] = "Memo: Interface contract: Module OUT canonical labels"
+MEMO_IMPAIRMENT_SPACE_2025_REPORTED_ONLY: Final[str] = "Memo: Impairment (Space, 2025 reported only)"
+MEMO_INCOME_FROM_OPS_2025_VARIANCE_VS_S_1_2_589_M: Final[str] = "Memo: Income from ops 2025 variance vs S-1 $(2,589)M"
 MEMO_L_M_SOTP_BV_BASED_AS_OF_2026: Final[str] = "Memo: L/M SoTP (BV-based, as-of 2026)"
 MEMO_L_M_STRATEGIC_PREMIUM_OVER_CASH_DRAIN_PV: Final[str] = "Memo: L/M strategic premium over cash-drain PV"
-MEMO_LOSS_FROM_OPERATIONS_2025_M_CALIBRATION: Final[str] = "Memo: Loss from operations 2025 ($M): calibration"
 MEMO_LUNAR_MARS_SUB_LINE_MODULE_REVENUE: Final[str] = "Memo: Lunar - Mars sub-line − module Revenue"
 MEMO_LUNAR_SURFACE_MISSIONS_CUMULATIVE: Final[str] = "Memo: Lunar surface missions cumulative"
-MEMO_MNO_ADDRESSABLE_POPULATION_MILLIONS: Final[str] = "Memo: MNO addressable population (millions)"
-MEMO_MNO_PARTNER_COUNT: Final[str] = "Memo: MNO partner count"
 MEMO_MARS_SURFACE_MISSIONS_CUMULATIVE: Final[str] = "Memo: Mars surface missions cumulative"
 MEMO_MASS_TO_ORBIT_F9_KG: Final[str] = "Memo: Mass to orbit: F9 (kg)"
 MEMO_MASS_TO_ORBIT_STARSHIP_KG: Final[str] = "Memo: Mass to orbit: Starship (kg)"
@@ -912,22 +892,18 @@ MEMO_ODC_DEMAND_SHARE_RETIRED_A8_3_DEMAND_NOT_SPLIT_ODC_PRIORITY: Final[str] = "
 MEMO_ODC_FIRST_DEPLOYMENT_YEAR_ANCHOR: Final[str] = "Memo: ODC first deployment year (anchor)"
 MEMO_ODC_KG_BUILDABLE_DIAGNOSTIC_UNUSED_AFTER_A7_1: Final[str] = "Memo: ODC kg-buildable (diagnostic: unused after A7.1)"
 MEMO_ODC_TERR_SPILLOVER_MM_A8_3_CONSUMED_BY_R114: Final[str] = "Memo: ODC→Terr spillover ($mm): A8.3 (consumed by R114)"
-MEMO_OPERATING_CASH_FLOW_2025_M_CALIBRATION: Final[str] = "Memo: Operating cash flow 2025 ($M): calibration"
 MEMO_P_L_IRR_CONSERVATION: Final[str] = "Memo: P&L↔IRR conservation"
 MEMO_P_L_IRR_OPERATING_MARGIN: Final[str] = "Memo: P&L↔IRR operating-margin"
-MEMO_PP_E_NET_DEC_31_2025_M: Final[str] = "Memo: PP&E net Dec 31 2025 ($M)"
 MEMO_PV_OF_L_M_FCF_DRAIN_EMBEDDED_IN_GROUP_FCF: Final[str] = "Memo: PV of L/M FCF drain embedded in Group FCF"
 MEMO_R_D_DUAL_TRACK_DIVERGENCE: Final[str] = "Memo: R&D dual-track divergence"
 MEMO_REALIZED_GPU_HR_BASE_DAMPENER: Final[str] = "Memo: Realized $/GPU-hr (base × dampener)"
-MEMO_SPACE_CONNECTIVITY_CAPEX_2025_M: Final[str] = "Memo: Space + Connectivity CapEx 2025 ($M)"
-MEMO_SPACE_R_D_2025_M_CALIBRATION: Final[str] = "Memo: Space R&D 2025 ($M): calibration"
-MEMO_SPACE_SEGMENT_CAPEX_2025_M: Final[str] = "Memo: Space segment CapEx 2025 ($M)"
-MEMO_SPACE_SEGMENT_INCOME_FROM_OPS_2025_M_CALIBRATION: Final[str] = "Memo: Space segment income from ops 2025 ($M): calibration"
+MEMO_REPORTABLE_EBITDA_2025_VARIANCE_VS_S_1_4_112M: Final[str] = "Memo: Reportable EBITDA 2025 variance vs S-1 $4,112M"
+MEMO_REPORTABLE_GROUP_EBITDA_S_1_3_SEGMENT: Final[str] = "Memo: Reportable Group EBITDA (S-1, 3-segment)"
+MEMO_RESTRUCTURING_XAI_2025_REPORTED_ONLY: Final[str] = "Memo: Restructuring (xAI, 2025 reported only)"
+MEMO_SBC_TOTAL_SUPPLEMENTAL_ALREADY_IN_EBIT_NOT_RE_SUBTRACTED: Final[str] = "Memo: SBC total (supplemental — already in EBIT, not re-subtracted)"
 MEMO_SPACEX_LAUNCH_SERVICES_REV_AS_OF_EXPANDED_TAM_COHERENCE_CHECK_MUST_BE_100: Final[str] = "Memo: SpaceX Launch-Services rev as % of expanded $TAM (coherence check, must be <100%)"
-MEMO_SPECTRUM_LICENCE_FEE_RENEWAL_FLAG_2042: Final[str] = "Memo: Spectrum licence fee renewal flag (2042)"
 MEMO_STARLINK_SUB_LINES_MODULE_REVENUE: Final[str] = "Memo: Starlink sub-lines − module Revenue"
 MEMO_STARLINK_DTC_REVENUE_EXCL_STARSHIELD: Final[str] = "Memo: Starlink+DTC revenue (excl. Starshield)"
-MEMO_SUBSEQUENT_EVENTS_CHECK_S_1_A: Final[str] = "Memo: Subsequent events check (S-1/A)"
 MEMO_TERR_MW_DEMAND_IMPLIED_PRE_CASH: Final[str] = "Memo: Terr MW demand-implied (pre-cash)"
 MEMO_TERR_DEMAND_SHARE_RETIRED_A8_3_DEMAND_NOT_SPLIT: Final[str] = "Memo: Terr demand share: RETIRED A8.3 (demand not split)"
 MEMO_TERR_SHARE_OF_NET_DEMAND_GAP_RETIRED_A8_0_1_SUPERSEDED_BY_IRR_SHARE_DEMAND_SPLIT: Final[str] = "Memo: Terr share of net demand gap: RETIRED A8.0.1 (superseded by IRR-share demand split)"
@@ -937,8 +913,6 @@ MEMO_TESLA_FUNDED_FAB_CAPEX_1_SHARE_MM: Final[str] = "Memo: Tesla-funded fab Cap
 MEMO_TOTAL_F9_LAUNCHES_INTERNAL_CUSTOMER: Final[str] = "Memo: Total F9 launches (internal + customer)"
 MEMO_TOTAL_LUNAR_MARS_ACCUMULATED_BV_MM_SOTP_TERMINAL_INPUT: Final[str] = "Memo: Total Lunar + Mars Accumulated BV ($mm): SoTP terminal input"
 MEMO_TOTAL_LUNAR_MARS_KG_LANDED_THIS_YEAR: Final[str] = "Memo: Total Lunar+Mars kg landed this year"
-MEMO_TOTAL_BACKLOG_DEC_31_2025_M: Final[str] = "Memo: Total backlog (Dec 31 2025) ($M)"
-MEMO_TOTAL_DEPRECIATION_2025_M_CALIBRATION: Final[str] = "Memo: Total depreciation 2025 ($M): calibration"
 MEMO_TOTAL_MASS_TO_ORBIT_MT: Final[str] = "Memo: Total mass to orbit (mt)"
 MEMO_TOTAL_DEMAND_VS_SUPPLY_CHECK: Final[str] = "Memo: Total-demand-vs-supply CHECK"
 MEMO_VB_FLEET_CAPEX_CONSERVATION_VB_R53: Final[str] = "Memo: VB fleet CapEx conservation (=VB R53)"
@@ -960,7 +934,7 @@ MEMO_EXPLICIT_DCF_OF_GROUP_FCF_INCL_L_M_NO_TV: Final[str] = "Memo: explicit-DCF 
 MEMO_EXPLICIT_DCF_OF_SOTP_MODULES_SL_CL_AI_CORP: Final[str] = "Memo: explicit-DCF of SoTP modules (SL+CL+AI+Corp)"
 MEMO_FLEET_CAPEX_CONSERVATION_ENGINE_MODULE_MUST_0: Final[str] = "Memo: fleet CapEx conservation (engine − Σ module; must = 0)"
 MEMO_FULL_JV_FAB_CAPEX_100_PRE_SHARE_MM: Final[str] = "Memo: full JV fab CapEx (100%, pre-share) ($mm)"
-MEMO_IMPLIED_TOTAL_STARLINK_SUBSCRIBERS_BB_M_VS_S_1_8_9M: Final[str] = "Memo: implied total Starlink subscribers (BB, M) vs S-1 8.9M"
+MEMO_IMPLIED_TOTAL_STARLINK_BB_SUBSCRIBERS_BB_M_VS_S_1_8_9M: Final[str] = "Memo: implied total Starlink BB subscribers (BB, M) vs S-1 8.9M"
 MEMO_LAUNCH_CADENCE_WRIGHT_S_LAW_IS_DRIVEN_BY_TOTAL_FLEET_CUMULATIVE_UP_MASS_ROW_76_ROW_32_STARSHIP_LAUNCHES_PAYLOAD_ALL_FLIGHTS_INTERNAL_STARLINK_COMMERCIAL_NOT_CUSTOMER_LAUNCH_FLIGHTS_ONLY_DO_NOT_REPOINT: Final[str] = "Memo: launch cadence (Wright's Law) is driven by total fleet cumulative up-mass (row 76 = Σ row 32 Starship launches × payload) — all flights, internal Starlink + commercial, not customer-launch flights only. Do not repoint."
 MEMO_LAUNCH_DEMAND_ELASTICITY_MULTIPLIER_X: Final[str] = "Memo: launch demand elasticity multiplier (x)"
 MEMO_LAUNCH_INFRA_ALLOCABLE_PER_VEHICLE_MM: Final[str] = "Memo: launch-infra allocable per vehicle ($mm)"
@@ -982,6 +956,8 @@ MEMO_TOTAL_EXTERNAL_LAUNCHES: Final[str] = "Memo: total external launches"
 MEMO_TOTAL_KG_DEMAND_KG: Final[str] = "Memo: total kg demand (kg)"
 MEMO_TOTAL_LAUNCH_FACILITY_CAPEX: Final[str] = "Memo: total launch + facility CapEx"
 MEMO_WITHIN_AI_SHARE_SUM_1: Final[str] = "Memo: within-AI share sum (=1)"
+MEMO_XAI_D_A_MM: Final[str] = "Memo: xAI D&A ($mm)"
+MEMO_XAI_SBC_MM: Final[str] = "Memo: xAI SBC ($mm)"
 MEMO_GROUP_FCF_CUMULATIVE_RULE_23_YR_CHAINED: Final[str] = "Memo: Σ Group FCF cumulative (Rule 23 yr-chained)"
 MEMO_MODULE_OWNED_LAUNCH_CAPEX_ALL_MODULES: Final[str] = "Memo: Σ module owned launch CapEx (all modules)"
 MEMO_NEW_INFRASTRUCTURE_CAPEX_EX_TERMINAL_MM: Final[str] = "Memo: Σ new infrastructure CapEx ex-terminal ($mm)"
@@ -991,10 +967,6 @@ MISSION_OPS_COST_LUNAR_MM: Final[str] = "Mission ops cost: Lunar ($mm)"
 MISSION_OPS_COST_LUNAR_OF_LUNAR_CAPEX: Final[str] = "Mission ops cost: Lunar (% of Lunar CapEx)"
 MISSION_OPS_COST_MARS_MM: Final[str] = "Mission ops cost: Mars ($mm)"
 MISSION_OPS_COST_MARS_OF_MARS_CAPEX: Final[str] = "Mission ops cost: Mars (% of Mars CapEx)"
-MODEL_GORDON_VS_BRANT: Final[str] = "Model (Gordon) vs Brant"
-MODEL_GORDON_VS_MS: Final[str] = "Model (Gordon) vs MS"
-MODEL_EV_AS_OF_2026_EXIT_MULT: Final[str] = "Model EV as-of 2026: Exit-mult"
-MODEL_EV_AS_OF_2026_GORDON: Final[str] = "Model EV as-of 2026: Gordon"
 MODULE_CAPEX: Final[str] = "Module CapEx"
 MODULE_CAPEX_MM: Final[str] = "Module CapEx ($mm)"
 MODULE_CAPEX_FCF_INPUT_MM: Final[str] = "Module CapEx (FCF input) ($mm)"
@@ -1091,6 +1063,7 @@ PAYLOAD_BOOSTER_ONLY_MODE_KG_TO_LEO: Final[str] = "Payload: booster-only mode (k
 PAYLOAD_FULLY_REUSABLE_MODE_KG_TO_LEO: Final[str] = "Payload: fully reusable mode (kg-to-LEO)"
 PER_SHIP_COST_LUNAR_MM_SHIP: Final[str] = "Per-ship cost: Lunar ($mm/ship)"
 PER_SHIP_COST_MARS_MM_SHIP: Final[str] = "Per-ship cost: Mars ($mm/ship)"
+PLACEHOLDER_AI_CAPEX_REV: Final[str] = "Placeholder AI CapEx (% rev)"
 PLACEHOLDER_AI_STRATEGIC_CAPEX_MM_TEMP_RETIRE_WHEN_AI_COMPUTE_LOADED: Final[str] = "Placeholder AI/strategic CapEx ($mm): TEMP (retire when AI-Compute loaded)"
 PLACEHOLDER_AI_STRATEGIC_CAPEX_OF_GROUP_REVENUE_TEMP: Final[str] = "Placeholder AI/strategic CapEx (% of Group revenue): TEMP"
 POOL_AFTER_QUEUE_GATE_MM: Final[str] = "Pool after queue gate ($mm)"
@@ -1120,6 +1093,8 @@ READ_ONLY_DIRECT_PULLS_FROM_MODULE_TABS_EACH_MODULE_ROW_IS_THE_REALIZED_CAPPED_L
 REMAINING_POOL_FOR_IRR_WEIGHTED_ALLOCATION_MM_GATED_TO_0_IN_THE_2025_ANCHOR_YEAR_ALLOCATION_OPERATIVE_2026_ONWARD: Final[str] = "Remaining pool for IRR-weighted allocation ($mm): gated to 0 in the 2025 anchor year; allocation operative 2026 onward"
 REQUIRED_FAB_CAPACITY_WSPM: Final[str] = "Required fab capacity (wspm)"
 REQUIRED_INSTALLED_COMPUTE_W_BUFFER_GPU_HRS: Final[str] = "Required installed compute w/ buffer (GPU-hrs)"
+RESEARCH_AND_DEVELOPMENT: Final[str] = "Research and development"
+RESTRUCTURING: Final[str] = "Restructuring"
 REVENUE: Final[str] = "Revenue"
 REVENUE_ALLOCATOR_OUT: Final[str] = "Revenue   ◄ Allocator OUT"
 REVENUE_MM: Final[str] = "Revenue ($mm)"
@@ -1156,6 +1131,36 @@ ROLL_UP_STARSHIP_LAUNCHES_PER_YEAR_ODC_DRIVEN: Final[str] = "Roll-up Starship la
 RUNNING_COST_COGS_OPEX_MM: Final[str] = "Running cost (COGS+OpEx) ($mm)"
 S_M_CUSTOMER_ACQUISITION_MM: Final[str] = "S&M - customer acquisition ($mm)"
 S_1_2025_SPACEX_TOTAL_CAPEX_MM: Final[str] = "S-1 2025 SpaceX total CapEx ($mm)"
+S_1_AI_XAI_CONSOLIDATED_REVENUE_MM: Final[str] = "S-1 AI (≙ xAI, consolidated): Revenue ($mm)"
+S_1_AI_CAPEX_SUPPLEMENTAL_MM: Final[str] = "S-1 AI: CapEx supplemental ($mm)"
+S_1_AI_COST_OF_REVENUE_MM: Final[str] = "S-1 AI: Cost of revenue ($mm)"
+S_1_AI_D_A_SUPPLEMENTAL_MM: Final[str] = "S-1 AI: D&A supplemental ($mm)"
+S_1_AI_IMPAIRMENT_MM: Final[str] = "S-1 AI: Impairment ($mm)"
+S_1_AI_INCOME_FROM_OPERATIONS_MM: Final[str] = "S-1 AI: Income from operations ($mm)"
+S_1_AI_R_D_MM: Final[str] = "S-1 AI: R&D ($mm)"
+S_1_AI_RESTRUCTURING_MM: Final[str] = "S-1 AI: Restructuring ($mm)"
+S_1_AI_SBC_SUPPLEMENTAL_MM: Final[str] = "S-1 AI: SBC supplemental ($mm)"
+S_1_AI_SG_A_MM: Final[str] = "S-1 AI: SG&A ($mm)"
+S_1_CONNECTIVITY_STARLINK_REVENUE_MM: Final[str] = "S-1 Connectivity (≙ Starlink): Revenue ($mm)"
+S_1_CONNECTIVITY_CAPEX_SUPPLEMENTAL_MM: Final[str] = "S-1 Connectivity: CapEx supplemental ($mm)"
+S_1_CONNECTIVITY_COST_OF_REVENUE_MM: Final[str] = "S-1 Connectivity: Cost of revenue ($mm)"
+S_1_CONNECTIVITY_D_A_SUPPLEMENTAL_MM: Final[str] = "S-1 Connectivity: D&A supplemental ($mm)"
+S_1_CONNECTIVITY_IMPAIRMENT_MM: Final[str] = "S-1 Connectivity: Impairment ($mm)"
+S_1_CONNECTIVITY_INCOME_FROM_OPERATIONS_MM: Final[str] = "S-1 Connectivity: Income from operations ($mm)"
+S_1_CONNECTIVITY_R_D_MM: Final[str] = "S-1 Connectivity: R&D ($mm)"
+S_1_CONNECTIVITY_RESTRUCTURING_MM: Final[str] = "S-1 Connectivity: Restructuring ($mm)"
+S_1_CONNECTIVITY_SBC_SUPPLEMENTAL_MM: Final[str] = "S-1 Connectivity: SBC supplemental ($mm)"
+S_1_CONNECTIVITY_SG_A_MM: Final[str] = "S-1 Connectivity: SG&A ($mm)"
+S_1_SPACE_CUSTOMER_LAUNCH_REVENUE_MM: Final[str] = "S-1 Space (≙ Customer Launch): Revenue ($mm)"
+S_1_SPACE_CAPEX_SUPPLEMENTAL_MM: Final[str] = "S-1 Space: CapEx supplemental ($mm)"
+S_1_SPACE_COST_OF_REVENUE_MM: Final[str] = "S-1 Space: Cost of revenue ($mm)"
+S_1_SPACE_D_A_SUPPLEMENTAL_MM: Final[str] = "S-1 Space: D&A supplemental ($mm)"
+S_1_SPACE_IMPAIRMENT_MM: Final[str] = "S-1 Space: Impairment ($mm)"
+S_1_SPACE_INCOME_FROM_OPERATIONS_MM: Final[str] = "S-1 Space: Income from operations ($mm)"
+S_1_SPACE_R_D_MM: Final[str] = "S-1 Space: R&D ($mm)"
+S_1_SPACE_RESTRUCTURING_MM: Final[str] = "S-1 Space: Restructuring ($mm)"
+S_1_SPACE_SBC_SUPPLEMENTAL_MM: Final[str] = "S-1 Space: SBC supplemental ($mm)"
+S_1_SPACE_SG_A_MM: Final[str] = "S-1 Space: SG&A ($mm)"
 SHIP_FLEET_ROLL_FORWARD_BOOSTER_SHIP_SPLIT: Final[str] = "SHIP FLEET ROLL-FORWARD (booster / ship split)"
 STARLINK: Final[str] = "STARLINK"
 STARSHIP_BUILD_CAPEX_SPLIT: Final[str] = "STARSHIP BUILD CapEx SPLIT"
@@ -1192,10 +1197,12 @@ SATS_FUNDABLE_FROM_LAUNCH_KG: Final[str] = "Sats fundable from launch kg"
 SATS_PER_STARSHIP_LAUNCH: Final[str] = "Sats per Starship launch"
 SEGMENT_P_L_FULL_GROUP_WATERFALL_WITH_REVENUE_BROKEN_TO_MODULE_SUB_SEGMENTS_READ_ONLY_PRESENTATION_TIES_TO_GROUP_P_L: Final[str] = "Segment P&L — full Group waterfall with revenue broken to module sub-segments (read-only presentation; ties to Group P&L)"
 SELLING_GENERAL_ADMINISTRATIVE_MM: Final[str] = "Selling, general & administrative ($mm)"
+SELLING_GENERAL_AND_ADMINISTRATIVE: Final[str] = "Selling, general and administrative"
 SHARED_UNATTRIBUTABLE_R_D_MM: Final[str] = "Shared / unattributable R&D ($mm)"
 SHARED_UNATTRIBUTABLE_R_D_CORPORATE: Final[str] = "Shared / unattributable R&D: corporate"
-SHARED_UNATTRIBUTABLE_R_D_CORPORATE_INCL_STARSHIP_PLATFORM_R_D: Final[str] = "Shared / unattributable R&D: corporate (incl Starship platform R&D)"
+SHARED_UNATTRIBUTABLE_R_D_CORPORATE_STARSHIP_PLATFORM_R_D_NET_OF_CL_CARVE_OUT: Final[str] = "Shared / unattributable R&D: corporate (Starship platform R&D, net of CL carve-out)"
 SHARED_CORPORATE_R_D_MM_YR_YEAR_ROW: Final[str] = "Shared corporate R&D ($mm/yr): year-row"
+SHARED_CORPORATE_R_D_CAGR: Final[str] = "Shared corporate R&D CAGR"
 SHIELDING_SAT: Final[str] = "Shielding $/sat"
 SHIP_BUILD_CAPEX_MM: Final[str] = "Ship build CapEx ($mm)"
 SHIP_CADENCE_FLOOR_FLIGHTS_YR_OPERATIONAL: Final[str] = "Ship cadence floor (flights/yr, operational)"
@@ -1216,8 +1223,10 @@ SOLAR_SPECIFIC_POWER_ANCHOR_2025_W_KG: Final[str] = "Solar specific power anchor
 SOLAR_SPECIFIC_POWER_MATURE_W_KG: Final[str] = "Solar specific power mature (W/kg)"
 SPACEX_COMMERCIAL_MARKET_SHARE: Final[str] = "SpaceX commercial market share"
 SPACEX_COMMERCIAL_MARKET_SHARE_2: Final[str] = "SpaceX commercial market share %"
+SPACEX_COMMERCIAL_SHARE_STEP_PTS_YR: Final[str] = "SpaceX commercial share step (pts/yr)"
 SPACEX_GOVERNMENT_MARKET_SHARE: Final[str] = "SpaceX government market share"
 SPACEX_GOVERNMENT_MARKET_SHARE_2: Final[str] = "SpaceX government market share %"
+SPACEX_GOVERNMENT_SHARE_STEP_PTS_YR: Final[str] = "SpaceX government share step (pts/yr)"
 SPECTRUM_LICENCE_OPEX_MM: Final[str] = "Spectrum licence OpEx ($mm)"
 SPECTRUM_LICENCE_OPEX_OF_REVENUE: Final[str] = "Spectrum licence OpEx (% of revenue)"
 SPECTRUM_LICENCE_FEE: Final[str] = "Spectrum licence fee"
@@ -1254,6 +1263,9 @@ STARLINK_GROUND_NETWORK_CAPEX_MM: Final[str] = "Starlink ground-network CapEx ($
 STARLINK_GROUND_NETWORK_CAPEX_OF_STARLINK_REVENUE: Final[str] = "Starlink ground-network CapEx (% of Starlink revenue)"
 STARLINK_MODULE_ALLOCATED_CASH_MM_YR_LIVE_FROM_CASH_ALLOCATION_ENGINE: Final[str] = "Starlink module allocated cash ($mm/yr): live from Cash Allocation Engine"
 STARLINK_MODULE_REAL_COHORTS_TOTAL_BANDWIDTH_REVENUE_FULL_WATERFALL_4_LINE_OPEX_PER_SAT_IRR: Final[str] = "Starlink module — real cohorts + total-bandwidth revenue + full waterfall + 4-line OpEx + per-sat IRR"
+STARLINK_REV_GROWTH_POST_CAP: Final[str] = "Starlink rev growth (post-cap)"
+STARLINK_REV_GROWTH_PRE_CAP: Final[str] = "Starlink rev growth (pre-cap)"
+STARLINK_REV_GROWTH_CAP_YEARS: Final[str] = "Starlink rev growth cap (years)"
 STARLINK_BROADBAND_BB: Final[str] = "Starlink — Broadband (BB)"
 STARLINK_DIRECT_TO_CELL_DTC: Final[str] = "Starlink — Direct-to-Cell (DTC)"
 STARLINK_HARDWARE_KIT: Final[str] = "Starlink — Hardware / kit"
@@ -1277,10 +1289,12 @@ STARSHIP_KG_FULLY_REUSABLE: Final[str] = "Starship $/kg, fully reusable"
 STARSHIP_2ND_STAGE_MANUFACTURING_COST_MM_UNIT_BASE: Final[str] = "Starship 2nd-stage manufacturing cost ($mm/unit, base)"
 STARSHIP_BOOSTER_CADENCE_PER_VEHICLE_IN_SERVICE: Final[str] = "Starship BOOSTER cadence per vehicle in service"
 STARSHIP_F9_INHERITED_EXPERIENCE_SEED_F9_EQUIV_CUM_STACKS_AT_2025_ENTRY: Final[str] = "Starship F9-inherited experience seed (F9-equiv cum stacks at 2025 entry)"
+STARSHIP_R_D_LEVEL: Final[str] = "Starship R&D level ×"
 STARSHIP_R_D_TOTAL_MM_YR_YEAR_ROW: Final[str] = "Starship R&D total ($mm/yr): year-row"
 STARSHIP_SHIP_CADENCE_PER_VEHICLE_IN_SERVICE: Final[str] = "Starship SHIP cadence per vehicle in service"
 STARSHIP_SPOT_IRR_COMPETES_IN_THE_IRR_WEIGHTED_ALLOCATION: Final[str] = "Starship Spot IRR (competes in the IRR-weighted allocation)"
 STARSHIP_AMORTIZED_MFG_PER_LAUNCH_FULLY_REUSABLE_MM: Final[str] = "Starship amortized mfg per launch, fully reusable ($mm)"
+STARSHIP_AT_COST_RATE_CAGR: Final[str] = "Starship at-cost rate CAGR"
 STARSHIP_AT_COST_RATE_PER_LAUNCH_MM: Final[str] = "Starship at-cost rate per launch ($mm)"
 STARSHIP_AT_COST_RATE_EXPENDABLE_SHIP_REUSABLE_BOOSTER_MM_LAUNCH: Final[str] = "Starship at-cost rate, expendable ship / reusable booster ($mm/launch)"
 STARSHIP_AT_COST_RATE_FULLY_EXPENDABLE_MM_LAUNCH: Final[str] = "Starship at-cost rate, fully expendable ($mm/launch)"
@@ -1329,13 +1343,15 @@ STARSHIP_PAYLOAD_FULLY_EXPENDABLE_KG: Final[str] = "Starship payload, fully expe
 STARSHIP_PAYLOAD_FULLY_REUSABLE_KG: Final[str] = "Starship payload, fully reusable (kg)"
 STARSHIP_PRE_BUILD_BUFFER_MULTIPLE_X: Final[str] = "Starship pre-build buffer multiple (x)"
 STARSHIP_PRE_BUILD_TARGET_PLANNED_NEXT_YR_UPMASS_KG: Final[str] = "Starship pre-build target: planned next-yr upmass (kg)"
-STARSHIP_SATS_PER_LAUNCH_V3_PACKING_RETIRED_SUPERSEDED_BY_MASS_DERIVED_SATS_LAUNCH_STARLINK_R205: Final[str] = "Starship sats per launch (V3 packing): RETIRED — superseded by mass-derived sats/launch (Starlink R205)"
+STARSHIP_READINESS_MIDPOINT_YEAR: Final[str] = "Starship readiness midpoint (year)"
+STARSHIP_READINESS_STEEPNESS: Final[str] = "Starship readiness steepness"
 STARSHIP_SATS_PER_LAUNCH_V3_MASS_DERIVED: Final[str] = "Starship sats per launch (V3, mass-derived)"
 STARSHIP_SHIP_REFURB_COST_ANCHOR_MM_FLIGHT_2024_BASELINE: Final[str] = "Starship ship refurb cost anchor ($mm/flight, 2024 baseline)"
 STARSHIP_SHIP_REFURB_PER_FLIGHT_MM: Final[str] = "Starship ship refurb per flight ($mm)"
 STARSHIP_SHIP_REUSE_LIFE_FLIGHTS_PER_SHIP: Final[str] = "Starship ship reuse life (flights per ship)"
 STARSHIP_TARGET_LAUNCHES_INTERNAL_COMMERCIAL_DEMAND: Final[str] = "Starship target launches (internal + commercial demand)"
 STARSHIP_TOTAL_CAPACITY_LAUNCHES_YR: Final[str] = "Starship total capacity (launches/yr)"
+STARSHIP_VARIABLE_COST_CAGR: Final[str] = "Starship variable cost CAGR"
 STARSHIP_VARIABLE_COST_PER_LAUNCH_MM_LAUNCH: Final[str] = "Starship variable cost per launch ($mm/launch)"
 STARSHIP_VEHICLE_BUILD_COST_MM: Final[str] = "Starship vehicle build cost ($mm)"
 STARSHIP_VEHICLE_FLEET_EOY: Final[str] = "Starship vehicle fleet EoY"
@@ -1345,7 +1361,7 @@ STARSHIP_CAPEX_SLUG_PER_VEHICLE_MM: Final[str] = "Starship: CapEx slug per vehic
 STARSHIP_MARGIN_PER_VEHICLE_PER_YR_MM_EX_D_A: Final[str] = "Starship: margin per vehicle per yr ($mm, ex-D&A)"
 STARSHIP_REVENUE_PER_VEHICLE_PER_YR_MM: Final[str] = "Starship: revenue per vehicle per yr ($mm)"
 STARTING_BOY_2025_SUBSCRIBERS_MILLIONS: Final[str] = "Starting BoY 2025 subscribers (millions)"
-STARTING_CASH_POSITION_EOY_2024_MM: Final[str] = "Starting cash position EoY 2024 ($mm)"
+STOCK_BASED_COMPENSATION: Final[str] = "Stock-based compensation"
 STRUCTURE_SAT: Final[str] = "Structure $/sat"
 SUBSYSTEM_COST_PRE_WL_SAT: Final[str] = "Subsystem cost pre-WL ($/sat)"
 SUBSYSTEM_COST_W_WL_SAT: Final[str] = "Subsystem cost w/ WL ($/sat)"
@@ -1353,6 +1369,7 @@ SUBTOTAL_AI_COMPUTE_REVENUE_MM: Final[str] = "Subtotal: AI - Compute Revenue ($m
 SUBTOTAL_CUSTOMER_LAUNCH_REVENUE_MM: Final[str] = "Subtotal: Customer Launch Revenue ($mm)"
 SUBTOTAL_LUNAR_MARS_REVENUE_MM: Final[str] = "Subtotal: Lunar - Mars Revenue ($mm)"
 SUBTOTAL_STARLINK_REVENUE_MM: Final[str] = "Subtotal: Starlink Revenue ($mm)"
+SUPPLEMENTAL_MEMO: Final[str] = "Supplemental (memo):"
 TOTAL_KG_DEMAND: Final[str] = "TOTAL KG DEMAND"
 TAX_RATE_CORPORATE_US_FEDERAL_STATE_BLENDED: Final[str] = "Tax rate (corporate, US federal + state blended)"
 TAXES_MM: Final[str] = "Taxes ($mm)"
@@ -1387,6 +1404,7 @@ TERMINAL_GROWTH_RATE_G_GROUP_MOST_MODULES: Final[str] = "Terminal growth rate g 
 TERMINAL_KITS_DEMANDED_THIS_YEAR_PLACEHOLDER_GBPS_GROWTH_SCALED: Final[str] = "Terminal kits demanded this year (placeholder: Gbps-growth scaled)"
 TERMINAL_KITS_PER_NET_SUBSCRIBER_ADD: Final[str] = "Terminal kits per net subscriber add"
 TERMINAL_REPLACEMENT_RATE_INSTALLED_YR: Final[str] = "Terminal replacement rate (% installed/yr)"
+TERR_AI_COMPUTE_DRAW_LEVEL: Final[str] = "Terr AI compute draw level ×"
 TERR_DEMAND_BUILDABLE_CAPEX_MM: Final[str] = "Terr demand-buildable CapEx ($mm)"
 TERR_TARGET_MW_DEMAND_SHARE: Final[str] = "Terr target MW (demand-share)"
 TERRESTRIAL_MW_BUILD: Final[str] = "Terrestrial $/MW build"
@@ -1412,6 +1430,7 @@ TOTAL_STARSHIP_LAUNCHES: Final[str] = "Total Starship launches"
 TOTAL_COMPUTE_DEMAND_GPU_HRS: Final[str] = "Total compute demand (GPU-hrs)"
 TOTAL_COMPUTE_GAP_GPU_HRS_A8_3: Final[str] = "Total compute gap (GPU-hrs): A8.3"
 TOTAL_CORPORATE_OPEX_MM: Final[str] = "Total corporate OpEx ($mm)"
+TOTAL_COSTS_AND_EXPENSES: Final[str] = "Total costs and expenses"
 TOTAL_DESIRED_LAUNCH_KG: Final[str] = "Total desired launch kg"
 TOTAL_DESIRED_SATS_PRE_CAP: Final[str] = "Total desired sats (pre-cap)"
 TOTAL_DESIRED_UPMASS_KG_FLEET_CURRENT_YR_CASH_ALLOCATION_ENGINE: Final[str] = "Total desired upmass kg (fleet, current yr)  ◄ Cash Allocation Engine"
@@ -1428,10 +1447,11 @@ TOTAL_SAT_DRY_MASS_KG_DERIVED: Final[str] = "Total sat dry mass (kg): derived"
 TRAINING_CARVE_OUT_INPUT_A8_5: Final[str] = "Training carve-out % (= input): A8.5"
 TWO_SIDED_RADIATOR_FACTOR: Final[str] = "Two-sided radiator factor"
 UTILIZATION: Final[str] = "Utilization (%)"
+UTILIZATION_CEILING: Final[str] = "Utilization ceiling (%)"
+UTILIZATION_RAMP_PTS_YR: Final[str] = "Utilization ramp (pts/yr)"
 V2_BB_GBPS: Final[str] = "V2 BB Gbps"
 V2_BB_GBPS_PER_SAT: Final[str] = "V2 BB Gbps per sat"
 V2_BB_SAT_MASS_KG: Final[str] = "V2 BB sat mass (kg)"
-V2_BB_SHARE_OF_NEW_DEPLOYMENT_FRAC: Final[str] = "V2 BB share of new deployment (frac)"
 V2_BB_CAPEX_SLUG_PER_SAT_MM: Final[str] = "V2 BB: CapEx slug per sat ($mm)"
 V2_BB_SPOT_IRR: Final[str] = "V2 BB: Spot IRR"
 V2_BB_MARGIN_PER_SAT_YR_MM: Final[str] = "V2 BB: margin per sat-yr ($mm)"
@@ -1441,7 +1461,6 @@ V2_DTC_BASE_DEORBIT_END_YEAR: Final[str] = "V2 DTC base deorbit end year"
 V2_DTC_BASE_DEORBIT_START_YEAR: Final[str] = "V2 DTC base deorbit start year"
 V2_DTC_EFFECTIVE_GBPS: Final[str] = "V2 DTC effective Gbps"
 V2_DTC_SAT_MASS_KG: Final[str] = "V2 DTC sat mass (kg)"
-V2_DTC_SHARE_OF_NEW_DEPLOYMENT_FRAC: Final[str] = "V2 DTC share of new deployment (frac)"
 V2_DTC_CAPEX_SLUG_PER_SAT_MM: Final[str] = "V2 DTC: CapEx slug per sat ($mm)"
 V2_DTC_SPOT_IRR: Final[str] = "V2 DTC: Spot IRR"
 V2_DTC_MARGIN_PER_SAT_YR_MM: Final[str] = "V2 DTC: margin per sat-yr ($mm)"
@@ -1488,9 +1507,7 @@ WRIGHT_S_LAW_FLOOR_PCT_OF_BASE_SUBSYSTEM_COST: Final[str] = "Wright's Law floor 
 WRIGHT_S_LAW_MULTIPLIER: Final[str] = "Wright's Law multiplier"
 YEAR: Final[str] = "YEAR"
 YEAR_OFFSET: Final[str] = "Year offset"
-SUPERSEDED_A8_7_ODC_POWER_DENSITY_ANCHOR_2025_KW_TON: Final[str] = "[SUPERSEDED A8.7] ODC power density anchor 2025 (kW/ton)"
-SUPERSEDED_A8_7_ODC_POWER_DENSITY_TARGET_KW_TON: Final[str] = "[SUPERSEDED A8.7] ODC power density target (kW/ton)"
-SUPERSEDED_A8_7_SAT_BASE_MASS_NON_THERMAL_KG: Final[str] = "[SUPERSEDED A8.7] Sat base mass (non-thermal) (kg)"
+CONSOLIDATED_VIA_MERGER_2025_REPORTING_ONLY_NOT_PART_OF_FORWARD_ODC_APPS_THESIS: Final[str] = "consolidated via merger; 2025 reporting only — not part of forward ODC/Apps thesis"
 EXP_IRR_BB: Final[str] = "exp(β·IRR) BB"
 EXP_IRR_DTC: Final[str] = "exp(β·IRR) DTC"
 EXP_IRR_AI_COMPUTE: Final[str] = "exp(β·IRR): AI-Compute"
@@ -1501,22 +1518,28 @@ EXP_IRR_TERRESTRIAL: Final[str] = "exp(β·IRR): Terrestrial"
 G_WACC: Final[str] = "g ＼ WACC →"
 KG_BINDING_FLAG_1_CAPACITY_BINDS: Final[str] = "kg-binding flag (1=capacity binds)"
 LESS_INTER_MODULE_ELIMINATIONS: Final[str] = "less inter-module eliminations"
+XAI_CAPEX_MM: Final[str] = "xAI CapEx ($mm)"
+XAI_COST_OF_REVENUE_MM: Final[str] = "xAI Cost of revenue ($mm)"
+XAI_INCOME_FROM_OPS_MM: Final[str] = "xAI Income from ops ($mm)"
+XAI_R_D_MM: Final[str] = "xAI R&D ($mm)"
+XAI_RESTRUCTURING_MM: Final[str] = "xAI Restructuring ($mm)"
+XAI_REVENUE_MM: Final[str] = "xAI Revenue ($mm)"
+XAI_SG_A_MM: Final[str] = "xAI SG&A ($mm)"
 EXP_IRR: Final[str] = "Σ exp(β·IRR)"
 EXP_WITHIN_AI: Final[str] = "Σ exp: within-AI"
 SPILLOVER_WEIGHT: Final[str] = "Σ spillover weight"
-STANDALONE_ANALYST_ANCHORS_SL_AI_CL_AISTACK_L_M: Final[str] = "Σ standalone analyst anchors (SL+AI+CL+AIStack+L/M)"
 D_A_CAPEX_CHECK_1_OK: Final[str] = "Σ-D&A ≤ Σ-CapEx check (1=OK)"
 REDUNDANT_AI_APPS_TAM_M_SUBS: Final[str] = "⊘ REDUNDANT — AI Apps TAM (M subs)"
 REDUNDANT_AI_APPS_ADOPTION_CEILING_OF_TAM: Final[str] = "⊘ REDUNDANT — AI Apps adoption ceiling (% of TAM)"
 REDUNDANT_AI_APPS_ADOPTION_STEEPNESS_K: Final[str] = "⊘ REDUNDANT — AI Apps adoption steepness k"
 REDUNDANT_AI_APPS_BLENDED_ARPU_SUB_YR: Final[str] = "⊘ REDUNDANT — AI Apps blended ARPU ($/sub/yr)"
-REDUNDANT_AI_APPS_BLENDED_ARPU_CAGR_YR: Final[str] = "⊘ REDUNDANT — AI Apps blended ARPU CAGR (/yr)"
 REDUNDANT_AI_APPS_BLENDED_TOKENS_PER_SUB_M_SUB_YR: Final[str] = "⊘ REDUNDANT — AI Apps blended tokens per sub (M/sub/yr)"
 REDUNDANT_AI_APPS_SUBS_2025_SEED_M: Final[str] = "⊘ REDUNDANT — AI Apps subs 2025 seed (M)"
-REDUNDANT_AI_APPS_TOKENS_PER_SUB_CAGR_YR: Final[str] = "⊘ REDUNDANT — AI Apps tokens-per-sub CAGR (/yr)"
-REDUNDANT_AI_APPS_TOKENS_PER_SUB_GROWTH_CAP: Final[str] = "⊘ REDUNDANT — AI Apps tokens-per-sub growth cap (×)"
 REDUNDANT_BLENDED_ARPU_SUPERSEDED_BY_5_BUCKET_BLOCK_ROWS_224_255: Final[str] = "⊘ REDUNDANT — blended ARPU (superseded by 5-bucket block, rows 224-255)"
 REDUNDANT_BLENDED_TOKENS_SUB_SUPERSEDED_BY_5_BUCKET_BLOCK_ROWS_224_255: Final[str] = "⊘ REDUNDANT — blended tokens/sub (superseded by 5-bucket block, rows 224-255)"
+L_2025_S_1_ACTUALS_STAMP_SOURCE_STRUCTURAL_NO_MC: Final[str] = "▸ 2025 S-1 ACTUALS (stamp source — structural, no MC)"
+L_2025_S_1_RECONCILIATION_FY2025_ACTUALS_TIES_TO_TOTAL_REPORTABLE_18_674M: Final[str] = "▸ 2025 S-1 RECONCILIATION (FY2025 actuals — ties to Total Reportable $18,674M)"
+L_2025_S_1_REPORTABLE_BRIDGE_COL_D_MEMO_FEEDS_2025_EBIT_TIE: Final[str] = "▸ 2025 S-1 REPORTABLE BRIDGE (col D memo — feeds 2025 EBIT tie)"
 L_2026_LAUNCH_PACING_CASH_RESERVE: Final[str] = "▸ 2026 LAUNCH PACING & CASH RESERVE"
 ABSORPTIVE_CAPACITY_WATER_FILL_TOP_LEVEL_A_REFRESH_V4_102: Final[str] = "▸ ABSORPTIVE-CAPACITY WATER-FILL (top-level, A-refresh V4.102)"
 AI_COMPUTE_OUT_CONTRACT: Final[str] = "▸ AI - COMPUTE OUT CONTRACT"
@@ -1524,7 +1547,6 @@ AI_COMPUTE_OUT_CONTRACT_EXTENDED: Final[str] = "▸ AI - COMPUTE OUT CONTRACT �
 AI_COMPUTE_MODULE: Final[str] = "▸ AI / COMPUTE MODULE"
 AI_APPS_5_BUCKET_DEMAND_BUILD_REPLACES_BLENDED_R116_118: Final[str] = "▸ AI APPS: 5-BUCKET DEMAND BUILD (replaces blended R116-118)"
 AI_APPS_PER_CUSTOMER_YEAR_SUB_LINE_3_L_3: Final[str] = "▸ AI APPS: per customer-year (sub-line 3, L=3)"
-AI_SEGMENT_DATA: Final[str] = "▸ AI segment data"
 AI_COMPUTE_SHARED_DRIVERS_DERIVED_ON_TAB_NO_DEMAND_CURVE: Final[str] = "▸ AI-COMPUTE SHARED DRIVERS (derived on-tab; no demand curve)"
 AI_AI_APPS: Final[str] = "▸ AI: AI Apps"
 AI_AI_APPS_CONSOLIDATED_A2_2: Final[str] = "▸ AI: AI Apps (consolidated, A2.2)"
@@ -1550,7 +1572,6 @@ ALLOCATOR_IN_CROSS_TAB_READS: Final[str] = "▸ ALLOCATOR IN (cross-tab reads)"
 ALLOCATOR_OUT_CANONICAL_LABELS_RULE_12_SOURCES: Final[str] = "▸ ALLOCATOR OUT (canonical labels: Rule 12 sources)"
 ALLOCATOR_ODC_CONSTRUCTION_FACILITY_DEBT_LAYER: Final[str] = "▸ ALLOCATOR: ODC Construction Facility (debt layer)"
 ALLOCATOR_TERAFAB_CONSTRUCTION_FACILITY_DEBT_LAYER: Final[str] = "▸ ALLOCATOR: Terafab Construction Facility (debt layer)"
-BB_DTC_MARKET_MIX: Final[str] = "▸ BB/DTC market mix"
 BLOCK_A_ALLOCATOR_IN_CROSS_TAB_READS: Final[str] = "▸ BLOCK A: ALLOCATOR IN (cross-tab reads)"
 BLOCK_B_LAUNCH_DEMAND_FLEET_BUILD: Final[str] = "▸ BLOCK B: LAUNCH DEMAND & FLEET BUILD"
 BLOCK_C_REVENUE_EXTERNAL_ONLY: Final[str] = "▸ BLOCK C: REVENUE (external only)"
@@ -1562,7 +1583,6 @@ BLOCK_H_PER_VEHICLE_IRR_ENGINE_V4_CANONICAL_SPOT_ONLY: Final[str] = "▸ BLOCK H
 BLOCK_I_ALLOCATOR_OUT_AMENDED_CANONICAL_LABELS: Final[str] = "▸ BLOCK I: ALLOCATOR OUT (amended canonical labels)"
 BLOCK_J_CONSERVATION_MEMOS_VERIFICATION_ONLY_EXCL_SUMS: Final[str] = "▸ BLOCK J, CONSERVATION MEMOS (verification only, excl. sums)"
 BV_ENGINE_SOTP_VALUATION_TRACK_OFF_P_L: Final[str] = "▸ BV ENGINE: SoTP / VALUATION TRACK (off-P&L)"
-BANDWIDTH_FLOW_SUPERSEDED_BY_THE_AI_COMPUTE_SECTION_SEE_ORBITAL_COMPUTE_STARLINK_ELIMINATION: Final[str] = "▸ Bandwidth flow → superseded by the AI/Compute section; see orbital-compute↔Starlink elimination"
 CAPACITY_PRIORITY_ALLOCATION: Final[str] = "▸ CAPACITY-PRIORITY ALLOCATION"
 CAPEX_MM_2: Final[str] = "▸ CAPEX ($mm)"
 CAPEX_MODULE_FCF: Final[str] = "▸ CAPEX → MODULE FCF"
@@ -1576,7 +1596,6 @@ CHIP_FAB_FACILITY_ENGINE_TERAFAB: Final[str] = "▸ CHIP-FAB FACILITY ENGINE (Te
 CHIP_FAB_INTEGRATION_A5_TERAFAB_R_D_BOUNDARY_TIE: Final[str] = "▸ CHIP-FAB INTEGRATION (A5): Terafab R&D + boundary tie"
 COGS_MM_2: Final[str] = "▸ COGS ($mm)"
 COGS_GROSS_PROFIT: Final[str] = "▸ COGS → GROSS PROFIT"
-COMPARABLES_CROSS_CHECK_B: Final[str] = "▸ COMPARABLES CROSS-CHECK ($B)"
 CONSERVATION: Final[str] = "▸ CONSERVATION"
 CONSERVATION_INTRA_TAB_MUST_0_RULE_5_21: Final[str] = "▸ CONSERVATION (intra-tab; must = 0: Rule 5/21)"
 CONSERVATION_CALIBRATION: Final[str] = "▸ CONSERVATION + CALIBRATION"
@@ -1587,10 +1606,6 @@ CUSTOMER_LAUNCH_MODULE_SPACE_SEGMENT_2_STREAM_REVENUE_R_D_ABOVE_EBITDA: Final[st
 CASH_ALLOCATION_ENGINE_INPUTS: Final[str] = "▸ Cash Allocation Engine inputs"
 CASH_POOL_BOUNDARY_INPUTS: Final[str] = "▸ Cash pool boundary inputs"
 COMPARABLES_ANCHORS_B: Final[str] = "▸ Comparables anchors ($B)"
-CONSTELLATION_OPENING_BALANCES_MACH33_HISTORICAL_ANCHORS_HARD: Final[str] = "▸ Constellation opening balances (Mach33 historical anchors: hard)"
-CORPORATE_FACILITIES_CAPEX_MM_YR: Final[str] = "▸ Corporate facilities CapEx ($mm/yr)"
-CORPORATE_HISTORICAL_CAPITAL_BASE: Final[str] = "▸ Corporate historical capital base"
-CORPORATE_USEFUL_LIVES: Final[str] = "▸ Corporate useful lives"
 CURVE_EVALUATORS_YEAR_ROW_READ_BY_THE_STARLINK_MODULE: Final[str] = "▸ Curve evaluators (year-row, read by the Starlink module)"
 CUSTOMER_LAUNCH_IRR_LIFE_CLAMPS: Final[str] = "▸ Customer Launch IRR life clamps"
 D_A_MM_2: Final[str] = "▸ D&A ($mm)"
@@ -1598,19 +1613,18 @@ DEMAND_DRIVEN_FLEET_SIZING_FORWARD_DEMAND_PULL_NO_CIRCULAR_REFERENCE: Final[str]
 DIAGNOSTIC_2025_VS_Q4_25_ANCHORS_NARROW_GATE_NON_HALT: Final[str] = "▸ DIAGNOSTIC: 2025 vs Q4'25 anchors (narrow-gate, non-halt)"
 DISCOUNT_FACTORS_1_1_WACC_YEAR_ASOF_0_BEFORE_ASOF: Final[str] = "▸ DISCOUNT FACTORS: 1/(1+WACC)^(year−asof); 0 before asof"
 DUAL_TRACK_SUMMARY_GROUP_EV_BY_AS_OF_B: Final[str] = "▸ DUAL-TRACK SUMMARY: Group EV by as-of ($B)"
-DEORBIT_PARAMETERS: Final[str] = "▸ Deorbit parameters"
 DEPRECIATION_PARAMETERS: Final[str] = "▸ Depreciation parameters"
 DUAL_REVENUE_MODEL: Final[str] = "▸ Dual revenue model"
 EBIT_BY_SEGMENT_MM: Final[str] = "▸ EBIT: by segment ($mm)"
 EBITDA_EBIT_R_D_IS_IN_MODULE_OPEX_ABOVE_ONLY_D_A_BELOW: Final[str] = "▸ EBITDA → EBIT (R&D is in Module OpEx above; only D&A below)"
 EBITDA_BY_SEGMENT_MM: Final[str] = "▸ EBITDA: by segment ($mm)"
-ECHOSTAR_SPECTRUM_RECLASSIFIED_AS_RECURRING_OPEX_LICENCE_FEE: Final[str] = "▸ EchoStar spectrum reclassified as recurring OpEx licence fee"
 F9_LAUNCHES_FLOWN_COUNT_YR_LEGACY_WINDING_DOWN: Final[str] = "▸ F9 LAUNCHES FLOWN (count/yr) — legacy, winding down"
 F9_LAUNCH_GLIDE_PATH_CUSTOMER_LAUNCH_IN_TO_VEHICLE_BUILD: Final[str] = "▸ F9 launch glide path (Customer Launch IN to Vehicle Build)"
 FACILITIES_BASE_ANCHORS_2025_STANDING_CAPACITY_SANITY_DENOMINATOR: Final[str] = "▸ FACILITIES BASE ANCHORS (2025 standing capacity + sanity denominator)"
 FACILITIES_BUILD_CAPACITY_STEP_FACILITY_CAPEX: Final[str] = "▸ FACILITIES BUILD: capacity-step facility CapEx"
 FREE_CASH_FLOW_BY_SEGMENT_MM: Final[str] = "▸ FREE CASH FLOW: by segment ($mm)"
 FALCON_9_PHYSICAL_COST_PARAMETERS: Final[str] = "▸ Falcon 9 physical + cost parameters"
+GLIDE_PATH_SCALARS_HYGIENE_CONVERSION_SPRINT_4_20: Final[str] = "▸ GLIDE-PATH SCALARS (hygiene conversion — Sprint 4.20)"
 GROSS_PROFIT_MM_2: Final[str] = "▸ GROSS PROFIT ($mm)"
 HQ_FACILITY_CORPORATE_GROUP: Final[str] = "▸ HQ FACILITY (CORPORATE → GROUP)"
 INPUTS_READ_FROM_ASSUMPTIONS: Final[str] = "▸ INPUTS READ FROM ASSUMPTIONS"
@@ -1645,22 +1659,17 @@ MODULE_SOTP_GORDON_PERPETUITY_GROWTH_TERMINAL_MM: Final[str] = "▸ MODULE SoTP:
 MARS_SPECIFIC: Final[str] = "▸ Mars-specific"
 MODULE_WIDE_PARAMETERS: Final[str] = "▸ Module-wide parameters"
 NEW_S_1_DERIVED_INPUTS: Final[str] = "▸ NEW S-1 derived inputs"
-NEW_STARLINK_ROWS_FROM_S_1_DISCLOSURES: Final[str] = "▸ NEW Starlink rows from S-1 disclosures"
 ODC_CONSTRUCTION_FACILITY_DEBT_LAYER_FUNDS_ODC_SAT_ROLLOUT: Final[str] = "▸ ODC CONSTRUCTION FACILITY (debt layer — funds ODC sat rollout)"
 ORBITAL_DC_PER_COMPUTE_SAT_YEAR_SUB_LINE_1_L_5: Final[str] = "▸ ORBITAL DC: per compute sat-year (sub-line 1, L=5)"
-OPEX_CALIBRATION_TARGETS: Final[str] = "▸ OpEx calibration targets"
 PER_SAT_IRR_ENGINE_V4_CANONICAL_PER_COHORT_ONE_COST_BASE: Final[str] = "▸ PER-SAT IRR ENGINE (v4 canonical): per cohort, one cost base"
 PER_SHIP_COST_BUILD: Final[str] = "▸ PER-SHIP COST BUILD"
 PER_MODULE_ASSET_LIFE_L_CANONICAL_IRR_FORMULA_INPUT: Final[str] = "▸ Per-module asset life L (canonical IRR formula input)"
 QUEUE_GATE_LIVE_EVERY_YEAR: Final[str] = "▸ QUEUE GATE: LIVE every year"
 R_D_MM: Final[str] = "▸ R&D ($mm)"
 R_D_ATTRIBUTION_RULES: Final[str] = "▸ R&D attribution rules"
-R_D_LUNAR_MARS_PROFILE_YEAR_ROW_PRE_REVENUE: Final[str] = "▸ R&D: Lunar/Mars ($-profile year-row, pre-revenue)"
 REVENUE_2: Final[str] = "▸ REVENUE"
 REVENUE_MM_2: Final[str] = "▸ REVENUE ($mm)"
 REVENUE_SEGMENT_SUB_LINES_MM: Final[str] = "▸ REVENUE — SEGMENT SUB-LINES ($mm)"
-S_1_NEW_CAPEX_CALIBRATION_TARGETS: Final[str] = "▸ S-1 NEW CapEx calibration targets"
-S_1_DERIVED_VALUATION_TRIANGULATION_MEMOS: Final[str] = "▸ S-1 derived valuation triangulation memos"
 SATELLITE_MFG_FACILITY_ENGINE_REDMOND: Final[str] = "▸ SATELLITE-MFG FACILITY ENGINE (Redmond)"
 SEGMENT_MIX_OF_GROUP_REVENUE: Final[str] = "▸ SEGMENT MIX — % OF GROUP REVENUE"
 SENSITIVITY_GROUP_EV_AS_OF_2026_GORDON_B: Final[str] = "▸ SENSITIVITY: Group EV as-of 2026, GORDON ($B)"
@@ -1672,14 +1681,10 @@ STARSHIP_LAUNCHES_FLOWN_COUNT_YR: Final[str] = "▸ STARSHIP LAUNCHES FLOWN (cou
 STARSHIP_PRODUCTION_FACILITY_STARFACTORY_GIGABAY_CAPACITY_SCALING: Final[str] = "▸ STARSHIP PRODUCTION FACILITY (Starfactory/Gigabay): capacity + scaling"
 SUB_SEGMENT_MIX_OF_OWN_SEGMENT_REVENUE: Final[str] = "▸ SUB-SEGMENT MIX — % OF OWN SEGMENT REVENUE"
 SUBSCRIBERS_HARDWARE: Final[str] = "▸ SUBSCRIBERS + HARDWARE"
-SATELLITE_PHYSICAL: Final[str] = "▸ Satellite physical"
 SHARED_UNATTRIBUTABLE_CORPORATE_R_D_GROUP_RESIDUAL: Final[str] = "▸ Shared / unattributable corporate R&D (Group, residual)"
 SOTP_EV_EBITDA_MULTIPLES_TERMINAL_AT_HORIZON: Final[str] = "▸ SoTP EV/EBITDA multiples (terminal, at horizon)"
 SOTP_TERMINAL_MEMO: Final[str] = "▸ SoTP TERMINAL MEMO"
 SOTP_MULTIPLES_EV_REVENUE_AT_2050: Final[str] = "▸ SoTP multiples (EV/Revenue at 2050)"
-STARLINK_R_D_ATTRIBUTION_RULE: Final[str] = "▸ Starlink R&D attribution rule"
-STARSHIELD: Final[str] = "▸ Starshield"
-STARSHIP_R_D_TOTAL_MM_YR_SPLITS_ACROSS_MODULES_BY_LAUNCH_SHARE: Final[str] = "▸ Starship R&D total ($mm/yr): splits across modules by launch share"
 STARSHIP_CADENCE_WRIGHT_S_LAW_ON_CUM_UPMASS: Final[str] = "▸ Starship cadence (Wright's Law on cum upmass)"
 STARSHIP_TIME_VARYING_INPUTS_YEAR_ROWS: Final[str] = "▸ Starship time-varying inputs (year-rows)"
 STARSHIP_VEHICLE_PHYSICAL_COST_PARAMETERS: Final[str] = "▸ Starship vehicle physical + cost parameters"
@@ -1698,9 +1703,9 @@ VEHICLE_BUILD_EXPOSURES_ADDED_2026_06_01_RESOLVE_VB_FLEET_PULLS_CANONICAL_UNIFOR
 VEHICLE_BUILD_STARSHIP_FLEET_WRIGHT_S_COST_CADENCE_FLEET_LEVEL_LAUNCH_LEARNING: Final[str] = "▸ VEHICLE BUILD: Starship fleet Wright's cost + cadence (fleet-level launch learning)"
 VEHICLE_BUILD_CLAIM_DEMAND_PULLED_ONE_PERIOD_LAG: Final[str] = "▸ Vehicle build claim (demand-pulled, one-period lag)"
 WACC_RISK_PREMIA: Final[str] = "▸ WACC + risk premia"
-WACC_COMPONENT_MEMOS_NOT_USED_IN_FORMULAS: Final[str] = "▸ WACC component memos (not used in formulas)"
 WRIGHT_S_LAW_PARAMETERS: Final[str] = "▸ Wright's Law parameters"
 YEAR_ROW_COST_CURVES: Final[str] = "▸ Year-row cost curves"
+XAI_CONSOLIDATED_2025_REPORTED_ONLY: Final[str] = "▸ xAI (consolidated — 2025 reported only)"
 A8_6_ODC_THERMAL_RECALIBRATION_KW_TON_GLIDE_DYNAMIC_TDP: Final[str] = "▸ §A8.6: ODC THERMAL RECALIBRATION (kW/ton glide + dynamic TDP)"
 IRR_ALLOCATION_SOFT_FLOOR: Final[str] = "▸ §IRR allocation soft floor"
 
@@ -1714,6 +1719,9 @@ CORPORATE_IT_CAPEX_MM_YR_FLAT: Final[str] = "Corporate IT CapEx ($mm/yr, flat)"
 CORPORATE_IT_USEFUL_LIFE_YEARS: Final[str] = "Corporate IT useful life (years)"
 CUSTOMER_LAUNCH_CASH_DEMAND_LARGE_DEFAULT_MM: Final[str] = "Customer Launch cash demand large default ($mm)"
 CUSTOMER_LAUNCH_REVENUE_TRAJECTORY_STUB_MM: Final[str] = "Customer Launch revenue trajectory stub ($mm)"
+CUSTOMER_LAUNCH_R_D_CAGR_TAPER: Final[str] = "Customer Launch R&D: CAGR (taper)"
+CUSTOMER_LAUNCH_R_D_END_STATE_FLOOR: Final[str] = "Customer Launch R&D: end-state % (floor)"
+DTC_ARPU_SUB_MO_YEAR_ROW: Final[str] = "DTC ARPU ($/sub/mo): year-row"
 ECHOSTAR_MID_BAND_CAPEX_MM_YEAR_ROW: Final[str] = "EchoStar mid-band CapEx ($mm) — year-row"
 GENERAL_ENGINEERING_FACILITIES_CAPEX_MM_YR_FLAT: Final[str] = "General engineering facilities CapEx ($mm/yr, flat)"
 GENERAL_ENGINEERING_FACILITIES_LIFE_YEARS: Final[str] = "General engineering facilities life (years)"
@@ -1722,6 +1730,7 @@ HQ_BUILDINGS_USEFUL_LIFE_YEARS: Final[str] = "HQ buildings useful life (years)"
 IMPAIRMENT_CHARGES_MM_YEAR_ROW: Final[str] = "Impairment charges ($mm/yr) — year-row"
 LAUNCHES_PER_STARSHIP_VEHICLE_PER_YEAR_CADENCE_VARIANT_BLEND_USED_FOR_SIZING: Final[str] = "Launches per Starship vehicle per year (cadence × variant blend, used for sizing)"
 MARS_MOON_R_D_MM_YR_YEAR_ROW: Final[str] = "Mars/Moon R&D ($mm/yr) — year-row"
+MEMO_AI_SEGMENT_TOTAL_REVENUE_2025_M: Final[str] = "Memo: AI segment total revenue 2025 ($M)"
 ODC_CASH_DEMAND_LARGE_DEFAULT_MM: Final[str] = "ODC cash demand large default ($mm)"
 ODC_KG_DEMAND_LARGE_DEFAULT_KG: Final[str] = "ODC kg demand large default (kg)"
 ODC_R_D_CAGR_TAPER: Final[str] = "ODC R&D — CAGR (taper)"
@@ -1741,6 +1750,7 @@ SATELLITE_USEFUL_LIFE_V3_DTC_YEARS: Final[str] = "Satellite useful life — V3 D
 SHARE_BASED_COMPENSATION_MM_YEAR_ROW: Final[str] = "Share-based compensation ($mm/yr) — year-row"
 SPECTRUM_USEFUL_LIFE_YEARS: Final[str] = "Spectrum useful life (years)"
 STARSHIP_PAYLOAD_2025_BASELINE_KG_TO_LEO_FULLY_REUSABLE_MODE: Final[str] = "Starship payload — 2025 baseline (kg-to-LEO, fully reusable mode)"
+STARTING_CASH_POSITION_EOY_2024_MM: Final[str] = "Starting cash position EoY 2024 ($mm)"
 V2_BB_FACILITY_CAPEX_PER_SAT_MM_SAT: Final[str] = "V2 BB facility CapEx per sat ($mm/sat)"
 V2_BB_SAT_UNIT_COST_MM_SAT: Final[str] = "V2 BB sat unit cost ($mm/sat)"
 V2_DTC_FACILITY_CAPEX_PER_SAT_MM_SAT: Final[str] = "V2 DTC facility CapEx per sat ($mm/sat)"
@@ -1765,9 +1775,11 @@ CANONICAL_LABELS: Final[frozenset[str]] = frozenset(
         "(cols C:F = as-of)",
         "(retired)",
         "(retired: NBV reported as total on R115; output-BV memo on R76/R77)",
+        "2025 is stamped to the S-1 reported basis (3-segment Space/Conn/AI; D&A inside Cost of revenue; xAI consolidated for AI). The model's native conservation identities assume the 4-segment computed basis (Lunar incl.; D&A in the EBITDA→EBIT bridge), so checks D8–D11 net against the stamp and read FAIL for 2025 only. 2026+ recompute from drivers and remain OK. Basis difference, not corruption.",
         "7 buckets: sat-mfg (Redmond), Starship-vehicle (Gigabay @100/yr), pads, engines, terminals (toggle-OFF), ground stations, HQ→Group. Exposes CapEx + D&A totals by label.",
         "ADCS+avionics $/sat",
         "AI - Compute",
+        "AI - Compute module — orbital + terrestrial datacenter build, compute revenue & waterfall",
         "AI - Compute — AI Apps (external)",
         "AI - Compute — Orbital DC (external)",
         "AI - Compute — Terrestrial DC (external)",
@@ -1784,7 +1796,6 @@ CANONICAL_LABELS: Final[frozenset[str]] = frozenset(
         "AI Apps: paying users (M)",
         "AI Apps: total revenue ($mm)",
         "AI Apps: total tokens (T)",
-        "AI STACK — RETIRED, superseded by the AI/Compute section. Memos below retained.",
         "AI Stack R&D CAGR",
         "AI Stack R&D floor pct",
         "AI Stack R&D start pct",
@@ -1884,7 +1895,7 @@ CANONICAL_LABELS: Final[frozenset[str]] = frozenset(
         "Attributed R&D ($mm): component of Module OpEx total (row 87)",
         "Attributed R&D: AI - Compute",
         "Attributed R&D: Customer Launch",
-        "Attributed R&D: Customer Launch (Starship R&D lifted to Shared)",
+        "Attributed R&D: Customer Launch (sustaining floor + Starship launch-share; platform R&D net in Shared)",
         "Attributed R&D: Lunar - Mars",
         "Avg $/Gbps BB at Q (price-at-Q)",
         "Avg $/Gbps DTC at Q (price-at-Q)",
@@ -1974,16 +1985,18 @@ CANONICAL_LABELS: Final[frozenset[str]] = frozenset(
         "Booster fleet BoY (units)",
         "Booster fleet EoY (units)",
         "Booster mfg per stack ($mm)",
+        "Booster reuse cap level ×",
         "Boosters built (fleet)",
         "Boosters built this year (= Vehicle Build Boosters built (fleet))",
         "Boosters needed (fleet)",
         "Boosters retired (fleet)",
         "Boundary tie: 'Facilities Build' chips − (ODC R55 + Terr R94)×toggle; must = 0",
         "Broadband ARPU ($/sub/mo): year-row",
+        "Broadband ARPU CAGR",
+        "Broadband ARPU floor ($/mo)",
         "CAC slug per customer ($)",
         "CAPACITY (Starship + F9)",
         "CAPACITY + CapEx + TRANSFER REVENUE",
-        "CAPEX (corporate + spectrum + module aggregation)",
         "COGS",
         "COGS ($mm)",
         "COGS total",
@@ -2014,6 +2027,7 @@ CANONICAL_LABELS: Final[frozenset[str]] = frozenset(
         "Capacity (Gbps)",
         "Capacity available after LM (kg)",
         "Capital Deployed (cumulative)",
+        "Capital expenditures",
         "Capital lifetime: BV straight-line dep (yrs)",
         "Capital lifetime: BV straight-line depreciation (years)",
         "Capped: AI-Compute ($mm)",
@@ -2030,6 +2044,7 @@ CANONICAL_LABELS: Final[frozenset[str]] = frozenset(
         "Carve-out effective % (IRR-responsive)",
         "Carve-out floor ($mm/yr)",
         "Carve-out pre-2028 R&D-only override ($mm/yr)",
+        "Cash Allocation Engine — cash pool waterfall + module funding allocator",
         "Cash BoY ($mm)",
         "Cash EoY ($mm)",
         "Cash available for year ($mm)",
@@ -2055,15 +2070,13 @@ CANONICAL_LABELS: Final[frozenset[str]] = frozenset(
         "Chips demanded this year (count)  ◄ AI-Compute",
         "Chips deployed (count)",
         "Chips per sat",
+        "Commercial launch market CAGR",
         "Commercial launch market size ($mm/year): year-row",
         "Commercial launch market size ($mm/yr)",
         "Comms ISL set $/sat",
-        "Comp anchor: AI Stack standalone",
         "Comp anchor: AI/Compute standalone (CoreWeave-anchored)",
         "Comp anchor: Customer Launch standalone (Rocket Lab)",
-        "Comp anchor: Group EV (Brant internal)",
         "Comp anchor: Group EV (Morgan Stanley public)",
-        "Comp anchor: Lunar / Mars (NASA HLS lifetime)",
         "Comp anchor: Starlink standalone (Bernstein/JPM)",
         "Compute build headroom buffer (frac)",
         "Compute power per sat (kW)",
@@ -2083,6 +2096,7 @@ CANONICAL_LABELS: Final[frozenset[str]] = frozenset(
         "Corporate SG&A ($mm)",
         "Corporate, IT & HQ CapEx ($mm)",
         "Corporate, IT & HQ CapEx (% of Group revenue)",
+        "Cost of revenue",
         "Cum Starship boosters built (cumulative, from 0)",
         "Cum Starship boosters retired (cumulative, from 0)",
         "Cum Starship experience units (Wright's-Law cost basis, incl. 2024 baseline + F9-inherited seed; NOT the standing fleet)",
@@ -2096,11 +2110,9 @@ CANONICAL_LABELS: Final[frozenset[str]] = frozenset(
         "Customer Launch",
         "Customer Launch (commercial)",
         "Customer Launch F9",
-        "Customer Launch R&D % (CAGR)",
-        "Customer Launch R&D % (floor)",
+        "Customer Launch R&D % (CAGR) — retired (flat sustaining rate, see A111)",
+        "Customer Launch R&D % (floor) — retired (flat sustaining rate, see A111)",
         "Customer Launch R&D % (start)",
-        "Customer Launch R&D: CAGR (taper)",
-        "Customer Launch R&D: end-state % (floor)",
         "Customer Launch R&D: start % of external rev",
         "Customer Launch module SG&A (% of external rev)",
         "Customer Launch module — module = Space segment · 2-stream revenue $4,086M · full waterfall, R&D above EBITDA · separate F9 + Starship D&A · Spot IRR · per-launch D&A interface",
@@ -2125,7 +2137,6 @@ CANONICAL_LABELS: Final[frozenset[str]] = frozenset(
         "DF: as-of 2030",
         "DF: as-of 2035",
         "DF: as-of 2040",
-        "DTC ARPU ($/sub/mo): year-row",
         "DTC DEMAND CURVE (piecewise-linear Q→Revenue lookup)",
         "DTC FLEET + BANDWIDTH",
         "DTC Gbps available for external Starlink revenue",
@@ -2194,7 +2205,6 @@ CANONICAL_LABELS: Final[frozenset[str]] = frozenset(
         "DTC TAM uplift ramp-end (yrs from 2025)",
         "DTC TAM uplift target: Starlink Mobile premium (×)",
         "DTC active Gbps (V2+V3 combined)",
-        "DTC avg subscribers (implied, M)",
         "DTC demand curve level multiplier",
         "DTC pool at-cost $/Gbps/yr",
         "Demand Curves: Starlink BB + DTC piecewise-linear lookup",
@@ -2206,6 +2216,7 @@ CANONICAL_LABELS: Final[frozenset[str]] = frozenset(
         "Demand-vs-supply CHECK (not a cap)",
         "Deployable area penalty (kg/m²)",
         "Deployment cap: MIN(demand, launch, pacing) (sats)",
+        "Depreciation & amortization",
         "Desired BB sats (pre-cap)",
         "Desired DTC sats (pre-cap)",
         "Desired Starship launches (current yr)",
@@ -2283,6 +2294,7 @@ CANONICAL_LABELS: Final[frozenset[str]] = frozenset(
         "F9 cadence per booster (flights/year, flat)",
         "F9 cadence per booster (flights/yr)",
         "F9 customer launch price ($mm/launch)",
+        "F9 customer launch price CAGR",
         "F9 customer launches (residual)",
         "F9 customer launches per year",
         "F9 fairing cost net of 75% recovery ($mm/flight)",
@@ -2291,6 +2303,7 @@ CANONICAL_LABELS: Final[frozenset[str]] = frozenset(
         "F9 internal launches per year (Starlink-driven)",
         "F9 launch capacity (launches/yr)",
         "F9 launches V2-Starlink final year",
+        "F9 launches glide level ×",
         "F9 launches glide path (per year)",
         "F9 launches per year",
         "F9 lifetime reuses per booster",
@@ -2304,6 +2317,7 @@ CANONICAL_LABELS: Final[frozenset[str]] = frozenset(
         "F9 sats per launch (V2 packing)",
         "F9 starting fleet at 2025 SoY (boosters)",
         "F9 total launch capacity (launches/yr)",
+        "F9 variable cost CAGR",
         "F9 variable cost per launch ($mm/launch)",
         "F9 vehicle life L (years)",
         "F9: CapEx slug per vehicle ($mm)",
@@ -2316,7 +2330,6 @@ CANONICAL_LABELS: Final[frozenset[str]] = frozenset(
         "FCF: AI - Compute",
         "FCF: Corporate (cost centre)",
         "FCF: Customer Launch",
-        "FCF: Customer Launch (ex-Starship R&D; lifted to corporate)",
         "FCF: Group DCF subtotal (SL+CL+AI+Corp; excl L/M)",
         "FCF: Lunar - Mars",
         "FCF: Starlink",
@@ -2336,7 +2349,6 @@ CANONICAL_LABELS: Final[frozenset[str]] = frozenset(
         "Final BB sats",
         "Final DTC sats",
         "First mission year (Lunar Mars)",
-        "Flag: rev-module SoTP<0, as-of2026 EBITDA (cnt, expect 0)",
         "Flag: rev-module SoTP<0, as-of2026 Exit (cnt, expect 0)",
         "Flag: rev-module SoTP<0, as-of2026 Gordon (cnt, expect 0)",
         "Fleet energy (GWh/yr)",
@@ -2370,6 +2382,7 @@ CANONICAL_LABELS: Final[frozenset[str]] = frozenset(
         "General & Administrative: start % of group rev",
         "Gigabay base capacity 2025 (ships/yr)",
         "Gigabay installed Starship build capacity (ships/yr)  ◄ Assumptions",
+        "Government launch market CAGR",
         "Government launch market size ($mm/year): year-row",
         "Government launch market size ($mm/yr)",
         "Grand total",
@@ -2381,6 +2394,7 @@ CANONICAL_LABELS: Final[frozenset[str]] = frozenset(
         "Gross Profit: Lunar - Mars",
         "Gross Profit: Starlink",
         "Gross compute revenue ($mm)",
+        "Gross kit shipments (M)",
         "Ground / network",
         "Ground station CapEx this year ($mm)",
         "Ground station build CapEx per station ($mm)",
@@ -2398,8 +2412,6 @@ CANONICAL_LABELS: Final[frozenset[str]] = frozenset(
         "Group D&A ($mm)",
         "Group EBIT ($mm)",
         "Group EBITDA ($mm)",
-        "Group EV anchor: Brant (internal)",
-        "Group EV anchor: Morgan Stanley (public)",
         "Group EV: EBITDA-multiple",
         "Group EV: Exit-multiple",
         "Group EV: Exit-multiple (revenue)",
@@ -2437,6 +2449,8 @@ CANONICAL_LABELS: Final[frozenset[str]] = frozenset(
         "IPO injection ($mm)",
         "IPO injection amount ($mm)",
         "IPO injection year",
+        "Impairment",
+        "Income (loss) from operations",
         "Individual paid: ARPU ($/user/yr)",
         "Individual paid: revenue ($mm)",
         "Individual paid: tokens (T)",
@@ -2482,6 +2496,7 @@ CANONICAL_LABELS: Final[frozenset[str]] = frozenset(
         "Labour unit productivity factor vs human baseline",
         "Labour unit productivity learning rate (%/yr)",
         "Labour unit useful life (yrs)",
+        "Launch & Dev revenue CAGR",
         "Launch & Development revenue ($mm)",
         "Launch & Development revenue ($mm/yr)",
         "Launch & Development revenue ($mm/yr): year-row",
@@ -2532,14 +2547,18 @@ CANONICAL_LABELS: Final[frozenset[str]] = frozenset(
         "Legacy V1.5 base deorbit start year",
         "Legacy V1.5 sat mass (kg)",
         "Lifetime reuses per booster (year cap)",
+        "Line ($mm)",
         "Lookup form: INDEX/MATCH(..., 1) bracket-find + manual linear interp. NO FORECAST / TREND. Per Memory Snapshot v3 §2.4.",
         "Lunar % payload as labour units",
         "Lunar - Mars",
+        "Lunar - Mars module — carve-out funded program, CapEx & book-value waterfall",
         "Lunar / Mars",
         "Lunar / Mars (BV×mult)",
         "Lunar / Mars: terminal BV multiplier",
         "Lunar Mars Module D&A ($mm)",
         "Lunar carve-out cash this year ($mm)",
+        "Lunar carve-out share decay",
+        "Lunar carve-out share floor",
         "Lunar fuel depot multiplier per outbound Starship",
         "Lunar hardware mass landed this year (kg)",
         "Lunar hardware mass per ship (kg)",
@@ -2585,6 +2604,7 @@ CANONICAL_LABELS: Final[frozenset[str]] = frozenset(
         "Max Starship build-capacity added per year (ships/yr)",
         "Max Starship launch capacity (kg/yr ceiling): 0 = off",
         "Memo: (retired: carve-out computed on Cash Allocation Engine R24)",
+        "Memo: 2025 (col D) conservation FAILs are EXPECTED — netted out against the SpaceX S-1 stamp.",
         "Memo: 2025 CapEx reconciliation",
         "Memo: 2025 D&A reconciliation",
         "Memo: 2025 DTC sub-line reconciliation",
@@ -2595,65 +2615,35 @@ CANONICAL_LABELS: Final[frozenset[str]] = frozenset(
         "Memo: AI EBITDA tie: Group EBITDA-AI (R54) − module ('AI - Compute' R169+R168); must = 0",
         "Memo: AI kg ration (diagnostic: ODC self-supplies, A7.1)",
         "Memo: AI placeholder strategic CapEx ($mm): engine, TEMP",
-        "Memo: AI segment AI Solutions & Infra 2025 ($M)",
-        "Memo: AI segment Adj EBITDA 2025 ($M)",
-        "Memo: AI segment Advertising 2025 ($M)",
-        "Memo: AI segment CapEx 2025 ($M)",
-        "Memo: AI segment R&D 2025 ($M)",
-        "Memo: AI segment nameplate compute draw EoY 2025 (GW)",
-        "Memo: AI segment total revenue 2025 ($M)",
-        "Memo: Accumulated depreciation Dec 31 2025 ($M)",
         "Memo: Attributed R&D, Starlink (in Module OpEx; excl. Total R&D)",
         "Memo: Attributed R&D, Starlink (now in Module OpEx; excl. from Total R&D)",
         "Memo: Average $/Gbps BB from curve",
         "Memo: Average $/Gbps DTC from curve",
-        "Memo: Avg customer payload size (mt/mission)",
         "Memo: Carve-out reserved vs Module CapEx gap ($mm)",
-        "Memo: Connectivity Adj EBITDA margin 2025: calibration target",
-        "Memo: Connectivity COGS 2025 ($M)",
-        "Memo: Connectivity COGS 2025 ($M): calibration",
-        "Memo: Connectivity Consumer revenue 2025 ($M)",
-        "Memo: Connectivity E&G incl Mobile revenue 2025 ($M)",
-        "Memo: Connectivity R&D 2025 ($M)",
-        "Memo: Connectivity R&D 2025 ($M): calibration",
-        "Memo: Connectivity SG&A 2025 ($M)",
-        "Memo: Connectivity SG&A 2025 ($M): calibration",
-        "Memo: Connectivity segment CapEx 2025 ($M)",
-        "Memo: Connectivity segment income from ops 2025 ($M): calibration",
-        "Memo: Countries served",
-        "Memo: Customer A concentration risk (US Gov NASA+DoW % consol)",
         "Memo: Customer Launch sub-lines − module Revenue",
         "Memo: DC chips deployed (ODC R55 + Terr R94)",
-        "Memo: Deferred revenue (Dec 31 2025) ($M)",
         "Memo: Demand dampener (price-at-Q, =MIN(1,(demand/supply)^b))",
         "Memo: EBITDA Margin %",
-        "Memo: EchoStar spectrum deal total ($M, S-1 audited)",
         "Memo: Engine cash Group FCF ($mm)",
-        "Memo: Enterprise churn: qualitative",
         "Memo: F9 available capacity (kg)",
         "Memo: F9 customer (model) vs S-1 customer − Starshield",
         "Memo: F9 customer launches (Customer Launch)",
         "Memo: F9 internal (model) vs S-1 core Starlink + Starshield",
         "Memo: F9 internal launches (Starlink-driven)",
         "Memo: F9 launch capacity (launches/yr)",
-        "Memo: F9 price set to $54.8M lands 2025 Launch Services = $2,575.6M (target $2,576M) + Launch & Delivery $1,510M → revenue $4,085.6M ≈ S-1 Space $4,086M.",
         "Memo: Gross Margin %",
-        "Memo: Group D&A 2025 variance vs $1,060M",
-        "Memo: Group EBITDA 2025 variance vs $8,690M",
+        "Memo: Group D&A 2025 variance vs S-1 $6,701M",
         "Memo: Group EV as-of2026 Exit $B",
         "Memo: Group EV as-of2026 Gordon $B",
-        "Memo: Group FCF 2025 variance vs $3,670M",
         "Memo: Group Revenue − Group P&L Group Revenue",
         "Memo: Group revenue (claims base) ($mm)",
         "Memo: HQ CapEx (2025 ≈ $53M reference)",
-        "Memo: Interface contract: Module OUT canonical labels",
+        "Memo: Impairment (Space, 2025 reported only)",
+        "Memo: Income from ops 2025 variance vs S-1 $(2,589)M",
         "Memo: L/M SoTP (BV-based, as-of 2026)",
         "Memo: L/M strategic premium over cash-drain PV",
-        "Memo: Loss from operations 2025 ($M): calibration",
         "Memo: Lunar - Mars sub-line − module Revenue",
         "Memo: Lunar surface missions cumulative",
-        "Memo: MNO addressable population (millions)",
-        "Memo: MNO partner count",
         "Memo: Mars surface missions cumulative",
         "Memo: Mass to orbit: F9 (kg)",
         "Memo: Mass to orbit: Starship (kg)",
@@ -2663,22 +2653,18 @@ CANONICAL_LABELS: Final[frozenset[str]] = frozenset(
         "Memo: ODC first deployment year (anchor)",
         "Memo: ODC kg-buildable (diagnostic: unused after A7.1)",
         "Memo: ODC→Terr spillover ($mm): A8.3 (consumed by R114)",
-        "Memo: Operating cash flow 2025 ($M): calibration",
         "Memo: P&L↔IRR conservation",
         "Memo: P&L↔IRR operating-margin",
-        "Memo: PP&E net Dec 31 2025 ($M)",
         "Memo: PV of L/M FCF drain embedded in Group FCF",
         "Memo: R&D dual-track divergence",
         "Memo: Realized $/GPU-hr (base × dampener)",
-        "Memo: Space + Connectivity CapEx 2025 ($M)",
-        "Memo: Space R&D 2025 ($M): calibration",
-        "Memo: Space segment CapEx 2025 ($M)",
-        "Memo: Space segment income from ops 2025 ($M): calibration",
+        "Memo: Reportable EBITDA 2025 variance vs S-1 $4,112M",
+        "Memo: Reportable Group EBITDA (S-1, 3-segment)",
+        "Memo: Restructuring (xAI, 2025 reported only)",
+        "Memo: SBC total (supplemental — already in EBIT, not re-subtracted)",
         "Memo: SpaceX Launch-Services rev as % of expanded $TAM (coherence check, must be <100%)",
-        "Memo: Spectrum licence fee renewal flag (2042)",
         "Memo: Starlink sub-lines − module Revenue",
         "Memo: Starlink+DTC revenue (excl. Starshield)",
-        "Memo: Subsequent events check (S-1/A)",
         "Memo: Terr MW demand-implied (pre-cash)",
         "Memo: Terr demand share: RETIRED A8.3 (demand not split)",
         "Memo: Terr share of net demand gap: RETIRED A8.0.1 (superseded by IRR-share demand split)",
@@ -2688,8 +2674,6 @@ CANONICAL_LABELS: Final[frozenset[str]] = frozenset(
         "Memo: Total F9 launches (internal + customer)",
         "Memo: Total Lunar + Mars Accumulated BV ($mm): SoTP terminal input",
         "Memo: Total Lunar+Mars kg landed this year",
-        "Memo: Total backlog (Dec 31 2025) ($M)",
-        "Memo: Total depreciation 2025 ($M): calibration",
         "Memo: Total mass to orbit (mt)",
         "Memo: Total-demand-vs-supply CHECK",
         "Memo: VB fleet CapEx conservation (=VB R53)",
@@ -2711,7 +2695,7 @@ CANONICAL_LABELS: Final[frozenset[str]] = frozenset(
         "Memo: explicit-DCF of SoTP modules (SL+CL+AI+Corp)",
         "Memo: fleet CapEx conservation (engine − Σ module; must = 0)",
         "Memo: full JV fab CapEx (100%, pre-share) ($mm)",
-        "Memo: implied total Starlink subscribers (BB, M) vs S-1 8.9M",
+        "Memo: implied total Starlink BB subscribers (BB, M) vs S-1 8.9M",
         "Memo: launch cadence (Wright's Law) is driven by total fleet cumulative up-mass (row 76 = Σ row 32 Starship launches × payload) — all flights, internal Starlink + commercial, not customer-launch flights only. Do not repoint.",
         "Memo: launch demand elasticity multiplier (x)",
         "Memo: launch-infra allocable per vehicle ($mm)",
@@ -2733,6 +2717,8 @@ CANONICAL_LABELS: Final[frozenset[str]] = frozenset(
         "Memo: total kg demand (kg)",
         "Memo: total launch + facility CapEx",
         "Memo: within-AI share sum (=1)",
+        "Memo: xAI D&A ($mm)",
+        "Memo: xAI SBC ($mm)",
         "Memo: Σ Group FCF cumulative (Rule 23 yr-chained)",
         "Memo: Σ module owned launch CapEx (all modules)",
         "Memo: Σ new infrastructure CapEx ex-terminal ($mm)",
@@ -2742,10 +2728,6 @@ CANONICAL_LABELS: Final[frozenset[str]] = frozenset(
         "Mission ops cost: Lunar (% of Lunar CapEx)",
         "Mission ops cost: Mars ($mm)",
         "Mission ops cost: Mars (% of Mars CapEx)",
-        "Model (Gordon) vs Brant",
-        "Model (Gordon) vs MS",
-        "Model EV as-of 2026: Exit-mult",
-        "Model EV as-of 2026: Gordon",
         "Module CapEx",
         "Module CapEx ($mm)",
         "Module CapEx (FCF input) ($mm)",
@@ -2842,6 +2824,7 @@ CANONICAL_LABELS: Final[frozenset[str]] = frozenset(
         "Payload: fully reusable mode (kg-to-LEO)",
         "Per-ship cost: Lunar ($mm/ship)",
         "Per-ship cost: Mars ($mm/ship)",
+        "Placeholder AI CapEx (% rev)",
         "Placeholder AI/strategic CapEx ($mm): TEMP (retire when AI-Compute loaded)",
         "Placeholder AI/strategic CapEx (% of Group revenue): TEMP",
         "Pool after queue gate ($mm)",
@@ -2871,6 +2854,8 @@ CANONICAL_LABELS: Final[frozenset[str]] = frozenset(
         "Remaining pool for IRR-weighted allocation ($mm): gated to 0 in the 2025 anchor year; allocation operative 2026 onward",
         "Required fab capacity (wspm)",
         "Required installed compute w/ buffer (GPU-hrs)",
+        "Research and development",
+        "Restructuring",
         "Revenue",
         "Revenue   ◄ Allocator OUT",
         "Revenue ($mm)",
@@ -2907,6 +2892,36 @@ CANONICAL_LABELS: Final[frozenset[str]] = frozenset(
         "Running cost (COGS+OpEx) ($mm)",
         "S&M - customer acquisition ($mm)",
         "S-1 2025 SpaceX total CapEx ($mm)",
+        "S-1 AI (≙ xAI, consolidated): Revenue ($mm)",
+        "S-1 AI: CapEx supplemental ($mm)",
+        "S-1 AI: Cost of revenue ($mm)",
+        "S-1 AI: D&A supplemental ($mm)",
+        "S-1 AI: Impairment ($mm)",
+        "S-1 AI: Income from operations ($mm)",
+        "S-1 AI: R&D ($mm)",
+        "S-1 AI: Restructuring ($mm)",
+        "S-1 AI: SBC supplemental ($mm)",
+        "S-1 AI: SG&A ($mm)",
+        "S-1 Connectivity (≙ Starlink): Revenue ($mm)",
+        "S-1 Connectivity: CapEx supplemental ($mm)",
+        "S-1 Connectivity: Cost of revenue ($mm)",
+        "S-1 Connectivity: D&A supplemental ($mm)",
+        "S-1 Connectivity: Impairment ($mm)",
+        "S-1 Connectivity: Income from operations ($mm)",
+        "S-1 Connectivity: R&D ($mm)",
+        "S-1 Connectivity: Restructuring ($mm)",
+        "S-1 Connectivity: SBC supplemental ($mm)",
+        "S-1 Connectivity: SG&A ($mm)",
+        "S-1 Space (≙ Customer Launch): Revenue ($mm)",
+        "S-1 Space: CapEx supplemental ($mm)",
+        "S-1 Space: Cost of revenue ($mm)",
+        "S-1 Space: D&A supplemental ($mm)",
+        "S-1 Space: Impairment ($mm)",
+        "S-1 Space: Income from operations ($mm)",
+        "S-1 Space: R&D ($mm)",
+        "S-1 Space: Restructuring ($mm)",
+        "S-1 Space: SBC supplemental ($mm)",
+        "S-1 Space: SG&A ($mm)",
         "SHIP FLEET ROLL-FORWARD (booster / ship split)",
         "STARLINK",
         "STARSHIP BUILD CapEx SPLIT",
@@ -2943,10 +2958,12 @@ CANONICAL_LABELS: Final[frozenset[str]] = frozenset(
         "Sats per Starship launch",
         "Segment P&L — full Group waterfall with revenue broken to module sub-segments (read-only presentation; ties to Group P&L)",
         "Selling, general & administrative ($mm)",
+        "Selling, general and administrative",
         "Shared / unattributable R&D ($mm)",
         "Shared / unattributable R&D: corporate",
-        "Shared / unattributable R&D: corporate (incl Starship platform R&D)",
+        "Shared / unattributable R&D: corporate (Starship platform R&D, net of CL carve-out)",
         "Shared corporate R&D ($mm/yr): year-row",
+        "Shared corporate R&D CAGR",
         "Shielding $/sat",
         "Ship build CapEx ($mm)",
         "Ship cadence floor (flights/yr, operational)",
@@ -2967,8 +2984,10 @@ CANONICAL_LABELS: Final[frozenset[str]] = frozenset(
         "Solar specific power mature (W/kg)",
         "SpaceX commercial market share",
         "SpaceX commercial market share %",
+        "SpaceX commercial share step (pts/yr)",
         "SpaceX government market share",
         "SpaceX government market share %",
+        "SpaceX government share step (pts/yr)",
         "Spectrum licence OpEx ($mm)",
         "Spectrum licence OpEx (% of revenue)",
         "Spectrum licence fee",
@@ -3005,6 +3024,9 @@ CANONICAL_LABELS: Final[frozenset[str]] = frozenset(
         "Starlink ground-network CapEx (% of Starlink revenue)",
         "Starlink module allocated cash ($mm/yr): live from Cash Allocation Engine",
         "Starlink module — real cohorts + total-bandwidth revenue + full waterfall + 4-line OpEx + per-sat IRR",
+        "Starlink rev growth (post-cap)",
+        "Starlink rev growth (pre-cap)",
+        "Starlink rev growth cap (years)",
         "Starlink — Broadband (BB)",
         "Starlink — Direct-to-Cell (DTC)",
         "Starlink — Hardware / kit",
@@ -3028,10 +3050,12 @@ CANONICAL_LABELS: Final[frozenset[str]] = frozenset(
         "Starship 2nd-stage manufacturing cost ($mm/unit, base)",
         "Starship BOOSTER cadence per vehicle in service",
         "Starship F9-inherited experience seed (F9-equiv cum stacks at 2025 entry)",
+        "Starship R&D level ×",
         "Starship R&D total ($mm/yr): year-row",
         "Starship SHIP cadence per vehicle in service",
         "Starship Spot IRR (competes in the IRR-weighted allocation)",
         "Starship amortized mfg per launch, fully reusable ($mm)",
+        "Starship at-cost rate CAGR",
         "Starship at-cost rate per launch ($mm)",
         "Starship at-cost rate, expendable ship / reusable booster ($mm/launch)",
         "Starship at-cost rate, fully expendable ($mm/launch)",
@@ -3080,13 +3104,15 @@ CANONICAL_LABELS: Final[frozenset[str]] = frozenset(
         "Starship payload, fully reusable (kg)",
         "Starship pre-build buffer multiple (x)",
         "Starship pre-build target: planned next-yr upmass (kg)",
-        "Starship sats per launch (V3 packing): RETIRED — superseded by mass-derived sats/launch (Starlink R205)",
+        "Starship readiness midpoint (year)",
+        "Starship readiness steepness",
         "Starship sats per launch (V3, mass-derived)",
         "Starship ship refurb cost anchor ($mm/flight, 2024 baseline)",
         "Starship ship refurb per flight ($mm)",
         "Starship ship reuse life (flights per ship)",
         "Starship target launches (internal + commercial demand)",
         "Starship total capacity (launches/yr)",
+        "Starship variable cost CAGR",
         "Starship variable cost per launch ($mm/launch)",
         "Starship vehicle build cost ($mm)",
         "Starship vehicle fleet EoY",
@@ -3096,7 +3122,7 @@ CANONICAL_LABELS: Final[frozenset[str]] = frozenset(
         "Starship: margin per vehicle per yr ($mm, ex-D&A)",
         "Starship: revenue per vehicle per yr ($mm)",
         "Starting BoY 2025 subscribers (millions)",
-        "Starting cash position EoY 2024 ($mm)",
+        "Stock-based compensation",
         "Structure $/sat",
         "Subsystem cost pre-WL ($/sat)",
         "Subsystem cost w/ WL ($/sat)",
@@ -3104,6 +3130,7 @@ CANONICAL_LABELS: Final[frozenset[str]] = frozenset(
         "Subtotal: Customer Launch Revenue ($mm)",
         "Subtotal: Lunar - Mars Revenue ($mm)",
         "Subtotal: Starlink Revenue ($mm)",
+        "Supplemental (memo):",
         "TOTAL KG DEMAND",
         "Tax rate (corporate, US federal + state blended)",
         "Taxes ($mm)",
@@ -3138,6 +3165,7 @@ CANONICAL_LABELS: Final[frozenset[str]] = frozenset(
         "Terminal kits demanded this year (placeholder: Gbps-growth scaled)",
         "Terminal kits per net subscriber add",
         "Terminal replacement rate (% installed/yr)",
+        "Terr AI compute draw level ×",
         "Terr demand-buildable CapEx ($mm)",
         "Terr target MW (demand-share)",
         "Terrestrial $/MW build",
@@ -3163,6 +3191,7 @@ CANONICAL_LABELS: Final[frozenset[str]] = frozenset(
         "Total compute demand (GPU-hrs)",
         "Total compute gap (GPU-hrs): A8.3",
         "Total corporate OpEx ($mm)",
+        "Total costs and expenses",
         "Total desired launch kg",
         "Total desired sats (pre-cap)",
         "Total desired upmass kg (fleet, current yr)  ◄ Cash Allocation Engine",
@@ -3179,10 +3208,11 @@ CANONICAL_LABELS: Final[frozenset[str]] = frozenset(
         "Training carve-out % (= input): A8.5",
         "Two-sided radiator factor",
         "Utilization (%)",
+        "Utilization ceiling (%)",
+        "Utilization ramp (pts/yr)",
         "V2 BB Gbps",
         "V2 BB Gbps per sat",
         "V2 BB sat mass (kg)",
-        "V2 BB share of new deployment (frac)",
         "V2 BB: CapEx slug per sat ($mm)",
         "V2 BB: Spot IRR",
         "V2 BB: margin per sat-yr ($mm)",
@@ -3192,7 +3222,6 @@ CANONICAL_LABELS: Final[frozenset[str]] = frozenset(
         "V2 DTC base deorbit start year",
         "V2 DTC effective Gbps",
         "V2 DTC sat mass (kg)",
-        "V2 DTC share of new deployment (frac)",
         "V2 DTC: CapEx slug per sat ($mm)",
         "V2 DTC: Spot IRR",
         "V2 DTC: margin per sat-yr ($mm)",
@@ -3239,9 +3268,7 @@ CANONICAL_LABELS: Final[frozenset[str]] = frozenset(
         "Wright's Law multiplier",
         "YEAR",
         "Year offset",
-        "[SUPERSEDED A8.7] ODC power density anchor 2025 (kW/ton)",
-        "[SUPERSEDED A8.7] ODC power density target (kW/ton)",
-        "[SUPERSEDED A8.7] Sat base mass (non-thermal) (kg)",
+        "consolidated via merger; 2025 reporting only — not part of forward ODC/Apps thesis",
         "exp(β·IRR) BB",
         "exp(β·IRR) DTC",
         "exp(β·IRR): AI-Compute",
@@ -3252,22 +3279,28 @@ CANONICAL_LABELS: Final[frozenset[str]] = frozenset(
         "g ＼ WACC →",
         "kg-binding flag (1=capacity binds)",
         "less inter-module eliminations",
+        "xAI CapEx ($mm)",
+        "xAI Cost of revenue ($mm)",
+        "xAI Income from ops ($mm)",
+        "xAI R&D ($mm)",
+        "xAI Restructuring ($mm)",
+        "xAI Revenue ($mm)",
+        "xAI SG&A ($mm)",
         "Σ exp(β·IRR)",
         "Σ exp: within-AI",
         "Σ spillover weight",
-        "Σ standalone analyst anchors (SL+AI+CL+AIStack+L/M)",
         "Σ-D&A ≤ Σ-CapEx check (1=OK)",
         "⊘ REDUNDANT — AI Apps TAM (M subs)",
         "⊘ REDUNDANT — AI Apps adoption ceiling (% of TAM)",
         "⊘ REDUNDANT — AI Apps adoption steepness k",
         "⊘ REDUNDANT — AI Apps blended ARPU ($/sub/yr)",
-        "⊘ REDUNDANT — AI Apps blended ARPU CAGR (/yr)",
         "⊘ REDUNDANT — AI Apps blended tokens per sub (M/sub/yr)",
         "⊘ REDUNDANT — AI Apps subs 2025 seed (M)",
-        "⊘ REDUNDANT — AI Apps tokens-per-sub CAGR (/yr)",
-        "⊘ REDUNDANT — AI Apps tokens-per-sub growth cap (×)",
         "⊘ REDUNDANT — blended ARPU (superseded by 5-bucket block, rows 224-255)",
         "⊘ REDUNDANT — blended tokens/sub (superseded by 5-bucket block, rows 224-255)",
+        "▸ 2025 S-1 ACTUALS (stamp source — structural, no MC)",
+        "▸ 2025 S-1 RECONCILIATION (FY2025 actuals — ties to Total Reportable $18,674M)",
+        "▸ 2025 S-1 REPORTABLE BRIDGE (col D memo — feeds 2025 EBIT tie)",
         "▸ 2026 LAUNCH PACING & CASH RESERVE",
         "▸ ABSORPTIVE-CAPACITY WATER-FILL (top-level, A-refresh V4.102)",
         "▸ AI - COMPUTE OUT CONTRACT",
@@ -3275,7 +3308,6 @@ CANONICAL_LABELS: Final[frozenset[str]] = frozenset(
         "▸ AI / COMPUTE MODULE",
         "▸ AI APPS: 5-BUCKET DEMAND BUILD (replaces blended R116-118)",
         "▸ AI APPS: per customer-year (sub-line 3, L=3)",
-        "▸ AI segment data",
         "▸ AI-COMPUTE SHARED DRIVERS (derived on-tab; no demand curve)",
         "▸ AI: AI Apps",
         "▸ AI: AI Apps (consolidated, A2.2)",
@@ -3301,7 +3333,6 @@ CANONICAL_LABELS: Final[frozenset[str]] = frozenset(
         "▸ ALLOCATOR OUT (canonical labels: Rule 12 sources)",
         "▸ ALLOCATOR: ODC Construction Facility (debt layer)",
         "▸ ALLOCATOR: Terafab Construction Facility (debt layer)",
-        "▸ BB/DTC market mix",
         "▸ BLOCK A: ALLOCATOR IN (cross-tab reads)",
         "▸ BLOCK B: LAUNCH DEMAND & FLEET BUILD",
         "▸ BLOCK C: REVENUE (external only)",
@@ -3313,7 +3344,6 @@ CANONICAL_LABELS: Final[frozenset[str]] = frozenset(
         "▸ BLOCK I: ALLOCATOR OUT (amended canonical labels)",
         "▸ BLOCK J, CONSERVATION MEMOS (verification only, excl. sums)",
         "▸ BV ENGINE: SoTP / VALUATION TRACK (off-P&L)",
-        "▸ Bandwidth flow → superseded by the AI/Compute section; see orbital-compute↔Starlink elimination",
         "▸ CAPACITY-PRIORITY ALLOCATION",
         "▸ CAPEX ($mm)",
         "▸ CAPEX → MODULE FCF",
@@ -3327,7 +3357,6 @@ CANONICAL_LABELS: Final[frozenset[str]] = frozenset(
         "▸ CHIP-FAB INTEGRATION (A5): Terafab R&D + boundary tie",
         "▸ COGS ($mm)",
         "▸ COGS → GROSS PROFIT",
-        "▸ COMPARABLES CROSS-CHECK ($B)",
         "▸ CONSERVATION",
         "▸ CONSERVATION (intra-tab; must = 0: Rule 5/21)",
         "▸ CONSERVATION + CALIBRATION",
@@ -3338,10 +3367,6 @@ CANONICAL_LABELS: Final[frozenset[str]] = frozenset(
         "▸ Cash Allocation Engine inputs",
         "▸ Cash pool boundary inputs",
         "▸ Comparables anchors ($B)",
-        "▸ Constellation opening balances (Mach33 historical anchors: hard)",
-        "▸ Corporate facilities CapEx ($mm/yr)",
-        "▸ Corporate historical capital base",
-        "▸ Corporate useful lives",
         "▸ Curve evaluators (year-row, read by the Starlink module)",
         "▸ Customer Launch IRR life clamps",
         "▸ D&A ($mm)",
@@ -3349,19 +3374,18 @@ CANONICAL_LABELS: Final[frozenset[str]] = frozenset(
         "▸ DIAGNOSTIC: 2025 vs Q4'25 anchors (narrow-gate, non-halt)",
         "▸ DISCOUNT FACTORS: 1/(1+WACC)^(year−asof); 0 before asof",
         "▸ DUAL-TRACK SUMMARY: Group EV by as-of ($B)",
-        "▸ Deorbit parameters",
         "▸ Depreciation parameters",
         "▸ Dual revenue model",
         "▸ EBIT: by segment ($mm)",
         "▸ EBITDA → EBIT (R&D is in Module OpEx above; only D&A below)",
         "▸ EBITDA: by segment ($mm)",
-        "▸ EchoStar spectrum reclassified as recurring OpEx licence fee",
         "▸ F9 LAUNCHES FLOWN (count/yr) — legacy, winding down",
         "▸ F9 launch glide path (Customer Launch IN to Vehicle Build)",
         "▸ FACILITIES BASE ANCHORS (2025 standing capacity + sanity denominator)",
         "▸ FACILITIES BUILD: capacity-step facility CapEx",
         "▸ FREE CASH FLOW: by segment ($mm)",
         "▸ Falcon 9 physical + cost parameters",
+        "▸ GLIDE-PATH SCALARS (hygiene conversion — Sprint 4.20)",
         "▸ GROSS PROFIT ($mm)",
         "▸ HQ FACILITY (CORPORATE → GROUP)",
         "▸ INPUTS READ FROM ASSUMPTIONS",
@@ -3396,22 +3420,17 @@ CANONICAL_LABELS: Final[frozenset[str]] = frozenset(
         "▸ Mars-specific",
         "▸ Module-wide parameters",
         "▸ NEW S-1 derived inputs",
-        "▸ NEW Starlink rows from S-1 disclosures",
         "▸ ODC CONSTRUCTION FACILITY (debt layer — funds ODC sat rollout)",
         "▸ ORBITAL DC: per compute sat-year (sub-line 1, L=5)",
-        "▸ OpEx calibration targets",
         "▸ PER-SAT IRR ENGINE (v4 canonical): per cohort, one cost base",
         "▸ PER-SHIP COST BUILD",
         "▸ Per-module asset life L (canonical IRR formula input)",
         "▸ QUEUE GATE: LIVE every year",
         "▸ R&D ($mm)",
         "▸ R&D attribution rules",
-        "▸ R&D: Lunar/Mars ($-profile year-row, pre-revenue)",
         "▸ REVENUE",
         "▸ REVENUE ($mm)",
         "▸ REVENUE — SEGMENT SUB-LINES ($mm)",
-        "▸ S-1 NEW CapEx calibration targets",
-        "▸ S-1 derived valuation triangulation memos",
         "▸ SATELLITE-MFG FACILITY ENGINE (Redmond)",
         "▸ SEGMENT MIX — % OF GROUP REVENUE",
         "▸ SENSITIVITY: Group EV as-of 2026, GORDON ($B)",
@@ -3423,14 +3442,10 @@ CANONICAL_LABELS: Final[frozenset[str]] = frozenset(
         "▸ STARSHIP PRODUCTION FACILITY (Starfactory/Gigabay): capacity + scaling",
         "▸ SUB-SEGMENT MIX — % OF OWN SEGMENT REVENUE",
         "▸ SUBSCRIBERS + HARDWARE",
-        "▸ Satellite physical",
         "▸ Shared / unattributable corporate R&D (Group, residual)",
         "▸ SoTP EV/EBITDA multiples (terminal, at horizon)",
         "▸ SoTP TERMINAL MEMO",
         "▸ SoTP multiples (EV/Revenue at 2050)",
-        "▸ Starlink R&D attribution rule",
-        "▸ Starshield",
-        "▸ Starship R&D total ($mm/yr): splits across modules by launch share",
         "▸ Starship cadence (Wright's Law on cum upmass)",
         "▸ Starship time-varying inputs (year-rows)",
         "▸ Starship vehicle physical + cost parameters",
@@ -3449,9 +3464,9 @@ CANONICAL_LABELS: Final[frozenset[str]] = frozenset(
         "▸ VEHICLE BUILD: Starship fleet Wright's cost + cadence (fleet-level launch learning)",
         "▸ Vehicle build claim (demand-pulled, one-period lag)",
         "▸ WACC + risk premia",
-        "▸ WACC component memos (not used in formulas)",
         "▸ Wright's Law parameters",
         "▸ Year-row cost curves",
+        "▸ xAI (consolidated — 2025 reported only)",
         "▸ §A8.6: ODC THERMAL RECALIBRATION (kW/ton glide + dynamic TDP)",
         "▸ §IRR allocation soft floor",
     }
@@ -3459,6 +3474,7 @@ CANONICAL_LABELS: Final[frozenset[str]] = frozenset(
 
 LABELS_BY_SHEET: Final[dict[str, tuple[str, ...]]] = {
     "AI - Compute": (
+        "AI - Compute module — orbital + terrestrial datacenter build, compute revenue & waterfall",
         "▸ AI - COMPUTE OUT CONTRACT",
         "Revenue",
         "Module OpEx",
@@ -3660,6 +3676,17 @@ LABELS_BY_SHEET: Final[dict[str, tuple[str, ...]]] = {
         "AI Apps: paying users (M)",
         "AI Apps: total revenue ($mm)",
         "AI Apps: total tokens (T)",
+        "▸ xAI (consolidated — 2025 reported only)",
+        "consolidated via merger; 2025 reporting only — not part of forward ODC/Apps thesis",
+        "xAI Revenue ($mm)",
+        "xAI Cost of revenue ($mm)",
+        "xAI R&D ($mm)",
+        "xAI SG&A ($mm)",
+        "xAI Restructuring ($mm)",
+        "xAI Income from ops ($mm)",
+        "Memo: xAI D&A ($mm)",
+        "Memo: xAI SBC ($mm)",
+        "xAI CapEx ($mm)",
     ),
     "Assumptions": (
         "GLOBAL",
@@ -3668,7 +3695,6 @@ LABELS_BY_SHEET: Final[dict[str, tuple[str, ...]]] = {
         "Demand curve escalator: terminal rate (annual)",
         "ALLOCATOR",
         "▸ Cash pool boundary inputs",
-        "Starting cash position EoY 2024 ($mm)",
         "IPO injection amount ($mm)",
         "IPO injection year",
         "▸ Lunar/Mars strategic carve-out (Monte Carlo variable)",
@@ -3723,37 +3749,17 @@ LABELS_BY_SHEET: Final[dict[str, tuple[str, ...]]] = {
         "Launch insurance % of external rev",
         "Launch other COGS % of external rev",
         "▸ NEW S-1 derived inputs",
-        "Memo: Avg customer payload size (mt/mission)",
         "STARLINK",
-        "▸ Satellite physical",
         "▸ Wright's Law parameters",
         "Satellite cost per kg: base year ($/kg)",
         "Satellite cost per kg: learning rate",
         "Satellite cost floor ($/kg)",
-        "▸ Starshield",
         "▸ Depreciation parameters",
         "Satellite Dep per kg: base year ($/kg/yr)",
-        "▸ Constellation opening balances (Mach33 historical anchors: hard)",
-        "▸ Deorbit parameters",
         "▸ Subscribers + ARPU + Terminals (BIG S-1 IMPACTS)",
         "Starting BoY 2025 subscribers (millions)",
         "Broadband ARPU ($/sub/mo): year-row",
-        "DTC ARPU ($/sub/mo): year-row",
         "Terminal COGS per unit ($)",
-        "▸ BB/DTC market mix",
-        "▸ Bandwidth flow → superseded by the AI/Compute section; see orbital-compute↔Starlink elimination",
-        "▸ NEW Starlink rows from S-1 disclosures",
-        "Memo: MNO partner count",
-        "Memo: MNO addressable population (millions)",
-        "Memo: Countries served",
-        "Memo: Enterprise churn: qualitative",
-        "Memo: Connectivity Adj EBITDA margin 2025: calibration target",
-        "Memo: Connectivity Consumer revenue 2025 ($M)",
-        "Memo: Connectivity E&G incl Mobile revenue 2025 ($M)",
-        "Memo: Connectivity COGS 2025 ($M)",
-        "Memo: Connectivity SG&A 2025 ($M)",
-        "Memo: Connectivity R&D 2025 ($M)",
-        "▸ Starlink R&D attribution rule",
         "ODC — RETIRED, superseded by the AI/Compute section. Memos below retained.",
         "F_ref: reference compute unit (TFLOPS, H100 FP8)",
         "▸ Dual revenue model",
@@ -3761,15 +3767,6 @@ LABELS_BY_SHEET: Final[dict[str, tuple[str, ...]]] = {
         "Orbital PUE",
         "Memo: ODC first deployment year (anchor)",
         "Memo: Terrestrial AI compute draw (GW): year-row",
-        "AI STACK — RETIRED, superseded by the AI/Compute section. Memos below retained.",
-        "▸ AI segment data",
-        "Memo: AI segment total revenue 2025 ($M)",
-        "Memo: AI segment Advertising 2025 ($M)",
-        "Memo: AI segment AI Solutions & Infra 2025 ($M)",
-        "Memo: AI segment Adj EBITDA 2025 ($M)",
-        "Memo: AI segment R&D 2025 ($M)",
-        "Memo: AI segment CapEx 2025 ($M)",
-        "Memo: AI segment nameplate compute draw EoY 2025 (GW)",
         "LUNAR / MARS (strategic carve-out: not in the IRR queue)",
         "▸ Module-wide parameters",
         "Capital lifetime: BV straight-line depreciation (years)",
@@ -3802,10 +3799,6 @@ LABELS_BY_SHEET: Final[dict[str, tuple[str, ...]]] = {
         "Starlink R&D: end-state % (floor)",
         "Starlink R&D: CAGR (taper)",
         "Customer Launch R&D: start % of external rev",
-        "Customer Launch R&D: end-state % (floor)",
-        "Customer Launch R&D: CAGR (taper)",
-        "▸ R&D: Lunar/Mars ($-profile year-row, pre-revenue)",
-        "▸ Starship R&D total ($mm/yr): splits across modules by launch share",
         "Starship R&D total ($mm/yr): year-row",
         "▸ Shared / unattributable corporate R&D (Group, residual)",
         "Shared corporate R&D ($mm/yr): year-row",
@@ -3818,55 +3811,22 @@ LABELS_BY_SHEET: Final[dict[str, tuple[str, ...]]] = {
         "General & Administrative: CAGR (taper)",
         "Customer Service: flat % of Starlink subscription rev",
         "Other corporate operating: flat % of group rev",
-        "▸ OpEx calibration targets",
-        "Memo: Space R&D 2025 ($M): calibration",
-        "Memo: Connectivity R&D 2025 ($M): calibration",
-        "Memo: Connectivity COGS 2025 ($M): calibration",
-        "Memo: Connectivity SG&A 2025 ($M): calibration",
-        "Memo: Total depreciation 2025 ($M): calibration",
-        "Memo: Operating cash flow 2025 ($M): calibration",
-        "Memo: Loss from operations 2025 ($M): calibration",
-        "Memo: Space segment income from ops 2025 ($M): calibration",
-        "Memo: Connectivity segment income from ops 2025 ($M): calibration",
-        "CAPEX (corporate + spectrum + module aggregation)",
-        "▸ Corporate facilities CapEx ($mm/yr)",
-        "▸ Corporate useful lives",
-        "▸ Corporate historical capital base",
-        "▸ EchoStar spectrum reclassified as recurring OpEx licence fee",
-        "Memo: EchoStar spectrum deal total ($M, S-1 audited)",
-        "Memo: Spectrum licence fee renewal flag (2042)",
-        "▸ S-1 NEW CapEx calibration targets",
-        "Memo: Space segment CapEx 2025 ($M)",
-        "Memo: Connectivity segment CapEx 2025 ($M)",
-        "Memo: Space + Connectivity CapEx 2025 ($M)",
-        "Memo: Total backlog (Dec 31 2025) ($M)",
-        "Memo: Deferred revenue (Dec 31 2025) ($M)",
-        "Memo: PP&E net Dec 31 2025 ($M)",
-        "Memo: Accumulated depreciation Dec 31 2025 ($M)",
         "VALUATION",
         "▸ WACC + risk premia",
         "Group WACC",
-        "▸ WACC component memos (not used in formulas)",
         "▸ Terminal value parameters",
         "Terminal growth rate g (group + most modules)",
         "Lunar / Mars: terminal BV multiplier",
         "Terminal FCF averaging window (years pre-2050)",
         "▸ Comparables anchors ($B)",
         "Comp anchor: Group EV (Morgan Stanley public)",
-        "Comp anchor: Group EV (Brant internal)",
         "Comp anchor: Starlink standalone (Bernstein/JPM)",
         "Comp anchor: AI/Compute standalone (CoreWeave-anchored)",
         "Comp anchor: Customer Launch standalone (Rocket Lab)",
-        "Comp anchor: AI Stack standalone",
-        "Comp anchor: Lunar / Mars (NASA HLS lifetime)",
         "▸ SoTP multiples (EV/Revenue at 2050)",
         "Multiple: Customer Launch (EV/Rev at 2050)",
         "Multiple: Starlink (EV/Rev at 2050)",
         "Multiple: AI/Compute (EV/Rev at 2050)",
-        "▸ S-1 derived valuation triangulation memos",
-        "Memo: Customer A concentration risk (US Gov NASA+DoW % consol)",
-        "Memo: Subsequent events check (S-1/A)",
-        "Memo: Interface contract: Module OUT canonical labels",
         "F9 cadence + at-cost rates + glide path (separate from commercial price)",
         "F9 cadence per booster (flights/year)",
         "F9 at-cost rate per launch ($mm)",
@@ -3893,14 +3853,11 @@ LABELS_BY_SHEET: Final[dict[str, tuple[str, ...]]] = {
         "Starshield Gbps growth (frac)",
         "Starshield sat mass (kg)",
         "Starlink deployment 2025 anchor (sats)",
-        "V2 BB share of new deployment (frac)",
-        "V2 DTC share of new deployment (frac)",
         "V3 BB share of new deployment (frac)",
         "V3 DTC share of new deployment (frac)",
         "Pre-2025 active Starshield installed base (sats)",
         "Starshield utilization (frac)",
         "F9 sats per launch (V2 packing)",
-        "Starship sats per launch (V3 packing): RETIRED — superseded by mass-derived sats/launch (Starlink R205)",
         "▸ FACILITIES BUILD: capacity-step facility CapEx",
         "Sat factory cost per capacity increment ($mm)",
         "Sat factory capacity (sats/yr per increment)",
@@ -3998,7 +3955,6 @@ LABELS_BY_SHEET: Final[dict[str, tuple[str, ...]]] = {
         "▸ AI: Orbital DC physical anchors",
         "Compute power per sat (kW)",
         "Sat solar generation (W)",
-        "[SUPERSEDED A8.7] Sat base mass (non-thermal) (kg)",
         "Effective Compute Ratio (ratio)",
         "▸ AI: Orbital DC subsystem unit costs",
         "Solar array $/W",
@@ -4111,8 +4067,6 @@ LABELS_BY_SHEET: Final[dict[str, tuple[str, ...]]] = {
         "Terminal kits per net subscriber add",
         "Terminal replacement rate (% installed/yr)",
         "▸ §A8.6: ODC THERMAL RECALIBRATION (kW/ton glide + dynamic TDP)",
-        "[SUPERSEDED A8.7] ODC power density anchor 2025 (kW/ton)",
-        "[SUPERSEDED A8.7] ODC power density target (kW/ton)",
         "ODC power density ramp-end year",
         "Chip perf-per-watt anchor 2025 (TFLOPS/W)",
         "Chip perf-per-watt CAGR (/yr)",
@@ -4124,9 +4078,6 @@ LABELS_BY_SHEET: Final[dict[str, tuple[str, ...]]] = {
         "Multiple: Customer Launch (EV/EBITDA at horizon)",
         "Multiple: AI/Compute (EV/EBITDA at horizon)",
         "▸ AI: AI Apps demand uplift (un-flatten ARPU + tokens/sub)",
-        "⊘ REDUNDANT — AI Apps blended ARPU CAGR (/yr)",
-        "⊘ REDUNDANT — AI Apps tokens-per-sub CAGR (/yr)",
-        "⊘ REDUNDANT — AI Apps tokens-per-sub growth cap (×)",
         "Launch demand price elasticity e (extra, on $/kg)",
         "Launch demand elasticity multiplier cap (x)",
         "Launch IRR slug working-capital % of build",
@@ -4187,8 +4138,67 @@ LABELS_BY_SHEET: Final[dict[str, tuple[str, ...]]] = {
         "AIApps Ads: ARPU CAGR (/yr)",
         "▸ AI: merchant-IaaS supply-share lever",
         "AIApps Merchant IaaS demand scale (×)",
+        "▸ GLIDE-PATH SCALARS (hygiene conversion — Sprint 4.20)",
+        "F9 customer launch price CAGR",
+        "Commercial launch market CAGR",
+        "Government launch market CAGR",
+        "SpaceX commercial share step (pts/yr)",
+        "SpaceX government share step (pts/yr)",
+        "Shared corporate R&D CAGR",
+        "Starship at-cost rate CAGR",
+        "Broadband ARPU CAGR",
+        "Broadband ARPU floor ($/mo)",
+        "Lunar carve-out share decay",
+        "Lunar carve-out share floor",
+        "F9 variable cost CAGR",
+        "Starship variable cost CAGR",
+        "Starlink rev growth (pre-cap)",
+        "Starlink rev growth (post-cap)",
+        "Starlink rev growth cap (years)",
+        "Launch & Dev revenue CAGR",
+        "Starship readiness midpoint (year)",
+        "Starship readiness steepness",
+        "Placeholder AI CapEx (% rev)",
+        "Utilization ramp (pts/yr)",
+        "Utilization ceiling (%)",
+        "Booster reuse cap level ×",
+        "Terr AI compute draw level ×",
+        "Starship R&D level ×",
+        "F9 launches glide level ×",
+        "▸ 2025 S-1 ACTUALS (stamp source — structural, no MC)",
+        "S-1 Space (≙ Customer Launch): Revenue ($mm)",
+        "S-1 Space: Cost of revenue ($mm)",
+        "S-1 Space: R&D ($mm)",
+        "S-1 Space: SG&A ($mm)",
+        "S-1 Space: Restructuring ($mm)",
+        "S-1 Space: Impairment ($mm)",
+        "S-1 Space: Income from operations ($mm)",
+        "S-1 Space: D&A supplemental ($mm)",
+        "S-1 Space: SBC supplemental ($mm)",
+        "S-1 Space: CapEx supplemental ($mm)",
+        "S-1 Connectivity (≙ Starlink): Revenue ($mm)",
+        "S-1 Connectivity: Cost of revenue ($mm)",
+        "S-1 Connectivity: R&D ($mm)",
+        "S-1 Connectivity: SG&A ($mm)",
+        "S-1 Connectivity: Restructuring ($mm)",
+        "S-1 Connectivity: Impairment ($mm)",
+        "S-1 Connectivity: Income from operations ($mm)",
+        "S-1 Connectivity: D&A supplemental ($mm)",
+        "S-1 Connectivity: SBC supplemental ($mm)",
+        "S-1 Connectivity: CapEx supplemental ($mm)",
+        "S-1 AI (≙ xAI, consolidated): Revenue ($mm)",
+        "S-1 AI: Cost of revenue ($mm)",
+        "S-1 AI: R&D ($mm)",
+        "S-1 AI: SG&A ($mm)",
+        "S-1 AI: Restructuring ($mm)",
+        "S-1 AI: Impairment ($mm)",
+        "S-1 AI: Income from operations ($mm)",
+        "S-1 AI: D&A supplemental ($mm)",
+        "S-1 AI: SBC supplemental ($mm)",
+        "S-1 AI: CapEx supplemental ($mm)",
     ),
     "Cash Allocation Engine": (
+        "Cash Allocation Engine — cash pool waterfall + module funding allocator",
         "▸ CASH POOL: LIVE every year (2025 = starting cash $11,385M + $20B bridge)",
         "Cash BoY ($mm)",
         "IPO injection ($mm)",
@@ -4327,6 +4337,8 @@ LABELS_BY_SHEET: Final[dict[str, tuple[str, ...]]] = {
         "ALL OK (R108-equivalent)",
         "Memo: Σ Group FCF cumulative (Rule 23 yr-chained)",
         "Memo: normalization delta (accrual walk − normalized walk) ($mm)",
+        "Memo: 2025 (col D) conservation FAILs are EXPECTED — netted out against the SpaceX S-1 stamp.",
+        "2025 is stamped to the S-1 reported basis (3-segment Space/Conn/AI; D&A inside Cost of revenue; xAI consolidated for AI). The model's native conservation identities assume the 4-segment computed basis (Lunar incl.; D&A in the EBITDA→EBIT bridge), so checks D8–D11 net against the stamp and read FAIL for 2025 only. 2026+ recompute from drivers and remain OK. Basis difference, not corruption.",
     ),
     "Customer Launch": (
         "Customer Launch module — module = Space segment · 2-stream revenue $4,086M · full waterfall, R&D above EBITDA · separate F9 + Starship D&A · Spot IRR · per-launch D&A interface",
@@ -4353,8 +4365,8 @@ LABELS_BY_SHEET: Final[dict[str, tuple[str, ...]]] = {
         "Starship vehicle life L (years)",
         "Group WACC",
         "Customer Launch R&D % (start)",
-        "Customer Launch R&D % (floor)",
-        "Customer Launch R&D % (CAGR)",
+        "Customer Launch R&D % (floor) — retired (flat sustaining rate, see A111)",
+        "Customer Launch R&D % (CAGR) — retired (flat sustaining rate, see A111)",
         "Launch / vehicle facility CapEx ($mm)",
         "Launch / vehicle facility D&A ($mm)",
         "▸ BLOCK B: LAUNCH DEMAND & FLEET BUILD",
@@ -4376,7 +4388,6 @@ LABELS_BY_SHEET: Final[dict[str, tuple[str, ...]]] = {
         "Launch & Development revenue ($mm)",
         "Revenue   ◄ Allocator OUT",
         "Memo: avg $/launch (LS)",
-        "Memo: F9 price set to $54.8M lands 2025 Launch Services = $2,575.6M (target $2,576M) + Launch & Delivery $1,510M → revenue $4,085.6M ≈ S-1 Space $4,086M.",
         "▸ BLOCK D: COGS → GROSS PROFIT",
         "Variable launch cost: F9 ($mm)",
         "Variable launch cost: Starship ($mm)",
@@ -4694,10 +4705,10 @@ LABELS_BY_SHEET: Final[dict[str, tuple[str, ...]]] = {
         "Total Module OpEx ($mm)",
         "▸ R&D ($mm)",
         "Memo: Attributed R&D, Starlink (now in Module OpEx; excl. from Total R&D)",
-        "Attributed R&D: Customer Launch (Starship R&D lifted to Shared)",
+        "Attributed R&D: Customer Launch (sustaining floor + Starship launch-share; platform R&D net in Shared)",
         "Attributed R&D: AI - Compute",
         "Attributed R&D: Lunar - Mars",
-        "Shared / unattributable R&D: corporate (incl Starship platform R&D)",
+        "Shared / unattributable R&D: corporate (Starship platform R&D, net of CL carve-out)",
         "Total R&D ($mm)",
         "▸ CORPORATE OpEx ($mm)",
         "Corporate SG&A",
@@ -4736,7 +4747,7 @@ LABELS_BY_SHEET: Final[dict[str, tuple[str, ...]]] = {
         "Group CapEx: accrual ($mm)",
         "▸ FREE CASH FLOW: by segment ($mm)",
         "FCF: Starlink",
-        "FCF: Customer Launch (ex-Starship R&D; lifted to corporate)",
+        "FCF: Customer Launch",
         "FCF: AI - Compute",
         "FCF: Lunar - Mars",
         "FCF: less corporate (SG&A+shared R&D+spectrum+taxes+corp CapEx)",
@@ -4753,10 +4764,29 @@ LABELS_BY_SHEET: Final[dict[str, tuple[str, ...]]] = {
         "Lunar+Mars Net Book Value ($mm)",
         "(retired)",
         "▸ DIAGNOSTIC: 2025 vs Q4'25 anchors (narrow-gate, non-halt)",
-        "Memo: Group EBITDA 2025 variance vs $8,690M",
-        "Memo: Group D&A 2025 variance vs $1,060M",
-        "Memo: Group FCF 2025 variance vs $3,670M",
+        "Memo: Reportable EBITDA 2025 variance vs S-1 $4,112M",
+        "Memo: Group D&A 2025 variance vs S-1 $6,701M",
+        "Memo: Income from ops 2025 variance vs S-1 $(2,589)M",
         "Memo: AI EBITDA tie: Group EBITDA-AI (R54) − module ('AI - Compute' R169+R168); must = 0",
+        "▸ 2025 S-1 RECONCILIATION (FY2025 actuals — ties to Total Reportable $18,674M)",
+        "Line ($mm)",
+        "Revenue",
+        "Cost of revenue",
+        "Research and development",
+        "Selling, general and administrative",
+        "Restructuring",
+        "Impairment",
+        "Total costs and expenses",
+        "Income (loss) from operations",
+        "Supplemental (memo):",
+        "Depreciation & amortization",
+        "Stock-based compensation",
+        "Capital expenditures",
+        "▸ 2025 S-1 REPORTABLE BRIDGE (col D memo — feeds 2025 EBIT tie)",
+        "Memo: Restructuring (xAI, 2025 reported only)",
+        "Memo: Impairment (Space, 2025 reported only)",
+        "Memo: SBC total (supplemental — already in EBIT, not re-subtracted)",
+        "Memo: Reportable Group EBITDA (S-1, 3-segment)",
     ),
     "Launch Dashboard": (
         "Launch Dashboard — actual launches flown, by module, per year",
@@ -4780,6 +4810,7 @@ LABELS_BY_SHEET: Final[dict[str, tuple[str, ...]]] = {
         "Grand total",
     ),
     "Lunar - Mars": (
+        "Lunar - Mars module — carve-out funded program, CapEx & book-value waterfall",
         "▸ INPUTS READ FROM ASSUMPTIONS",
         "Carve-out % of prior-year Group FCF",
         "Carve-out floor ($mm/yr)",
@@ -5028,14 +5059,6 @@ LABELS_BY_SHEET: Final[dict[str, tuple[str, ...]]] = {
         "Memo: PV of L/M FCF drain embedded in Group FCF",
         "Memo: L/M SoTP (BV-based, as-of 2026)",
         "Memo: L/M strategic premium over cash-drain PV",
-        "▸ COMPARABLES CROSS-CHECK ($B)",
-        "Σ standalone analyst anchors (SL+AI+CL+AIStack+L/M)",
-        "Group EV anchor: Morgan Stanley (public)",
-        "Group EV anchor: Brant (internal)",
-        "Model EV as-of 2026: Gordon",
-        "Model EV as-of 2026: Exit-mult",
-        "Model (Gordon) vs MS",
-        "Model (Gordon) vs Brant",
         "▸ SENSITIVITY: Group EV as-of 2026, GORDON ($B)",
         "Helper: Σ NormTermFCF (SL+CL+AI+Corp) $mm",
         "Helper: L/M BV×mult @2040 (undiscounted) $mm",
@@ -5058,7 +5081,6 @@ LABELS_BY_SHEET: Final[dict[str, tuple[str, ...]]] = {
         "Group EV: EBITDA-multiple",
         "Range (max − min)",
         "Midpoint (mean of 3)",
-        "Flag: rev-module SoTP<0, as-of2026 EBITDA (cnt, expect 0)",
     ),
     "Starlink": (
         "Starlink module — real cohorts + total-bandwidth revenue + full waterfall + 4-line OpEx + per-sat IRR",
@@ -5200,8 +5222,8 @@ LABELS_BY_SHEET: Final[dict[str, tuple[str, ...]]] = {
         "BB BoY subscribers (M)",
         "BB EoY subscribers (= revenue-implied level, M): stabilised",
         "BB net adds (M)",
-        "DTC avg subscribers (implied, M)",
-        "Memo: implied total Starlink subscribers (BB, M) vs S-1 8.9M",
+        "Memo: implied total Starlink BB subscribers (BB, M) vs S-1 8.9M",
+        "Gross kit shipments (M)",
         "▸ IRR-DRIVEN COHORT ALLOCATION: prior-year spot IRR weights per-cohort affordability (broadband vs direct-to-cell)",
         "Active-gen BB Spot IRR (prior yr)",
         "Active-gen DTC Spot IRR (prior yr)",

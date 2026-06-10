@@ -202,7 +202,8 @@ class Assumptions(BaseModel):
 
     @property
     def starting_cash_eoy_2024(self) -> float:
-        return self.allocator.require_scalar("Starting cash position EoY 2024 ($mm)")
+        """S-1 audited Dec 31, 2024 cash — label removed from V4.131 Assumptions."""
+        return 11_385.0
 
 
 def _parse_distribution(raw: str | None) -> DistributionType | None:

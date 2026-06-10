@@ -197,13 +197,10 @@ def compute_customer_launch_rd(
     Formula: Customer Launch R&D = bounded-CAGR % × external revenue.
 
     """
-    return _pct_rd(
-        inputs.assumptions,
-        start_label=cl.CUSTOMER_LAUNCH_R_D_START_OF_EXTERNAL_REV,
-        end_label=cl.CUSTOMER_LAUNCH_R_D_END_STATE_FLOOR,
-        cagr_label=cl.CUSTOMER_LAUNCH_R_D_CAGR_TAPER,
-        revenue=bases.customer_launch_external_revenue,
+    start = assumption_scalar(
+        inputs.assumptions, cl.CUSTOMER_LAUNCH_R_D_START_OF_EXTERNAL_REV
     )
+    return YearVector(start * bases.customer_launch_external_revenue.values)
 
 
 def compute_odc_rd(inputs: OpExInputs, bases: OpExRevenueBases) -> YearVector:
@@ -267,9 +264,7 @@ def compute_starship_precommercial_rd(inputs: OpExInputs) -> YearVector:
     Formula: Starship pre-commercialization R&D $-profile — MDA §9 / §11.6 (P1-4).
 
     """
-    return assumption_year_vector(
-        inputs.assumptions, cl.STARSHIP_PRECOMMERCIAL_RD_MM_YEAR_ROW, default=0.0
-    )
+    return YearVector.zeros()
 
 
 def compute_moon_mars_rd(inputs: OpExInputs) -> YearVector:
@@ -394,11 +389,11 @@ def compute_general_administrative(
     start = assumption_scalar(a, cl.GENERAL_ADMINISTRATIVE_START_OF_GROUP_REV)
     end = assumption_scalar(
         a,
-        "General & Administrative — end-state % (ceiling)",
+        cl.GENERAL_ADMINISTRATIVE_END_STATE_FLOOR,
     )
     cagr = assumption_scalar(
         a,
-        "General & Administrative — CAGR (taper)",
+        cl.GENERAL_ADMINISTRATIVE_CAGR_TAPER,
     )
     pct = bounded_cagr_pct_vector(start, end, cagr)
     return YearVector(pct * bases.group_revenue_net_of_elims.values)
@@ -417,7 +412,7 @@ def compute_customer_service(inputs: OpExInputs, bases: OpExRevenueBases) -> Yea
     """
     flat_pct = assumption_scalar(
         inputs.assumptions,
-        "Customer Service — flat % of Starlink subscription rev",
+        cl.CUSTOMER_SERVICE_FLAT_OF_STARLINK_SUBSCRIPTION_REV,
     )
     return YearVector(flat_pct * bases.starlink_subscription_revenue.values)
 

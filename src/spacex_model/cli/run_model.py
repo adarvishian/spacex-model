@@ -21,7 +21,7 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="Run Base Case deterministic pipeline",
     )
-    parser.add_argument("--workbook", type=Path, default=None, help="Path to V4.113 xlsx")
+    parser.add_argument("--workbook", type=Path, default=None, help="Path to V4.131 xlsx")
     parser.add_argument("--run-id", type=str, default=None, help="Optional run identifier")
     parser.add_argument(
         "--scenario",

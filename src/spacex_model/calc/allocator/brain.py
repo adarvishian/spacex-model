@@ -190,7 +190,7 @@ def _chip_transfer_revenue_estimate(
 ) -> YearVector:
     """Estimate at-cost chip transfer from exogenous ODC kg demand (acyclic)."""
     mass = assumption_scalar(assumptions, cl.V3_MASS_KG)
-    chips_per_sat = assumption_scalar(assumptions, cl.CHIPS_PER_SAT)
+    chips_per_sat = assumptions.lookup_scalar(cl.CHIPS_PER_SAT, default=0.0)
     if mass <= 0.0 or chips_per_sat <= 0.0:
         return YearVector.zeros()
     sats = odc_kg.values / mass

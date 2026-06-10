@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from spacex_model.inputs.assumptions import Assumptions
-from spacex_model.inputs.v4_113_2025_anchors import V4_113_INGEST_ANCHORS_2025
+from spacex_model.inputs.v4_131_2025_anchors import V4_131_INGEST_ANCHORS_2025
 
 
 def _check_anchors(assumptions: Assumptions, anchors: tuple) -> list[str]:
@@ -38,8 +38,8 @@ def _check_anchors(assumptions: Assumptions, anchors: tuple) -> list[str]:
 
 
 def check_s1_anchors(assumptions: Assumptions) -> list[str]:
-    """Return warning strings when Assumptions drifts from V4.113 2025 anchors."""
-    return _check_anchors(assumptions, V4_113_INGEST_ANCHORS_2025)
+    """Return warning strings when Assumptions drifts from V4.131 2025 anchors."""
+    return _check_anchors(assumptions, V4_131_INGEST_ANCHORS_2025)
 
 
 def check_q4_25_anchors(assumptions: Assumptions) -> list[str]:

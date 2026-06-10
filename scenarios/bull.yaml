@@ -3,7 +3,7 @@ name: bull
 description: >
   Bull stress scenario — higher TAM inflation, lower Mars carve-out pct,
   faster Starship manufacturing learning. Block A must hold; Block B not required.
-baseline_workbook: "SpaceX V4.113.xlsx"
+baseline_workbook: "SpaceX V4.131.xlsx"
 overrides:
   "TAM inflation rate (annual)": 0.035
   "Real GNI growth rate (% per year)": 0.03

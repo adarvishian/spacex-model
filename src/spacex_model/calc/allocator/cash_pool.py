@@ -20,28 +20,22 @@ _IPO_YEAR = 2027
 def starting_cash_mm(assumptions: Assumptions) -> float:
     """Starting cash position EoY 2024 ($mm) for R109 identity.
 
-    Excel cell:        Assumptions!B (Starting cash position EoY 2024)
-    Excel label:       "Starting cash position EoY 2024 ($mm)"
+    Excel cell:        Cash Allocation Engine!D8 (Cash BoY 2025 embeds $11,385M)
+    Excel label:       "Cash BoY ($mm)"
     Architecture ref:  §6.1 + §15.2 R109
     Principle:         4 (cash pool feeds queue gate)
 
-    Formula: Starting cash position EoY 2024 ($mm) for R109 identity.
+    Formula: S-1 audited Dec 31, 2024 cash — removed from Assumptions in V4.131.
 
     """
-    return assumption_scalar(
-        assumptions,
-        cl.STARTING_CASH_POSITION_EOY_2024_MM,
-    )
+    _ = assumptions
+    return _STARTING_CASH_MM
 
 
 def _bridge_drawdown_year(assumptions: Assumptions) -> int:
     """Year of $20B pre-IPO bridge receipt — S-1 MDA §6.5 (P1-1: March 2026)."""
-    return int(
-        assumption_scalar(
-            assumptions,
-            cl.PRE_IPO_BRIDGE_DRAWDOWN_YEAR,
-        )
-    )
+    _ = assumptions
+    return BRIDGE_DRAWDOWN_YEAR
 
 
 def compute_bridge_drawdown(assumptions: Assumptions) -> YearVector:

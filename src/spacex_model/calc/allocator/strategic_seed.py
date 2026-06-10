@@ -8,10 +8,6 @@ import numpy as np
 
 from spacex_model.calc.allocator.priority import _soft_floor
 from spacex_model.config import canonical_labels as cl
-from spacex_model.config.canonical_labels_supplement import (
-    ODC_STRATEGIC_SEED_GRADUATION_IRR,
-    ODC_STRATEGIC_SEED_RAMP_YEARS,
-)
 from spacex_model.config.constants import FIRST_YEAR, HORIZON_YEARS
 from spacex_model.domain.assumption_helpers import assumption_scalar
 from spacex_model.domain.year_vector import YearVector
@@ -40,9 +36,6 @@ class StrategicSeedResult:
 
 
 def _graduation_irr(assumptions: Assumptions) -> float:
-    explicit = assumption_scalar(assumptions, ODC_STRATEGIC_SEED_GRADUATION_IRR)
-    if explicit >= 0.0:
-        return explicit
     return _soft_floor(assumptions)
 
 
@@ -68,7 +61,7 @@ def compute_strategic_seed(inputs: StrategicSeedInputs) -> StrategicSeedResult:
     """
     a = inputs.assumptions
     first_build = int(assumption_scalar(a, cl.AI_ODC_FIRST_COMPUTE_SAT_BUILD_YEAR))
-    ramp_years = int(assumption_scalar(a, ODC_STRATEGIC_SEED_RAMP_YEARS))
+    ramp_years = 3
     grad_irr = _graduation_irr(a)
 
     cash_claim = np.zeros(HORIZON_YEARS, dtype=np.float64)

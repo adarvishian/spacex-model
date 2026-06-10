@@ -1,4 +1,4 @@
-"""Block C sense / sanity checks — PRD §7.3 / V4.113 horizon."""
+"""Block C sense / sanity checks — PRD §7.3 / V4.131 horizon."""
 
 from __future__ import annotations
 
@@ -8,7 +8,7 @@ import pytest
 from spacex_model.calc.customer_launch.module import CustomerLaunchInputs, _starship_customer_launches
 from spacex_model.config.constants import FIRST_YEAR, LAST_YEAR
 from spacex_model.engine.pipeline import ModelResult
-from spacex_model.inputs.v4_113_2025_anchors import V4_113_INGEST_ANCHORS_2025
+from spacex_model.inputs.v4_131_2025_anchors import V4_131_INGEST_ANCHORS_2025
 
 
 def test_no_nan_or_inf(model_result: ModelResult) -> None:
@@ -44,8 +44,8 @@ def test_f9_customer_launch_irr_disposition(model_result: ModelResult) -> None:
 
 
 def test_ai_compute_s1_revenue_2025(model_result: ModelResult) -> None:
-    """V4.113: AI - Compute carries S-1 AI segment revenue anchor in 2025."""
-    anchor = next(a for a in V4_113_INGEST_ANCHORS_2025 if "AI segment" in a.name)
+    """V4.131: AI - Compute carries S-1 AI segment revenue anchor in 2025."""
+    anchor = next(a for a in V4_131_INGEST_ANCHORS_2025 if "AI segment" in a.name)
     actual = model_result.module_outputs["ai_compute"].total_revenue.at(FIRST_YEAR)
     assert actual == pytest.approx(anchor.target, rel=anchor.tolerance_pct)
 

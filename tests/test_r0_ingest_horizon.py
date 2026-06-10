@@ -1,4 +1,4 @@
-"""Sprint R0 gate tests — V4.113 ingest, horizon 2025–2040, canonical labels."""
+"""Sprint R0 gate tests — V4.131 ingest, horizon 2025–2040, canonical labels."""
 
 from __future__ import annotations
 
@@ -12,16 +12,16 @@ from spacex_model.config.canonical_labels import CANONICAL_LABELS, LABELS_BY_SHE
 from spacex_model.config.settings import get_settings
 from spacex_model.domain.year_vector import YearVector
 from spacex_model.inputs.assumptions import assumptions_from_ingest
-from spacex_model.inputs.v4_113_2025_anchors import V4_113_INGEST_ANCHORS_2025
+from spacex_model.inputs.v4_131_2025_anchors import V4_131_INGEST_ANCHORS_2025
 from spacex_model.io.anchor_checks import check_s1_anchors
 from spacex_model.io.excel_ingest import ingest_workbook
 from spacex_model.io.snapshot_store import ingest_to_snapshot_dict, write_diagnostic_snapshot
 from spacex_model.linters.canonical_labels import find_workbook_labels_missing_from_registry
 
 REPO = Path(__file__).resolve().parents[1]
-WORKBOOK = REPO / "SpaceX V4.113.xlsx"
+WORKBOOK = REPO / "SpaceX V4.131.xlsx"
 
-V4_113_TABS = frozenset(
+V4_131_TABS = frozenset(
     {
         "Assumptions",
         "Demand Curves",
@@ -44,13 +44,13 @@ V4_113_TABS = frozenset(
 @pytest.fixture(scope="module")
 def ingest():
     if not WORKBOOK.exists():
-        pytest.skip("V4.113 workbook not present")
+        pytest.skip("V4.131 workbook not present")
     return ingest_workbook(WORKBOOK)
 
 
-def test_settings_default_workbook_v4_113() -> None:
+def test_settings_default_workbook_v4_131() -> None:
     settings = get_settings()
-    assert settings.workbook_path.name == "SpaceX V4.113.xlsx"
+    assert settings.workbook_path.name == "SpaceX V4.131.xlsx"
 
 
 def test_horizon_constants() -> None:
@@ -67,8 +67,8 @@ def test_year_vector_shape() -> None:
         z.year_index(2041)
 
 
-def test_v4_113_tab_inventory(ingest) -> None:
-    assert V4_113_TABS <= frozenset(ingest.formula_pass.sheet_names)
+def test_v4_131_tab_inventory(ingest) -> None:
+    assert V4_131_TABS <= frozenset(ingest.formula_pass.sheet_names)
 
 
 def test_every_column_a_label_resolves(ingest) -> None:
@@ -90,15 +90,15 @@ def test_2025_anchors_load(ingest) -> None:
     assumptions = assumptions_from_ingest(ingest)
     warnings = check_s1_anchors(assumptions)
     assert warnings == [], "\n".join(warnings)
-    for anchor in V4_113_INGEST_ANCHORS_2025:
+    for anchor in V4_131_INGEST_ANCHORS_2025:
         assert anchor.assumptions_label in assumptions.by_label
 
 
 def test_diagnostic_snapshot_rebuilt(ingest, tmp_path: Path) -> None:
     snap = ingest_to_snapshot_dict(ingest)
-    assert snap["horizon"]["years"] == 16
-    assert snap["workbook_version"] == "SpaceX V4.113.xlsx"
-    assert len(snap["label_rows"]) == len(V4_113_TABS)
+    assert len(snap["horizon"]["years"]) == 16
+    assert snap["workbook_version"] == "SpaceX V4.131.xlsx"
+    assert len(snap["label_rows"]) == len(V4_131_TABS)
     assert "duplicate_labels" in snap
     assert all(snap["year_value_coverage"][str(y)] > 0 for y in range(2025, 2041))
 
@@ -112,8 +112,8 @@ def test_canonical_registry_nonempty() -> None:
 
 
 @pytest.mark.slow
-def test_v4_113_audit_grid_sheets_have_rows() -> None:
-    """Audit tabs must resolve V4.113 workbook names (not legacy V2.16 tab names)."""
+def test_v4_131_audit_grid_sheets_have_rows() -> None:
+    """Audit tabs must resolve V4.131 workbook names (not legacy V2.16 tab names)."""
     from spacex_model.engine.pipeline import run_base_case
     from spacex_model.service.grid import build_grid_payload
     from spacex_model.service.sheets_meta import get_sheet

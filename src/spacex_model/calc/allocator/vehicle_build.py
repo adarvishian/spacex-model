@@ -37,10 +37,7 @@ def compute_vehicle_build_claim(
 
     """
     lead = int(
-        assumption_scalar(
-            assumptions,
-            cl.VEHICLE_BUILD_LEAD_TIME_YEARS,
-        )
+        assumptions.lookup_scalar(cl.VEHICLE_BUILD_LEAD_TIME_YEARS, default=2.0)
     )
     launches_per_vehicle = assumption_scalar(
         assumptions,

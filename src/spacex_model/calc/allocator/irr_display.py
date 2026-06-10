@@ -67,7 +67,7 @@ def _terrestrial_spot_irr(assumptions: Assumptions) -> YearVector:
     margin = assumption_year_vector(
         assumptions, cl.MARGIN_PER_MW_PER_YR_MM, default=0.0
     ).values
-    slug = assumption_scalar(assumptions, cl.CAPEX_SLUG_PER_MW_MM)
+    slug = assumption_scalar(assumptions, cl.TERRESTRIAL_MW_BUILD) / 1e6
     if slug <= 0.0:
         return YearVector.zeros()
     return YearVector(np.clip(margin / slug, -1.0, 2.0))
