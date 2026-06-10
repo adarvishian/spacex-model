@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main, master]
+    branches: [main, master, dev]
   pull_request:
 
 jobs:
@@ -11,23 +11,32 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v5
+      - uses: astral-sh/setup-uv@v5
         with:
+          enable-cache: true
           python-version: "3.11"
 
       - name: Install dependencies
+        run: uv sync --frozen --extra dev --extra service
+
+      - name: Verify test collection floor
         run: |
-          python -m pip install --upgrade pip
-          pip install -e ".[dev,service]"
+          COUNT=$(uv run pytest --collect-only -q 2>&1 | tail -1 | awk '{print $1}')
+          echo "Collected ${COUNT} tests"
+          MIN_TESTS=750
+          if [ "${COUNT}" -lt "${MIN_TESTS}" ]; then
+            echo "Expected at least ${MIN_TESTS} collected tests (got ${COUNT})"
+            exit 1
+          fi
 
       - name: Ruff
-        run: ruff check src tests
+        run: uv run ruff check src tests
 
       - name: Black
-        run: black --check src tests
+        run: uv run black --check src tests
 
       - name: Mypy
-        run: mypy
+        run: uv run mypy
 
       - name: US English spell-check
         run: |
@@ -39,28 +48,48 @@ jobs:
           fi
 
       - name: Audit artifact drift check
-        run: spacex-audit --check
+        run: uv run spacex-audit --check
 
       - name: Pytest (excludes slow hypothesis by default)
-        run: pytest -n auto -m "not slow" --tb=short -q
+        run: uv run pytest -n auto -m "not slow" --cov=spacex_model --cov-report=term-missing:skip-covered --cov-report=xml --tb=short -q
+
+      - name: Record coverage baseline
+        run: |
+          uv run python -c "
+          import xml.etree.ElementTree as ET
+          from pathlib import Path
+          root = ET.parse('coverage.xml').getroot()
+          rate = float(root.attrib.get('line-rate', 0)) * 100
+          print(f'Total line coverage: {rate:.1f}%')
+          Path('docs/coverage_baseline.txt').write_text(f'{rate:.1f}\n')
+          "
+
+      - name: Upload coverage artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: |
+            coverage.xml
+            docs/coverage_baseline.txt
 
       - name: Hypothesis invariant suite (PRD §10.9)
         env:
           HYPOTHESIS_MAX_EXAMPLES: "200"
           HYPOTHESIS_DEADLINE_MS: "10000"
-        run: pytest tests/invariant/ -m slow --tb=short -q
+        run: uv run pytest tests/invariant/ -m slow --tb=short -q
 
   frontend:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v5
+      - uses: astral-sh/setup-uv@v5
         with:
+          enable-cache: true
           python-version: "3.11"
 
       - name: Install Python package (precompute base case)
-        run: pip install -e ".[dev,service]"
+        run: uv sync --frozen --extra dev --extra service
 
       - uses: actions/setup-node@v4
         with:

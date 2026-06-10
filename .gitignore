@@ -5,6 +5,8 @@ __pycache__/
 .ruff_cache/
 .pytest_cache/
 .hypothesis/
+.coverage
+coverage.xml
 dist/
 *.egg-info/
 outputs/          # run artifacts (CLI/API); golden fixtures live in tests/golden/
@@ -24,3 +26,4 @@ frontend/public/data/*
 *.mhtml           # S-1 filing (~200 MB); not read at runtime — see s1_overrides.py
 *.docx
 .vercel
+public/             # local Vite build output (canonical deploy: static/ui)
