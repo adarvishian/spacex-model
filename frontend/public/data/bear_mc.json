@@ -1,5 +1,5 @@
 {
-  "git_sha": "e76c3a0",
+  "git_sha": "b46f045",
   "scenario": "bear",
   "job_id": "precache",
   "run_id": "precache",
@@ -10,7 +10,7 @@
   "n_trials": 5000,
   "n_converged": 5000,
   "convergence_status": "converged",
-  "wall_clock_sec": 546.562,
+  "wall_clock_sec": 496.229,
   "mc_config": {
     "sampling": "mc",
     "warm_start": true,
