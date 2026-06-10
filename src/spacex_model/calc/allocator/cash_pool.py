@@ -49,10 +49,7 @@ def compute_bridge_drawdown(assumptions: Assumptions) -> YearVector:
     Formula: Pre-IPO bridge loan drawdown by year ($mm); $20B in bridge year per §2.13.
 
     """
-    bridge = assumption_scalar(
-        assumptions,
-        cl.PRE_IPO_DEBT_FACILITY_MM,
-    )
+    bridge = _BRIDGE_LOAN_2025_MM
     bridge_year = _bridge_drawdown_year(assumptions)
     values = np.zeros(HORIZON_YEARS, dtype=np.float64)
     idx = bridge_year - FIRST_YEAR
@@ -72,10 +69,13 @@ def compute_ipo_drawdown(assumptions: Assumptions) -> YearVector:
     Formula: IPO injection by year ($mm).
 
     """
-    ipo_year = int(assumption_scalar(assumptions, cl.IPO_INJECTION_YEAR))
+    ipo_year = int(
+        assumption_scalar(assumptions, cl.IPO_INJECTION_YEAR, default=float(_IPO_YEAR))
+    )
     ipo_amount = assumption_scalar(
         assumptions,
         cl.IPO_INJECTION_AMOUNT_MM,
+        default=_IPO_AMOUNT_MM,
     )
     values = np.zeros(HORIZON_YEARS, dtype=np.float64)
     for t in range(HORIZON_YEARS):
@@ -100,15 +100,15 @@ def compute_cash_boy(
 
     """
     starting = starting_cash_mm(assumptions)
-    ipo_year = int(assumption_scalar(assumptions, cl.IPO_INJECTION_YEAR))
+    ipo_year = int(
+        assumption_scalar(assumptions, cl.IPO_INJECTION_YEAR, default=float(_IPO_YEAR))
+    )
     ipo_amount = assumption_scalar(
         assumptions,
         cl.IPO_INJECTION_AMOUNT_MM,
+        default=_IPO_AMOUNT_MM,
     )
-    bridge = assumption_scalar(
-        assumptions,
-        cl.PRE_IPO_DEBT_FACILITY_MM,
-    )
+    bridge = _BRIDGE_LOAN_2025_MM
     bridge_year = _bridge_drawdown_year(assumptions)
 
     values = np.zeros(HORIZON_YEARS, dtype=np.float64)

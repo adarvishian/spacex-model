@@ -1,6 +1,6 @@
 # Mach33 SpaceX Valuation Model (Python Port)
 
-Python port of the Mach33 SpaceX Valuation Model. Workbook baseline: **SpaceX V4.113.xlsx**.
+Python port of the Mach33 SpaceX Valuation Model. Workbook baseline: **SpaceX V4.131.xlsx**.
 
 ## Agent / contributor onboarding
 
@@ -14,7 +14,7 @@ Disclosed inputs from the SpaceX S-1 (filed 2026-05-20) are applied automaticall
 
 | Topic | Authoritative doc |
 |---|---|
-| Architecture locks, reconciliation methodology | `context.md` (V4.113 deferral header → PRD + `constants.py`) |
+| Architecture locks, reconciliation methodology | `context.md` (V4.131 deferral header → PRD + `constants.py`) |
 | Active product requirements (V4.113 re-base) | `PRD_V4.113_Unified_Allocation_2026-06-04.md` |
 | Modeling persona & deliverable standards | `role.md` |
 | Recent changes, verification commands, Block B status | `docs/DEV_LOG.md` |
@@ -42,7 +42,7 @@ Locked installs (CI/Vercel): `uv sync` from `uv.lock`.
 python -m spacex_model.cli.run_model --base-case
 ```
 
-Default workbook: `SpaceX V4.113.xlsx` (override with `--workbook PATH` or `SPACEX_MODEL_WORKBOOK`).
+Default workbook: `SpaceX V4.131.xlsx` (override with `--workbook PATH` or `SPACEX_MODEL_WORKBOOK`).
 
 ## API + Web UI
 

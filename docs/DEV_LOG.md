@@ -11,6 +11,37 @@ Chronological record of material changes to the Python port. Read this after `co
 
 ---
 
+## 2026-06-10 — Milestone 0: safety net (audit 2026-06-10)
+
+**Trigger:** `SpaceX_Modeler_Repo_Audit_2026-06-10.md` §5 Milestone 0.
+
+### Shipped
+
+| Task | Change | Primary files |
+|------|--------|---------------|
+| 0.1 | Committed V4.113→V4.131 rebase script; README + `context.md` baseline → V4.131 | `scripts/rebase_v4131.py`, `README.md`, `context.md` |
+| 0.2 | Regenerated precache artifacts + reconciliation report at HEAD on V4.131 | `frontend/public/data/*.json`, `docs/reconciliation_report.md` | **Blocked:** solver non-convergence at HEAD (`group_fcf` limit cycle, residual ≈146); `./scripts/regenerate_precache.sh` fails until Milestone 1.3 remap fixes land |
+| 0.2-partial | Restored S-1 override coverage; fixed dimensionally-wrong Anthropic/EchoStar supplement remaps; hardcoded $20B bridge in `cash_pool.py` | `inputs/s1_overrides.py`, `config/canonical_labels_supplement.py`, `calc/allocator/cash_pool.py`, `domain/assumption_helpers.py` | Pipeline runs but does not converge — partial progress toward unblock |
+| 0.3 | CI gate: committed artifact `git_sha` must match `HEAD` | `scripts/check_precache_artifacts.py`, `.github/workflows/ci.yml` |
+| 0.4 | Removed root `Monte Carlo/` UNO engine (different project); Python port MC is canonical | repo hygiene |
+
+### V4.131 rebase (0.1 detail)
+
+- Workbook default: `SpaceX V4.131.xlsx` (`settings.py`).
+- `scripts/rebase_v4131.py`: extracts labels from V4.131, applies 95-entry `LABEL_REMAP` + `SUPPLEMENT_OVERRIDES`, clears `INGEST_SCALAR_DEFAULTS`, renames anchors → `v4_131_2025_anchors.py`, records per-cell ingest diff.
+- **Open (Milestone 1.3):** several remaps are dimensionally ambiguous or many-to-one — flag, do not silently fix. See audit ING-1.
+
+### Verify
+
+```bash
+uv run python scripts/check_precache_artifacts.py
+uv run python -m spacex_model.cli.run_model --base-case   # refresh reconciliation report
+./scripts/regenerate_precache.sh                            # when model changes
+grep -r "V4.131" README.md context.md docs/DEV_LOG.md
+```
+
+---
+
 ## 2026-06-10 — Milestone 2: high-leverage improvements (audit 2026-06-09)
 
 **Trigger:** `SpaceX_Modeler_Repo_Audit_2026-06-09.md` Milestone 2.

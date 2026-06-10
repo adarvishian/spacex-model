@@ -19,9 +19,9 @@ def derived_sat_unit_cost_mm(
     return cost_kg * mass_kg / 1e6 * (1.0 + lr) ** year_index
 
 
-def assumption_scalar(assumptions: Assumptions, label: str) -> float:
+def assumption_scalar(assumptions: Assumptions, label: str, *, default: float | None = None) -> float:
     """Return scalar base-case value for an Assumptions label (missing → KeyError/ValueError)."""
-    return assumptions.lookup_scalar(label)
+    return assumptions.lookup_scalar(label, default=default)
 
 
 def assumption_year_vector(

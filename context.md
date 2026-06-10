@@ -2,7 +2,7 @@
 
 **Status**: Living context document. Read in full before any code is written. Every code module references this doc; every PR cites the section it implements.
 
-> **V4.113 re-base (2026-06-04):** Horizon, solver contract, and workbook baseline in §2.2 below describe the **V2.16-era** snapshot. The active port uses **V4.113** per `PRD_V4.113_Unified_Allocation_2026-06-04.md` and `src/spacex_model/config/constants.py` (horizon 2025–2040, 1000 iter / 1e-7 tol). Where this document conflicts with constants.py or the V4.113 PRD, **the PRD + constants.py win**.
+> **V4.131 re-base (2026-06-10):** Horizon, solver contract, and workbook baseline in §2.2 below describe the **V2.16-era** snapshot. The active port uses **V4.131** (`SpaceX V4.131.xlsx`) per `PRD_V4.113_Unified_Allocation_2026-06-04.md` (architecture unchanged) and `src/spacex_model/config/constants.py` (horizon 2025–2040, 1000 iter / 1e-7 tol). Label remaps from V4.113→V4.131 are recorded in `scripts/rebase_v4131.py` and `docs/DEV_LOG.md`. Where this document conflicts with constants.py or the V4.113 PRD, **the PRD + constants.py win**.
 
 **Companion documents** (repo root + package):
 - `docs/DEV_LOG.md` — append-only agent handoff log (what changed, Block B xfail status, how to verify). **Read after this file when resuming work.**
@@ -1014,6 +1014,7 @@ Total onboarding: ~3 hours before writing any code.
 | 2026-05-28 | S-1 adherence P0 backlog (audit §7.2): `apply_s1_adherence_overrides()` on every pipeline run; Block B tests use S-1 2025 anchors; AI Stack populated with S-1 AI + Anthropic lines + terrestrial CapEx | `SpaceX_Modeler_S1_Adherence_Audit_2026-05-28.docx`; see `docs/DEV_LOG.md` |
 | 2026-06-04 | V4.113 re-base: workbook `SpaceX V4.113.xlsx`; horizon 2025–2040; solver 1000 iter / 1e-7 tol; unified allocator (Phases R/U) | `PRD_V4.113_Unified_Allocation_2026-06-04.md`; supersedes V2.16 horizon/solver locks in §2.2 for the active port |
 | 2026-06-10 | Block B anchor provenance split: S-1 disclosure targets (`block_b_anchors.py`) vs V4.113 ingest frozen inputs (`v4_113_2025_anchors.py`); pending list shrink-only with strict xfails | Repo audit Milestone 1; reconciliation report burn-down table; Client Mode uncalibrated banner |
+| 2026-06-10 | V4.131 re-base: workbook `SpaceX V4.131.xlsx`; 95-label `LABEL_REMAP` + supplement overrides via `scripts/rebase_v4131.py`; `INGEST_SCALAR_DEFAULTS` cleared; anchors module → `v4_131_2025_anchors.py` | Repo audit 2026-06-10 Milestone 0; ambiguous remaps flagged in Milestone 1.3 (do not silently adjudicate) |
 
 ---
 

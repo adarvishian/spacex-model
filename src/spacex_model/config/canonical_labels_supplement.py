@@ -12,10 +12,11 @@ COREWEAVE_BASELINE_ANCHOR_YEAR_ROW: Final[str] = (
     "Comp anchor: AI/Compute standalone (CoreWeave-anchored)"
 )
 S1_AI_SEGMENT_REVENUE_YEAR_ROW: Final[str] = "S-1 AI (≙ xAI, consolidated): Revenue ($mm)"
-ANTHROPIC_COMPUTE_REVENUE_YEAR_ROW: Final[str] = "External compute 2025 seed (M H100-eq GPU)"
+ANTHROPIC_COMPUTE_REVENUE_YEAR_ROW: Final[str] = (
+    "Anthropic compute services revenue ($mm) — year-row"
+)
 TERRESTRIAL_AI_CAPEX_YEAR_ROW: Final[str] = "Memo: Terrestrial AI compute draw (GW): year-row"
-ECHOSTAR_MID_BAND_CAPEX_MM_YEAR_ROW: Final[str] = "Spectrum licence OpEx (% of revenue)"
-PRE_IPO_DEBT_FACILITY_MM: Final[str] = "Minimum cash buffer ($mm)"
+# ECHOSTAR: keep canonical_labels.py label; missing from V4.131 ingest → s1_profiles fallback in capex.py
 PRE_IPO_BRIDGE_DRAWDOWN_YEAR: Final[str] = "Launch-pacing year (apply caps in this year only)"
 WORKLOAD_MIX_INFERENCE_SHARE: Final[str] = "Effective Compute Ratio (ratio)"
 ODC_UTILIZATION_FACTOR: Final[str] = "Utilization ceiling (%)"

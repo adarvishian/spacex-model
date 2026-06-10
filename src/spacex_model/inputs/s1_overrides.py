@@ -12,17 +12,21 @@ from spacex_model.inputs.assumptions import (
     AssumptionsSection,
 )
 from spacex_model.inputs.s1_profiles import (
+    BRIDGE_DRAWDOWN_YEAR,
+    anthropic_compute_revenue_mm,
     broadband_arpu_sub_mo,
+    echostar_spectrum_capex_mm,
+    f9_customer_launches_per_year,
+    impairment_charges_mm,
+    restructuring_charges_mm,
     s1_ai_segment_revenue_mm,
+    share_based_compensation_mm,
     starship_customer_launch_price_mm,
+    starship_customer_launches_per_year,
+    starshield_gov_connectivity_scope_factor,
+    terrestrial_ai_capex_mm,
 )
 from spacex_model.inputs.scenarios import apply_assumption_overrides
-
-_INJECTION_SECTIONS: dict[str, str] = {
-    cl.BROADBAND_ARPU_SUB_MO_YEAR_ROW: "§3 Starlink",
-    cl.S1_AI_SEGMENT_REVENUE_YEAR_ROW: "§7 AI - Compute",
-    cl.STARSHIP_CUSTOMER_LAUNCH_PRICE_MM_LAUNCH_YEAR_ROW: "§4 Customer Launch",
-}
 
 
 def _year_dict(vec) -> dict[int, float]:
@@ -32,6 +36,7 @@ def _year_dict(vec) -> dict[int, float]:
 def _inject_labels(
     assumptions: Assumptions, injections: dict[str, AssumptionInput]
 ) -> Assumptions:
+    """Add or replace Assumptions rows (for labels missing from V4.131)."""
     new_by_label = dict(assumptions.by_label)
     for label, row in injections.items():
         new_by_label[label] = row
@@ -64,29 +69,87 @@ def s1_adherence_override_map() -> dict[str, Any]:
     """Canonical S-1 override payload (mirrored in scenarios/s1_adherence.yaml)."""
     return {
         cl.BROADBAND_ARPU_SUB_MO_YEAR_ROW: _year_dict(broadband_arpu_sub_mo()),
+        cl.ECHOSTAR_MID_BAND_CAPEX_MM_YEAR_ROW: _year_dict(echostar_spectrum_capex_mm()),
+        cl.F9_CUSTOMER_LAUNCHES_PER_YEAR: _year_dict(f9_customer_launches_per_year()),
         cl.S1_AI_SEGMENT_REVENUE_YEAR_ROW: _year_dict(s1_ai_segment_revenue_mm()),
+        cl.ANTHROPIC_COMPUTE_REVENUE_YEAR_ROW: _year_dict(anthropic_compute_revenue_mm()),
+        cl.TERRESTRIAL_AI_CAPEX_YEAR_ROW: _year_dict(terrestrial_ai_capex_mm()),
+        cl.PRE_IPO_BRIDGE_DRAWDOWN_YEAR: float(BRIDGE_DRAWDOWN_YEAR),
+        cl.SATELLITE_USEFUL_LIFE_V2_DTC_YEARS: 3.0,
+        cl.SATELLITE_USEFUL_LIFE_V3_DTC_YEARS: 3.0,
+        cl.F9_BOOSTER_ACCOUNTING_DEPRECIATION_CAP_FLIGHTS: 25.0,
+        cl.STARSHIP_CUSTOMER_LAUNCHES_PER_YEAR: _year_dict(
+            starship_customer_launches_per_year()
+        ),
         cl.STARSHIP_CUSTOMER_LAUNCH_PRICE_MM_LAUNCH_YEAR_ROW: _year_dict(
             starship_customer_launch_price_mm()
         ),
+        cl.STARSHIELD_S1_GOV_CONNECTIVITY_SCOPE_FACTOR: starshield_gov_connectivity_scope_factor(),
+        cl.SHARE_BASED_COMPENSATION_MM_YEAR_ROW: _year_dict(share_based_compensation_mm()),
+        cl.RESTRUCTURING_CHARGES_MM_YEAR_ROW: _year_dict(restructuring_charges_mm()),
+        cl.IMPAIRMENT_CHARGES_MM_YEAR_ROW: _year_dict(impairment_charges_mm()),
     }
+
+
+_P1_INJECTION_SPECS: tuple[tuple[str, str, object], ...] = (
+    (cl.BROADBAND_ARPU_SUB_MO_YEAR_ROW, "§3 Starlink", broadband_arpu_sub_mo()),
+    (cl.F9_CUSTOMER_LAUNCHES_PER_YEAR, "§4 Customer Launch", f9_customer_launches_per_year()),
+    (cl.S1_AI_SEGMENT_REVENUE_YEAR_ROW, "§7 AI - Compute", s1_ai_segment_revenue_mm()),
+    (cl.ANTHROPIC_COMPUTE_REVENUE_YEAR_ROW, "§7 AI - Compute", anthropic_compute_revenue_mm()),
+    (cl.TERRESTRIAL_AI_CAPEX_YEAR_ROW, "§10 CapEx", terrestrial_ai_capex_mm()),
+    (cl.ECHOSTAR_MID_BAND_CAPEX_MM_YEAR_ROW, "§10 CapEx", echostar_spectrum_capex_mm()),
+    (
+        cl.STARSHIP_CUSTOMER_LAUNCHES_PER_YEAR,
+        "§4 Customer Launch",
+        starship_customer_launches_per_year(),
+    ),
+    (
+        cl.STARSHIP_CUSTOMER_LAUNCH_PRICE_MM_LAUNCH_YEAR_ROW,
+        "§4 Customer Launch",
+        starship_customer_launch_price_mm(),
+    ),
+    (cl.SHARE_BASED_COMPENSATION_MM_YEAR_ROW, "§15 Group P&L", share_based_compensation_mm()),
+    (cl.RESTRUCTURING_CHARGES_MM_YEAR_ROW, "§15 Group P&L", restructuring_charges_mm()),
+    (cl.IMPAIRMENT_CHARGES_MM_YEAR_ROW, "§15 Group P&L", impairment_charges_mm()),
+)
 
 
 def apply_s1_adherence_overrides(assumptions: Assumptions) -> Assumptions:
     """Apply §7.2 P0 + §7.3 P1 where workbook rows exist but S-1 disclosure wins."""
-    override_map = s1_adherence_override_map()
     injections: dict[str, AssumptionInput] = {}
-    for label, override in override_map.items():
+    for label, section, vec in _P1_INJECTION_SPECS:
         if label in assumptions.by_label:
             continue
-        year_values = override if isinstance(override, dict) else {}
-        base = float(year_values.get(FIRST_YEAR, next(iter(year_values.values()), 0.0)))
+        base = float(vec[0]) if hasattr(vec, "__getitem__") else None
         injections[label] = AssumptionInput(
             label=label,
-            section=_INJECTION_SECTIONS.get(label, "§1 Global"),
+            section=section,
             base_case=base,
-            year_values=year_values,
-            notes="S-1 adherence P0/P1",
+            year_values=_year_dict(vec) if hasattr(vec, "__len__") else {},
+            notes="S-1 adherence audit P0/P1",
         )
+
+    for label, default in (
+        (cl.F9_BOOSTER_ACCOUNTING_DEPRECIATION_CAP_FLIGHTS, 25.0),
+        (cl.SATELLITE_USEFUL_LIFE_V2_DTC_YEARS, 3.0),
+        (cl.SATELLITE_USEFUL_LIFE_V3_DTC_YEARS, 3.0),
+        (cl.PRE_IPO_BRIDGE_DRAWDOWN_YEAR, float(BRIDGE_DRAWDOWN_YEAR)),
+        (
+            cl.STARSHIELD_S1_GOV_CONNECTIVITY_SCOPE_FACTOR,
+            starshield_gov_connectivity_scope_factor(),
+        ),
+    ):
+        if label not in assumptions.by_label:
+            injections[label] = AssumptionInput(
+                label=label,
+                section="§1 Global",
+                base_case=default,
+                notes="S-1 adherence audit P1",
+            )
+
     if injections:
         assumptions = _inject_labels(assumptions, injections)
-    return apply_assumption_overrides(assumptions, override_map)
+
+    override_map = s1_adherence_override_map()
+    applicable = {k: v for k, v in override_map.items() if k in assumptions.by_label}
+    return apply_assumption_overrides(assumptions, applicable)

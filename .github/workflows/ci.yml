@@ -50,6 +50,9 @@ jobs:
       - name: Audit artifact drift check
         run: uv run spacex-audit --check
 
+      - name: Precache artifact freshness (Milestone 0.3)
+        run: uv run python scripts/check_precache_artifacts.py
+
       - name: pip-audit (dependency security)
         run: uv run pip-audit
 
