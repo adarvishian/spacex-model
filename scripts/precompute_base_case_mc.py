@@ -6,7 +6,8 @@ Default: 2,000 trials, seed 42 (PRD §9.1). Override trials via
 SPACEX_MODEL_MC_PRECOMPUTE_TRIALS for CI or local smoke runs.
 
 Usage (from repo root):
-    python scripts/precompute_base_case_mc.py
+    uv run python scripts/precompute_base_case_mc.py
+    SPACEX_MODEL_SKIP_PRECOMPUTE=1 python3 scripts/precompute_base_case_mc.py  # skip without deps
 """
 
 from __future__ import annotations
@@ -33,26 +34,6 @@ def _env_bool(name: str, default: bool) -> bool:
     return raw.strip().lower() in {"1", "true", "yes", "on"}
 
 
-def _mc_config(trials: int, base_seed: int, scenario: str) -> "McRunConfig":
-    from spacex_model.mc.runner import McRunConfig
-
-    sampling = os.environ.get("SPACEX_MODEL_MC_SAMPLING", "mc")
-    if sampling not in {"mc", "qmc"}:
-        sampling = "mc"
-    return McRunConfig(
-        trials=trials,
-        base_seed=base_seed,
-        n_jobs=-1,
-        checkpoint_interval=max(100, trials // 10),
-        scenario_name=scenario,
-        sampling=sampling,  # type: ignore[arg-type]
-        warm_start=_env_bool("SPACEX_MODEL_MC_WARM_START", True),
-        mc_lite=_env_bool("SPACEX_MODEL_MC_LITE", True),
-        adaptive=_env_bool("SPACEX_MODEL_MC_ADAPTIVE", False),
-        conservation_audit_every=int(os.environ.get("SPACEX_MODEL_MC_CONSERVATION_AUDIT_EVERY", "0")),
-    )
-
-
 def _git_sha() -> str:
     try:
         out = subprocess.check_output(
@@ -67,6 +48,9 @@ def _git_sha() -> str:
 
 
 def main() -> int:
+    if should_skip_precache(OUT_PATH, repo_root=REPO_ROOT, label="MC precompute"):
+        return 0
+
     sys.path.insert(0, str(REPO_ROOT / "src"))
 
     from spacex_model.config.settings import get_settings
@@ -81,14 +65,25 @@ def main() -> int:
         print(f"Workbook not found: {settings.workbook_path}", file=sys.stderr)
         return 1
 
-    if should_skip_precache(OUT_PATH, repo_root=REPO_ROOT, label="MC precompute"):
-        return 0
-
     trials = int(os.environ.get("SPACEX_MODEL_MC_PRECOMPUTE_TRIALS", str(DEFAULT_TRIALS)))
     base_seed = int(os.environ.get("SPACEX_MODEL_MC_PRECOMPUTE_SEED", str(DEFAULT_SEED)))
     scenario = "base_case"
 
-    cfg = _mc_config(trials, base_seed, scenario)
+    sampling = os.environ.get("SPACEX_MODEL_MC_SAMPLING", "mc")
+    if sampling not in {"mc", "qmc"}:
+        sampling = "mc"
+    cfg = McRunConfig(
+        trials=trials,
+        base_seed=base_seed,
+        n_jobs=-1,
+        checkpoint_interval=max(100, trials // 10),
+        scenario_name=scenario,
+        sampling=sampling,  # type: ignore[arg-type]
+        warm_start=_env_bool("SPACEX_MODEL_MC_WARM_START", True),
+        mc_lite=_env_bool("SPACEX_MODEL_MC_LITE", True),
+        adaptive=_env_bool("SPACEX_MODEL_MC_ADAPTIVE", False),
+        conservation_audit_every=int(os.environ.get("SPACEX_MODEL_MC_CONSERVATION_AUDIT_EVERY", "0")),
+    )
     print(
         f"Running base-case MC ({trials} trials, seed {base_seed}, "
         f"lite={cfg.mc_lite}, warm={cfg.warm_start}, sampling={cfg.sampling}, adaptive={cfg.adaptive})…"

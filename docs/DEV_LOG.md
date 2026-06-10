@@ -11,6 +11,27 @@ Chronological record of material changes to the Python port. Read this after `co
 
 ---
 
+## 2026-06-10 — Milestone 1 complete: serverless fixes + prebuild hardening (audit 2026-06-10)
+
+**Trigger:** `SpaceX_Modeler_Repo_Audit_2026-06-10.md` §5 Milestone 1 tasks 1.1, 1.2, 1.4 (1.3 shipped earlier same day).
+
+### Shipped
+
+| Task | Change | Primary files |
+|------|--------|---------------|
+| 1.1 | Cell history writes route to `/tmp/spacex_model/cell_history` on serverless; ingest wraps `record_ingest_changes` in logged non-fatal guard | `config/settings.py`, `io/snapshot_store.py`, `io/excel_ingest.py` |
+| 1.2 | Precompute skip check runs before any `spacex_model` import; frontend prebuild uses `uv run python` | `scripts/precompute_base_case*.py`, `frontend/package.json` |
+| 1.4 | Serverless smoke tests: read-only repo simulation, deterministic + MC poll + lineage history; CI steps | `tests/service/test_serverless_smoke.py`, `tests/scripts/test_precache_skip.py`, `.github/workflows/ci.yml` |
+
+### Verify
+
+```bash
+SPACEX_MODEL_SKIP_PRECOMPUTE=1 python3 scripts/precompute_base_case.py   # exit 0 without pydantic
+uv run pytest tests/service/test_serverless_smoke.py tests/scripts/test_precache_skip.py -v
+```
+
+---
+
 ## 2026-06-10 — Milestone 1.3: V4.131 remap audit + solver convergence (audit 2026-06-10)
 
 **Trigger:** `SpaceX_Modeler_Repo_Audit_2026-06-10.md` §5 task 1.3; unblocks M0 task 0.2.

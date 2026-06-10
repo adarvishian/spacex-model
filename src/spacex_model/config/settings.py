@@ -44,6 +44,13 @@ def _default_outputs_dir() -> Path:
     return _REPO_ROOT / "outputs"
 
 
+def _default_cell_history_dir() -> Path:
+    """Use /tmp on serverless — repo-root data/ is read-only on Vercel."""
+    if is_serverless():
+        return Path("/tmp/spacex_model/cell_history")
+    return _REPO_ROOT / "data" / "cell_history"
+
+
 def get_repo_root() -> Path:
     return _REPO_ROOT
 

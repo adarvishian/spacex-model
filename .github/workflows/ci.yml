@@ -59,6 +59,12 @@ jobs:
       - name: Pytest (excludes slow hypothesis by default)
         run: uv run pytest -n auto -m "not slow" --cov=spacex_model --cov-report=term-missing:skip-covered --cov-report=xml --tb=short -q
 
+      - name: Serverless smoke (Milestone 1.4)
+        run: uv run pytest tests/service/test_serverless_smoke.py -m slow --tb=short -q
+
+      - name: Prebuild skip probe (Milestone 1.2)
+        run: uv run pytest tests/scripts/test_precache_skip.py --tb=short -q
+
       - name: Record coverage baseline
         run: |
           uv run python -c "

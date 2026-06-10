@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -19,6 +20,8 @@ from spacex_model.config.constants import (
     FIRST_YEAR,
     LAST_YEAR,
 )
+
+_logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True, slots=True)
@@ -324,6 +327,9 @@ def ingest_workbook(workbook_path: Path) -> IngestResult:
     )
     from spacex_model.io.snapshot_store import record_ingest_changes
 
-    record_ingest_changes(result)
+    try:
+        record_ingest_changes(result)
+    except OSError as exc:
+        _logger.warning("Cell history write skipped (non-fatal): %s", exc)
     _ingest_cache[key] = result
     return result

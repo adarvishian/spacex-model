@@ -12,7 +12,7 @@ import pyarrow as pa
 import pyarrow.parquet as pq
 
 from spacex_model.config.constants import FIRST_YEAR, LAST_YEAR
-from spacex_model.config.settings import get_repo_root
+from spacex_model.config.settings import _default_cell_history_dir, get_repo_root
 from spacex_model.engine.label_lookup import normalize_label
 from spacex_model.inputs.s1_2025_anchors import S1_INGEST_ANCHORS_2025
 from spacex_model.io.excel_ingest import IngestResult
@@ -78,7 +78,7 @@ def cell_history_dir() -> Path:
     override = __import__("os").environ.get("SPACEX_MODEL_CELL_HISTORY_DIR")
     if override:
         return Path(override).resolve()
-    return get_repo_root() / "data" / "cell_history"
+    return _default_cell_history_dir()
 
 
 def _changes_path(store_dir: Path) -> Path:
