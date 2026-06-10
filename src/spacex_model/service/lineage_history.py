@@ -21,6 +21,13 @@ def _title_for_change(record: dict[str, Any]) -> str:
         return f"Anchor value moved — {version}{year_part}"
     if kind == "input":
         return f"Input assumption changed — {version}{year_part}"
+    if kind == "added":
+        return f"Variable added — {version}{year_part}"
+    if kind == "removed":
+        return f"Variable removed — {version}{year_part}"
+    if kind == "renamed":
+        prior = record.get("prior_label") or "prior label"
+        return f"Renamed from {prior!r} — {version}{year_part}"
     return f"Value updated — {version}{year_part}"
 
 

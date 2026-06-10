@@ -37,13 +37,14 @@ def serverless_client(serverless_env: None):
     return TestClient(app)
 
 
-def test_cell_history_dir_routes_to_tmp_on_serverless(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_cell_history_write_dir_routes_to_tmp_on_serverless(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("VERCEL", "1")
     monkeypatch.delenv("SPACEX_MODEL_CELL_HISTORY_DIR", raising=False)
 
-    from spacex_model.io.snapshot_store import cell_history_dir
+    from spacex_model.io.snapshot_store import cell_history_read_dir, cell_history_write_dir
 
-    assert cell_history_dir() == Path("/tmp/spacex_model/cell_history")
+    assert cell_history_write_dir() == Path("/tmp/spacex_model/cell_history")
+    assert cell_history_read_dir().name == "cell_history"
 
 
 @pytest.mark.skipif(not WORKBOOK.exists(), reason="V4.131 workbook not present")
@@ -68,9 +69,9 @@ def test_ingest_succeeds_when_repo_data_is_readonly(
     excel_ingest._ingest_cache.clear()
 
     from spacex_model.io.excel_ingest import ingest_workbook
-    from spacex_model.io.snapshot_store import cell_history_dir
+    from spacex_model.io.snapshot_store import cell_history_write_dir
 
-    assert cell_history_dir().as_posix().startswith("/tmp/spacex_model/")
+    assert cell_history_write_dir().as_posix().startswith("/tmp/spacex_model/")
     result = ingest_workbook(WORKBOOK)
     assert result.workbook_path == WORKBOOK
 

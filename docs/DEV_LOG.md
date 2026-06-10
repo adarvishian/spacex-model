@@ -11,6 +11,29 @@ Chronological record of material changes to the Python port. Read this after `co
 
 ---
 
+## 2026-06-10 — Milestone 2 complete: versioned ingestion engine (audit 2026-06-10)
+
+**Trigger:** `SpaceX_Modeler_Repo_Audit_2026-06-10.md` §5 Milestone 2 tasks 2.1–2.4 (Theme A).
+
+### Shipped
+
+| Task | Change | Primary files |
+|------|--------|---------------|
+| 2.1 | Label-identity change store: `label`/`label_key`/`identity_key` columns; diff keyed by `(sheet, label, year, field)`; `added`/`removed`/`renamed` kinds; legacy parquet migration | `io/snapshot_store.py` |
+| 2.2 | Diff coverage extended to Assumptions scalars (col B) and MC Min/Max/Distribution | `io/snapshot_store.py::_iter_ingest_cells` |
+| 2.3 | `spacex-rebase` CLI: `drift`, `propose`, `validate`, `apply` subcommands; unit-hint checks; versioned remap data under `data/label_remaps/` | `cli/rebase.py`, `io/rebase_drift.py`, `io/label_remaps.py` |
+| 2.4 | Committed cell-history artifact generated from V4.113→V4.131 lineage; bundled read path on serverless, writes still `/tmp` | `data/cell_history/`, `scripts/generate_cell_history.py`, `config/settings.py`, `.gitignore`, `.github/workflows/ci.yml` |
+
+### Verify
+
+```bash
+uv run spacex-rebase validate data/label_remaps/v4_113__v4_131.json
+uv run python scripts/generate_cell_history.py
+uv run pytest tests/io/ tests/service/test_lineage_history.py -v
+```
+
+---
+
 ## 2026-06-10 — Milestone 1 complete: serverless fixes + prebuild hardening (audit 2026-06-10)
 
 **Trigger:** `SpaceX_Modeler_Repo_Audit_2026-06-10.md` §5 Milestone 1 tasks 1.1, 1.2, 1.4 (1.3 shipped earlier same day).

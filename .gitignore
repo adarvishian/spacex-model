@@ -10,7 +10,7 @@ coverage.xml
 dist/
 *.egg-info/
 outputs/          # run artifacts (CLI/API); golden fixtures live in tests/golden/
-data/cell_history/  # per-cell xlsx ingest diff store (L3)
+# data/cell_history/ is a committed versioned artifact (Milestone 2.4)
 .DS_Store
 .env
 node_modules/

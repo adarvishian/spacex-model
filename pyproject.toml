@@ -43,6 +43,7 @@ spacex-model = "spacex_model.cli.run_model:main"
 spacex-mc = "spacex_model.cli.run_mc:main"
 spacex-api = "spacex_model.cli.run_api:main"
 spacex-audit = "spacex_model.cli.audit:main"
+spacex-rebase = "spacex_model.cli.rebase:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/spacex_model"]
