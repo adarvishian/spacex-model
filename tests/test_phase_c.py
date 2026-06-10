@@ -9,7 +9,7 @@ import pytest
 from spacex_model.calc.customer_launch.module import CustomerLaunchInputs, compute_allocator_out as cl_out
 from spacex_model.calc.launch_capacity import LaunchCapacityInputs, compute_launch_capacity
 from spacex_model.calc.lunar_mars.module import LunarMarsInputs, compute_allocator_out as lm_out
-from spacex_model.calc.odc.module import OdcInputs, compute_allocator_out as odc_out
+from spacex_model.calc.ai_compute import AiComputeInputs, compute_allocator_out as odc_out
 from spacex_model.calc.starlink.module import StarlinkInputs, compute_allocator_out as sl_out
 from spacex_model.calc.starlink.vehicle_pools import compute_vehicle_pools
 from spacex_model.calc.starlink_capacity import OdcBandwidthClaim
@@ -142,7 +142,7 @@ def test_starlink_starshield_2025(starlink_inputs: StarlinkInputs) -> None:
 
 @pytest.mark.skipif(not WORKBOOK.exists(), reason="V2.16 workbook not present")
 def test_odc_2025_zero(assumptions: Assumptions) -> None:
-    out = odc_out(OdcInputs(assumptions=assumptions, sats_deployed=YearVector.zeros()))
+    out = odc_out(AiComputeInputs(assumptions=assumptions, sats_deployed=YearVector.zeros()))
     y = FIRST_YEAR
     assert out.total_revenue.at(y) == 0.0
     assert out.total_cogs.at(y) == 0.0

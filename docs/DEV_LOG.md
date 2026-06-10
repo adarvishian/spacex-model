@@ -1044,11 +1044,27 @@ Unchanged: `vercel.json` build → `static/ui`; preview/e2e use Vite preview onl
 | P0-4 | EchoStar spectrum CapEx: 2025/26=0, **2027=$19,600** | `s1_profiles.py`, `capex.py` fallback |
 | P0-5 | F9 customer launches: hardcoded 38.58 → **Assumptions row @ 43** | `customer_launch/module.py`, injected label |
 | P0-6 | Q4'25 ingest anchors → **S-1 ingest anchors** | `s1_2025_anchors.py`, `io/anchor_checks.py` |
-| P0-7 | AI Stack: **S-1 AI segment revenue** (~$3,201mm 2025) | `calc/ai_stack/module.py` |
-| P0-8 | **Anthropic compute revenue** year-row (2026+) | `calc/ai_stack/module.py`, overrides |
-| P0-9 | **Terrestrial AI (COLOSSUS) CapEx** year-row | `calc/ai_stack/module.py`, overrides |
+| P0-7 | AI Stack: **S-1 AI segment revenue** (~$3,201mm 2025) | `calc/ai_compute/module.py` |
+| P0-8 | **Anthropic compute revenue** year-row (2026+) | `calc/ai_compute/module.py`, overrides |
+| P0-9 | **Terrestrial AI (COLOSSUS) CapEx** year-row | `calc/ai_compute/module.py`, overrides |
 | P0-10 | Customer Launch calibration | F9 @ 43 × $111mm; Space segment vs Mach33 mapping still **xfail** in Block B |
 | P0-11 | Block B tests → **S-1 audited 2025 anchor set** | `testing/block_b_anchors.py`, `pipeline.lookup_anchor` |
+
+---
+
+## 2026-06-10 — Milestone 3 (quality & polish)
+
+**Trigger:** `SpaceX_Modeler_Repo_Audit_2026-06-09.md` §5 Milestone 3.
+
+| Task | Change |
+|------|--------|
+| 3.1 | Root **documentation index** in `README.md`; superseded root PRDs moved to `docs/archive/` |
+| 3.2 | Serverless MC context: `context.pkl` → `context.json` (workbook path + mtime); trial append via Arrow concat (no pickle in `src/`) |
+| 3.3 | Job store TTL + LRU cap (`job_store_*` settings); run store TTL; non-daemon MC threads + `atexit` shutdown |
+| 3.4 | Removed deprecated `calc/odc/` and `calc/ai_stack/` shells; translation log → `calc.ai_compute` |
+| 3.5 | `frontend/README.md` — modes, precache, e2e mocking |
+
+**Verify:** `pytest tests/service/test_mc_store.py tests/service/test_job_eviction.py`; `rg 'import pickle' src/` empty.
 
 ### New modules
 

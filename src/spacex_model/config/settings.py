@@ -62,6 +62,10 @@ class Settings(BaseSettings):
     redis_url: str | None = None
     cache_max_entries: int = 128
     cache_ttl_sec: int = 3600
+    job_store_max_entries: int = 32
+    job_store_ttl_sec: int = 3600
+    run_store_max_entries: int = 16
+    run_store_ttl_sec: int = 3600
     api_key: str | None = None
     allowed_origins: str = "http://localhost:5173,http://localhost:3000,http://127.0.0.1:5173"
     # Serverless (Vercel): MC runs in small batches per poll to avoid FUNCTION_INVOCATION_TIMEOUT

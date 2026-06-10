@@ -4,9 +4,9 @@ Auto-generated tab→package mapping per PRD §15.
 
 ```mermaid
 flowchart LR
-  AI_Stack["AI Stack"] --> calc_ai_stack_demand["calc/calc.ai_stack.demand"]
-  AI_Stack["AI Stack"] --> calc_ai_stack_module["calc/calc.ai_stack.module"]
-  AI_Stack["AI Stack"] --> calc_ai_stack_output["calc/calc.ai_stack.output"]
+  AI_Compute["AI - Compute"] --> calc_ai_compute_demand["calc/calc.ai_compute.demand"]
+  AI_Compute["AI - Compute"] --> calc_ai_compute_module["calc/calc.ai_compute.module"]
+  AI_Compute["AI - Compute"] --> calc_ai_compute_output["calc/calc.ai_compute.output"]
   Allocator["Allocator"] --> calc_allocator_brain["calc/calc.allocator.brain"]
   Allocator["Allocator"] --> calc_allocator_cash_pool["calc/calc.allocator.cash_pool"]
   Allocator["Allocator"] --> calc_allocator_demand_builders["calc/calc.allocator.demand_builders"]
@@ -32,10 +32,7 @@ flowchart LR
   Lunar_Mars["Lunar Mars"] --> calc_lunar_mars_deployment["calc/calc.lunar_mars.deployment"]
   Lunar_Mars["Lunar Mars"] --> calc_lunar_mars_module["calc/calc.lunar_mars.module"]
   Lunar_Mars["Lunar Mars"] --> calc_lunar_mars_output["calc/calc.lunar_mars.output"]
-  ODC["ODC"] --> calc_internal_flows_compute["calc/calc.internal_flows.compute"]
-  ODC["ODC"] --> calc_odc_demand["calc/calc.odc.demand"]
-  ODC["ODC"] --> calc_odc_module["calc/calc.odc.module"]
-  ODC["ODC"] --> calc_odc_output["calc/calc.odc.output"]
+  AI_Compute["AI - Compute"] --> calc_internal_flows_compute["calc/calc.internal_flows.compute"]
   OpEx["OpEx"] --> calc_opex["calc/calc.opex"]
   Starlink["Starlink"] --> calc_allocator_physical_gates["calc/calc.allocator.physical_gates"]
   Starlink["Starlink"] --> calc_internal_flows_bandwidth["calc/calc.internal_flows.bandwidth"]

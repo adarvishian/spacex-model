@@ -2,25 +2,28 @@
 
 from __future__ import annotations
 
+import atexit
 import json
 import threading
+import time
 import uuid
+from collections import OrderedDict
 from dataclasses import dataclass, field
 from enum import StrEnum
 from pathlib import Path
 from typing import Any
 
 from spacex_model.config.settings import get_settings, is_serverless
-from spacex_model.service.mc_store import (
-    ServerlessMcSnapshot,
-    create_serverless_job,
-    get_serverless_job,
-)
 from spacex_model.engine.pipeline import run_base_case
 from spacex_model.mc.aggregator import aggregate_trials
 from spacex_model.mc.results import extract_trial_metrics, read_trials_parquet
 from spacex_model.mc.runner import McRunConfig, run_mc
 from spacex_model.mc.sensitivity import tornado_sensitivity
+from spacex_model.service.mc_store import (
+    ServerlessMcSnapshot,
+    create_serverless_job,
+    get_serverless_job,
+)
 from spacex_model.service.serializers import serialize_mc_aggregation, serialize_tornado
 
 
@@ -39,13 +42,15 @@ class McJob:
     error: str | None = None
     result: dict[str, Any] | None = None
     output_dir: Path | None = None
+    created_at: float = field(default_factory=time.time)
 
 
 class JobManager:
     """In-process background job queue for MC studies."""
 
     def __init__(self) -> None:
-        self._jobs: dict[str, McJob] = {}
+        self._jobs: OrderedDict[str, McJob] = OrderedDict()
+        self._threads: dict[str, threading.Thread] = {}
         self._lock = threading.Lock()
 
     def submit_mc(
@@ -72,6 +77,7 @@ class JobManager:
                 workbook_path=path,
             )
 
+        self._evict_stale()
         job_id = str(uuid.uuid4())[:8]
         cfg = McRunConfig(
             trials=trials,
@@ -86,8 +92,10 @@ class JobManager:
         thread = threading.Thread(
             target=self._run_mc_job,
             args=(job_id, cfg, include_tornado, tornado_top, workbook_path),
-            daemon=True,
+            daemon=False,
+            name=f"mc-job-{job_id}",
         )
+        self._threads[job_id] = thread
         thread.start()
         return job_id
 
@@ -97,6 +105,36 @@ class JobManager:
             return _snapshot_to_mc_job(snap) if snap else None
         with self._lock:
             return self._jobs.get(job_id)
+
+    def shutdown(self, timeout: float = 10.0) -> None:
+        """Wait for in-flight MC threads to finish (best-effort on process exit)."""
+        for thread in list(self._threads.values()):
+            if thread.is_alive():
+                thread.join(timeout=timeout)
+
+    def _evict_stale(self) -> None:
+        settings = get_settings()
+        now = time.time()
+        with self._lock:
+            for job_id in list(self._jobs.keys()):
+                job = self._jobs[job_id]
+                if job.status not in (JobStatus.COMPLETED, JobStatus.FAILED):
+                    continue
+                if now - job.created_at <= settings.job_store_ttl_sec:
+                    continue
+                self._jobs.pop(job_id, None)
+                self._threads.pop(job_id, None)
+
+            while len(self._jobs) > settings.job_store_max_entries:
+                evicted = False
+                for job_id, job in self._jobs.items():
+                    if job.status in (JobStatus.COMPLETED, JobStatus.FAILED):
+                        self._jobs.pop(job_id)
+                        self._threads.pop(job_id, None)
+                        evicted = True
+                        break
+                if not evicted:
+                    break
 
     def _run_mc_job(
         self,
@@ -165,6 +203,8 @@ class JobManager:
                 job = self._jobs[job_id]
                 job.status = JobStatus.FAILED
                 job.error = str(exc)
+        finally:
+            self._threads.pop(job_id, None)
 
 
 def _snapshot_to_mc_job(snap: ServerlessMcSnapshot) -> McJob:
@@ -185,10 +225,14 @@ def _jobs_root_exists(job_id: str) -> bool:
 
 
 _manager: JobManager | None = None
+_shutdown_registered = False
 
 
 def get_job_manager() -> JobManager:
-    global _manager
+    global _manager, _shutdown_registered
     if _manager is None:
         _manager = JobManager()
+    if not _shutdown_registered:
+        atexit.register(_manager.shutdown)
+        _shutdown_registered = True
     return _manager

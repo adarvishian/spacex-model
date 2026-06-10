@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-import pickle
 import time
 import uuid
 from dataclasses import asdict, dataclass
@@ -16,7 +15,12 @@ from spacex_model.inputs.assumptions import Assumptions, assumptions_from_ingest
 from spacex_model.inputs.demand_curves import DemandCurves, demand_curves_from_ingest
 from spacex_model.io.excel_ingest import IngestResult, ingest_workbook
 from spacex_model.mc.aggregator import aggregate_trials
-from spacex_model.mc.results import extract_trial_metrics, read_trials_parquet, write_trials_parquet
+from spacex_model.mc.results import (
+    append_trials_parquet,
+    extract_trial_metrics,
+    read_trials_parquet,
+    write_trials_parquet,
+)
 from spacex_model.mc.runner import McRunConfig, run_mc_trials
 from spacex_model.service.serializers import serialize_mc_aggregation
 
@@ -54,7 +58,7 @@ def _state_path(job_id: str) -> Path:
 
 
 def _context_path(job_id: str) -> Path:
-    return _job_dir(job_id) / "context.pkl"
+    return _job_dir(job_id) / "context.json"
 
 
 def _trials_path(job_id: str) -> Path:
@@ -72,27 +76,29 @@ def _save_state(state: _JobState) -> None:
     path.write_text(json.dumps(asdict(state), indent=2), encoding="utf-8")
 
 
+def _save_context(job_id: str, workbook_path: Path) -> None:
+    stat = workbook_path.stat()
+    payload = {
+        "workbook_path": str(workbook_path.resolve()),
+        "workbook_mtime": stat.st_mtime,
+    }
+    path = _context_path(job_id)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+
+
 def _load_context(job_id: str) -> tuple[IngestResult, Assumptions, DemandCurves]:
-    with _context_path(job_id).open("rb") as fh:
-        ingest, assumptions, demand = pickle.load(fh)
+    """Rehydrate ingest bundle from workbook path (process-local ingest cache applies)."""
+    data = json.loads(_context_path(job_id).read_text(encoding="utf-8"))
+    path = Path(data["workbook_path"])
+    ingest = ingest_workbook(path)
+    assumptions = assumptions_from_ingest(ingest)
+    demand = demand_curves_from_ingest(ingest)
     return ingest, assumptions, demand
 
 
-def _save_context(job_id: str, ingest: IngestResult, assumptions: Assumptions, demand: DemandCurves) -> None:
-    path = _context_path(job_id)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("wb") as fh:
-        pickle.dump((ingest, assumptions, demand), fh, protocol=pickle.HIGHEST_PROTOCOL)
-
-
 def _append_trials(job_id: str, new_rows: list[dict[str, Any]]) -> None:
-    path = _trials_path(job_id)
-    if path.exists():
-        existing = read_trials_parquet(path).to_pylist()
-        rows = existing + new_rows
-    else:
-        rows = new_rows
-    write_trials_parquet(rows, path)
+    append_trials_parquet(new_rows, _trials_path(job_id))
 
 
 def create_serverless_job(
@@ -212,10 +218,8 @@ def advance_serverless_job(job_id: str) -> ServerlessMcSnapshot | None:
         _save_state(state)
 
         if not _context_path(job_id).exists():
-            ingest = ingest_workbook(Path(state.workbook_path))
-            assumptions = assumptions_from_ingest(ingest)
-            demand = demand_curves_from_ingest(ingest)
-            _save_context(job_id, ingest, assumptions, demand)
+            wb_path = Path(state.workbook_path)
+            _save_context(job_id, wb_path)
 
         ingest, assumptions, demand = _load_context(job_id)
         start = state.trials_done

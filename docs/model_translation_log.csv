@@ -1,12 +1,12 @@
 sheet,row,column_a_label,excel_cell_range,module_path,function,docstring_section
-AI Stack,,AI Stack cash demand ($mm),AI Stack!— (Phase C / v1.x),calc.ai_stack.demand,compute_demand,§12 AI Stack (v1 stub)
-AI Stack,,Total Revenue ($mm),AI Stack!— (v1.x),calc.ai_stack.module,compute_revenue,§12 AI Stack (v1 stub)
-AI Stack,,Total COGS ($mm),AI Stack!— (v1.x),calc.ai_stack.module,compute_cogs,§7.3 internal compute transfer
-AI Stack,,Gross Profit ($mm),AI Stack!— (v1.x),calc.ai_stack.module,compute_gross_profit,§3 module framing
-AI Stack,,AI Stack Module CapEx ($mm),AI Stack!— (v1.x),calc.ai_stack.module,compute_capex,§12 AI Stack stub
-AI Stack,,Module FCF ($mm),AI Stack!— (v1.x),calc.ai_stack.module,compute_fcf,§3 module FCF
-AI Stack,,CENTRAL ALLOCATOR OUTPUTS,AI Stack!— (v1.x),calc.ai_stack.module,compute_allocator_out,§12 AI Stack stub OUT
-AI Stack,,AI Stack proposed allocation ($mm),AI Stack!— (v1.x),calc.ai_stack.output,compute_output,§12 AI Stack stub
+AI Stack,,AI Stack cash demand ($mm),AI Stack!— (Phase C / v1.x),calc.ai_compute.demand,compute_demand,§12 AI Stack (v1 stub)
+AI Stack,,Total Revenue ($mm),AI Stack!— (v1.x),calc.ai_compute.module,compute_revenue,§12 AI Stack (v1 stub)
+AI Stack,,Total COGS ($mm),AI Stack!— (v1.x),calc.ai_compute.module,compute_cogs,§7.3 internal compute transfer
+AI Stack,,Gross Profit ($mm),AI Stack!— (v1.x),calc.ai_compute.module,compute_gross_profit,§3 module framing
+AI Stack,,AI Stack Module CapEx ($mm),AI Stack!— (v1.x),calc.ai_compute.module,compute_capex,§12 AI Stack stub
+AI Stack,,Module FCF ($mm),AI Stack!— (v1.x),calc.ai_compute.module,compute_fcf,§3 module FCF
+AI Stack,,CENTRAL ALLOCATOR OUTPUTS,AI Stack!— (v1.x),calc.ai_compute.module,compute_allocator_out,§12 AI Stack stub OUT
+AI Stack,,AI Stack proposed allocation ($mm),AI Stack!— (v1.x),calc.ai_compute.output,compute_output,§12 AI Stack stub
 Allocator,,ALLOCATOR BRAIN,Allocator!— (Phase D orchestrator),calc.allocator.brain,compute_allocator,§6 + §20.2 (Sprint 11f Option A)
 Assumptions,,Starting cash position EoY 2024 ($mm),Assumptions!B (Starting cash position EoY 2024),calc.allocator.cash_pool,starting_cash_mm,§6.1 + §15.2 R109
 Assumptions,,Pre-IPO debt facility ($mm),Assumptions!B (Pre-IPO debt facility),calc.allocator.cash_pool,compute_bridge_drawdown,§2.13 + §15.2 R109
@@ -75,19 +75,19 @@ Lunar Mars,,Module CapEx ($mm),Lunar Mars!— (Phase C),calc.lunar_mars.module,c
 Lunar Mars,,Module FCF ($mm),Lunar Mars!— (Phase C),calc.lunar_mars.module,compute_fcf,§20.5 LM FCF
 Lunar Mars,,CENTRAL ALLOCATOR OUTPUTS,Lunar Mars!— (Phase C),calc.lunar_mars.module,compute_allocator_out,§11 Allocator OUT
 Lunar Mars,,Lunar Mars proposed allocation ($mm),Lunar Mars!— (Phase C),calc.lunar_mars.output,compute_output,§11 deployment
-ODC,,ODC cash demand ($mm),ODC!— (Phase C),calc.odc.demand,compute_demand,§20.8 / §6.5 (Sprint 11f Option A)
-ODC,,Per-sat combined revenue ($mm/yr),ODC!— (Phase C),calc.odc.module,per_sat_combined_revenue_mm,§9.2 dual revenue
-ODC,,Bandwidth services cost ($mm),ODC!— (Phase C),calc.odc.module,per_sat_bandwidth_cost_mm,§7.2 / §9.4
-ODC,,Per-sat net marginal revenue ($mm/yr),ODC!— (Phase C),calc.odc.module,per_sat_net_marginal_revenue_mm,§9.4 IRR engine input
-ODC,,ODC BB Gbps demand,ODC!— (Phase C),calc.odc.module,odc_bandwidth_claim,§7.2
-ODC,,Total Revenue ($mm),ODC!D— (Phase C),calc.odc.module,compute_revenue,§20.8 ODC revenue
-ODC,,Total COGS ($mm),ODC!— (Phase C),calc.odc.module,compute_cogs,§20.8 ODC COGS
-ODC,,Gross Profit ($mm),ODC!— (Phase C),calc.odc.module,compute_gross_profit,§3 module framing
-ODC,,Module CapEx ($mm),ODC!— (Phase C),calc.odc.module,compute_capex,§20.8 ODC CapEx
-ODC,,Module FCF ($mm),ODC!— (Phase C),calc.odc.module,compute_fcf,§3 module FCF
-ODC,,Blended IRR,ODC!— (Phase C),calc.odc.module,per_sat_blended_irr,§9.4
-ODC,,CENTRAL ALLOCATOR OUTPUTS,ODC!— (Phase C),calc.odc.module,compute_allocator_out,§20.8 Allocator OUT
-ODC,,ODC proposed allocation ($mm),ODC!— (Phase D),calc.odc.output,compute_output,§20.8 (cash-driven deployment)
+ODC,,ODC cash demand ($mm),ODC!— (Phase C),calc.ai_compute.demand,compute_demand,§20.8 / §6.5 (Sprint 11f Option A)
+ODC,,Per-sat combined revenue ($mm/yr),ODC!— (Phase C),calc.ai_compute.module,per_sat_combined_revenue_mm,§9.2 dual revenue
+ODC,,Bandwidth services cost ($mm),ODC!— (Phase C),calc.ai_compute.module,per_sat_bandwidth_cost_mm,§7.2 / §9.4
+ODC,,Per-sat net marginal revenue ($mm/yr),ODC!— (Phase C),calc.ai_compute.module,per_sat_net_marginal_revenue_mm,§9.4 IRR engine input
+ODC,,ODC BB Gbps demand,ODC!— (Phase C),calc.ai_compute.module,odc_bandwidth_claim,§7.2
+ODC,,Total Revenue ($mm),ODC!D— (Phase C),calc.ai_compute.module,compute_revenue,§20.8 ODC revenue
+ODC,,Total COGS ($mm),ODC!— (Phase C),calc.ai_compute.module,compute_cogs,§20.8 ODC COGS
+ODC,,Gross Profit ($mm),ODC!— (Phase C),calc.ai_compute.module,compute_gross_profit,§3 module framing
+ODC,,Module CapEx ($mm),ODC!— (Phase C),calc.ai_compute.module,compute_capex,§20.8 ODC CapEx
+ODC,,Module FCF ($mm),ODC!— (Phase C),calc.ai_compute.module,compute_fcf,§3 module FCF
+ODC,,Blended IRR,ODC!— (Phase C),calc.ai_compute.module,per_sat_blended_irr,§9.4
+ODC,,CENTRAL ALLOCATOR OUTPUTS,ODC!— (Phase C),calc.ai_compute.module,compute_allocator_out,§20.8 Allocator OUT
+ODC,,ODC proposed allocation ($mm),ODC!— (Phase D),calc.ai_compute.output,compute_output,§20.8 (cash-driven deployment)
 OpEx,,OpEx revenue bases,OpEx!— (revenue base wiring),calc.opex,build_revenue_bases,§12 OpEx tab
 OpEx,,"ODC R&D ($mm) — MAX($-profile, % × rev)",OpEx!D26 / D32,calc.opex,switching_rd,§12.1 (pre-revenue R&D switch)
 OpEx,,Starlink R&D ($mm),OpEx!D13,calc.opex,compute_starlink_rd,§12.1 R&D by module

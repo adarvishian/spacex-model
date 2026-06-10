@@ -99,5 +99,18 @@ def write_trials_parquet(rows: list[dict[str, Any]], path: Path) -> None:
     pq.write_table(trials_to_table(rows), path)
 
 
+def append_trials_parquet(new_rows: list[dict[str, Any]], path: Path) -> None:
+    """Append trial rows via Arrow concat (avoids Python dict round-trip)."""
+    if not new_rows:
+        return
+    path.parent.mkdir(parents=True, exist_ok=True)
+    new_table = trials_to_table(new_rows)
+    if path.exists():
+        combined = pa.concat_tables([pq.read_table(path), new_table])
+        pq.write_table(combined, path)
+    else:
+        pq.write_table(new_table, path)
+
+
 def read_trials_parquet(path: Path) -> pa.Table:
     return pq.read_table(path)
