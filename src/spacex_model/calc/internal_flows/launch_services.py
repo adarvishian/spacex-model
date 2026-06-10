@@ -7,9 +7,7 @@ from spacex_model.domain.year_vector import YearVector
 
 
 def at_cost_launch_services_rate(
-    launch_capacity: LaunchCapacityResult,
-    *,
-    vehicle: str = "f9",
+    launch_capacity: LaunchCapacityResult, *, vehicle: str = "f9"
 ) -> YearVector:
     """Fully-allocated at-cost launch services rate ($mm/launch).
 
@@ -17,7 +15,7 @@ def at_cost_launch_services_rate(
     Excel label:       "At-cost launch services rate ($mm/launch)"
     Architecture ref:  §7.1 (fully-allocated launch transfer)
     Principle:         9 (internal transfers at fully-allocated cost)
-    
+
     Formula: Fully-allocated at-cost launch services rate ($mm/launch).
 
     """
@@ -37,7 +35,7 @@ def internal_transfer_revenue(
     Excel label:       "Customer Launch internal transfer revenue ($mm)"
     Architecture ref:  §7.1
     Principle:         9 (source books internal transfer revenue)
-    
+
     Formula: Customer Launch internal transfer revenue = Σ internal launches × at-cost rate.
 
     """
@@ -51,8 +49,7 @@ def internal_transfer_revenue(
 
 
 def conservation_residual(
-    internal_transfer_revenue_vec: YearVector,
-    consumer_launch_services_cost: YearVector,
+    internal_transfer_revenue_vec: YearVector, consumer_launch_services_cost: YearVector
 ) -> YearVector:
     """R105 conservation: source rev − Σ consumer COGS.
 
@@ -60,8 +57,10 @@ def conservation_residual(
     Excel label:       "Launch services elimination check"
     Architecture ref:  §15 conservation block
     Principle:         9 (internal flow conservation)
-    
+
     Formula: R105 conservation: source rev − Σ consumer COGS.
 
     """
-    return YearVector(internal_transfer_revenue_vec.values - consumer_launch_services_cost.values)
+    return YearVector(
+        internal_transfer_revenue_vec.values - consumer_launch_services_cost.values
+    )

@@ -54,13 +54,19 @@ def compute_starlink_capacity(inputs: StarlinkCapacityInputs) -> StarlinkCapacit
     Excel label:       "BB pool at-cost rate ($/Gbps/yr)"
     Architecture ref:  §8.5 / §7.2
     Principle:         9 (fully-allocated internal transfer pricing)
-    
+
     Formula: Aggregate Gbps, subtract ODC claim, compute pool at-cost rates.
 
     """
     pools = inputs.pools
-    odc_bb = inputs.odc_claim.bb_gbps.values if inputs.odc_claim else np.zeros(HORIZON_YEARS)
-    odc_dtc = inputs.odc_claim.dtc_gbps.values if inputs.odc_claim else np.zeros(HORIZON_YEARS)
+    odc_bb = (
+        inputs.odc_claim.bb_gbps.values if inputs.odc_claim else np.zeros(HORIZON_YEARS)
+    )
+    odc_dtc = (
+        inputs.odc_claim.dtc_gbps.values
+        if inputs.odc_claim
+        else np.zeros(HORIZON_YEARS)
+    )
 
     total_bb = pools.total_bb_gbps.values
     total_dtc = pools.total_dtc_gbps.values
@@ -68,15 +74,18 @@ def compute_starlink_capacity(inputs: StarlinkCapacityInputs) -> StarlinkCapacit
     avail_dtc = np.maximum(0.0, total_dtc - odc_dtc)
 
     bb_share = np.where(total_bb > 0, total_bb / np.maximum(total_bb, 1e-12), 0.0)
-    dtc_share = np.where(total_dtc > 0, total_dtc / np.maximum(total_bb + total_dtc, 1e-12), 0.0)
+    dtc_share = np.where(
+        total_dtc > 0, total_dtc / np.maximum(total_bb + total_dtc, 1e-12), 0.0
+    )
 
     bb_pool_cost = (
         inputs.constellation_da_mm.values * bb_share
         + inputs.ground_ops_mm.values * bb_share
         + inputs.spectrum_amort_mm.values
     )
-    dtc_pool_cost = inputs.constellation_da_mm.values * dtc_share + inputs.ground_ops_mm.values * (
-        1.0 - bb_share
+    dtc_pool_cost = (
+        inputs.constellation_da_mm.values * dtc_share
+        + inputs.ground_ops_mm.values * (1.0 - bb_share)
     )
 
     bb_rate = np.nan_to_num(

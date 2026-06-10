@@ -28,43 +28,39 @@ __all__ = [
 
 
 def _variable_cost_pct(assumptions: Assumptions) -> float:
-    ground = assumption_scalar(assumptions, cl.STARLINK_GROUND_OPS_PCT_REV, default=0.04)
-    insurance = assumption_scalar(assumptions, cl.STARLINK_INSURANCE_PCT_REV, default=0.01)
-    other = assumption_scalar(assumptions, cl.STARLINK_OTHER_COGS_PCT_REV, default=0.02)
+    ground = assumption_scalar(assumptions, cl.STARLINK_GROUND_OPS_PCT_REV)
+    insurance = assumption_scalar(assumptions, cl.STARLINK_INSURANCE_PCT_REV)
+    other = assumption_scalar(assumptions, cl.STARLINK_OTHER_COGS_PCT_REV)
     return ground + insurance + other
 
 
 def _annual_da_mm(spec: VehiclePoolSpec, assumptions: Assumptions) -> float:
-    bb_life = assumption_scalar(assumptions, cl.SATELLITE_USEFUL_LIFE_V2_MINI_YEARS, default=5.0)
-    dep = assumption_scalar(assumptions, cl.SATELLITE_DEP_PER_KG_BASE_YEAR_KG_YR, default=128.8)
+    bb_life = assumption_scalar(assumptions, cl.SATELLITE_USEFUL_LIFE_V2_MINI_YEARS)
+    dep = assumption_scalar(assumptions, cl.SATELLITE_DEP_PER_KG_BASE_YEAR_KG_YR)
     scale = bb_life / max(spec.useful_life_years, 1)
     return dep * scale * spec.mass_kg / 1e6
 
 
 def _annual_gross_mm(
-    spec: VehiclePoolSpec,
-    assumptions: Assumptions,
-    *,
-    band: Literal["bb", "dtc"],
+    spec: VehiclePoolSpec, assumptions: Assumptions, *, band: Literal["bb", "dtc"]
 ) -> float:
     if band == "bb":
         rev_per_gbps = assumption_scalar(
-            assumptions, cl.STARSHIELD_REV_PER_GBPS_BASE_YEAR, default=164699.0
+            assumptions, cl.STARSHIELD_REV_PER_GBPS_BASE_YEAR
         )
         return spec.bb_gbps_per_sat * rev_per_gbps / 1e6
-    arpu = assumption_scalar(assumptions, cl.DTC_ARPU_SUB_MO_YEAR_ROW, default=16.0)
+    arpu = assumption_scalar(assumptions, cl.DTC_ARPU_SUB_MO_YEAR_ROW)
     return arpu * 12.0 / 1e6
 
 
 def _engine_for_pool(
-    spec: VehiclePoolSpec,
-    assumptions: Assumptions,
-    *,
-    band: Literal["bb", "dtc"],
+    spec: VehiclePoolSpec, assumptions: Assumptions, *, band: Literal["bb", "dtc"]
 ) -> IrrResult:
     """Shared per-sat IRR engine for one vehicle pool."""
     gross = _annual_gross_mm(spec, assumptions, band=band)
-    net = gross * (1.0 - _variable_cost_pct(assumptions)) - _annual_da_mm(spec, assumptions)
+    net = gross * (1.0 - _variable_cost_pct(assumptions)) - _annual_da_mm(
+        spec, assumptions
+    )
     n = spec.useful_life_years
     rev = np.full(n, max(net, 0.0), dtype=np.float64)
     return compute_irr_engine(spec.unit_cost_mm, rev, horizon_n=n)
@@ -81,7 +77,7 @@ def compute_v2_bb_irr(inputs: StarlinkInputs) -> YearVector:
     Excel label:       "V2 BB Blended IRR"
     Architecture ref:  §8.4 per-vehicle IRR
     Principle:         2 (per-unit marginal IRR)
-    
+
     Formula: V2 BB per-sat blended IRR engine.
 
     """
@@ -96,7 +92,7 @@ def compute_v2_dtc_irr(inputs: StarlinkInputs) -> YearVector:
     Excel label:       "V2 DTC Blended IRR"
     Architecture ref:  §8.4 per-vehicle IRR
     Principle:         2 (per-unit marginal IRR)
-    
+
     Formula: V2 DTC per-sat blended IRR engine.
 
     """
@@ -111,7 +107,7 @@ def compute_v3_bb_irr(inputs: StarlinkInputs) -> YearVector:
     Excel label:       "V3 BB Blended IRR"
     Architecture ref:  §8.4 per-vehicle IRR
     Principle:         2 (per-unit marginal IRR)
-    
+
     Formula: V3 BB per-sat blended IRR engine.
 
     """
@@ -126,7 +122,7 @@ def compute_v3_dtc_irr(inputs: StarlinkInputs) -> YearVector:
     Excel label:       "V3 DTC Blended IRR"
     Architecture ref:  §8.4 per-vehicle IRR
     Principle:         2 (per-unit marginal IRR)
-    
+
     Formula: V3 DTC per-sat blended IRR engine.
 
     """
@@ -141,7 +137,7 @@ def build_starlink_vehicle_irrs(inputs: StarlinkInputs) -> QueueSubBlockIrrs:
     Excel label:       "V2 BB / V2 DTC / V3 BB / V3 DTC Blended IRR"
     Architecture ref:  §8.4 per-vehicle IRR
     Principle:         2 (per-unit marginal IRR drives sigmoid weights)
-    
+
     Formula: Roll four Starlink pool IRR year-vectors into a queue sub-block slice.
 
     Non-Starlink slots in the returned struct are zeroed for irr_display roll-up.

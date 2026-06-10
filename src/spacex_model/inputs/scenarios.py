@@ -8,7 +8,11 @@ from typing import Any
 import yaml
 from pydantic import BaseModel, Field
 
-from spacex_model.inputs.assumptions import AssumptionInput, Assumptions, AssumptionsSection
+from spacex_model.inputs.assumptions import (
+    AssumptionInput,
+    Assumptions,
+    AssumptionsSection,
+)
 
 
 class ScenarioSpec(BaseModel):
@@ -51,9 +55,15 @@ def _normalize_override(raw: Any) -> dict[str, Any]:
     raise TypeError(msg)
 
 
-def _rebuild_section(section: AssumptionsSection, by_label: dict[str, AssumptionInput]) -> AssumptionsSection:
+def _rebuild_section(
+    section: AssumptionsSection, by_label: dict[str, AssumptionInput]
+) -> AssumptionsSection:
     return section.model_copy(
-        update={"inputs": {label: by_label[label] for label in section.inputs if label in by_label}}
+        update={
+            "inputs": {
+                label: by_label[label] for label in section.inputs if label in by_label
+            }
+        }
     )
 
 
@@ -71,7 +81,9 @@ def apply_assumption_overrides(
         if existing is None:
             msg = f"Scenario override references unknown Assumptions label: {label!r}"
             raise KeyError(msg)
-        new_by_label[label] = existing.model_copy(update=_normalize_override(raw_override))
+        new_by_label[label] = existing.model_copy(
+            update=_normalize_override(raw_override)
+        )
 
     return Assumptions(
         global_=_rebuild_section(assumptions.global_, new_by_label),

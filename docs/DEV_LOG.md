@@ -11,6 +11,30 @@ Chronological record of material changes to the Python port. Read this after `co
 
 ---
 
+## 2026-06-10 — Milestone 2: high-leverage improvements (audit 2026-06-09)
+
+**Trigger:** `SpaceX_Modeler_Repo_Audit_2026-06-09.md` Milestone 2.
+
+### Shipped
+
+| Area | Change | Primary files |
+|------|--------|---------------|
+| Ingest cache (2.1) | Process-local `ingest_workbook` memo keyed on resolved path + mtime | `io/excel_ingest.py`, `tests/unit/test_ingest_cache.py` |
+| Pipeline stages (2.2) | `_single_pass` decomposed into `_pass_blend_context`, `_pass_capacity_layer`, `_pass_module_bundle`, `_pass_close_allocator` + unit tests | `engine/pipeline.py`, `tests/unit/test_pipeline_stages.py` |
+| Frontend vitest (2.3) | 5 unit suites for shared/audit pure logic; `npm test` in CI | `frontend/src/**/*.test.ts`, `frontend/package.json`, `vite.config.ts` |
+| Ingest defaults (2.4) | Removed `default=` from `assumption_scalar` in `calc/`; `INGEST_SCALAR_DEFAULTS` at ingest; linter gate | `domain/assumption_helpers.py`, `inputs/ingest_scalar_defaults.py`, `linters/assumption_defaults.py` |
+| Dependency audits (2.5) | `pip-audit` + `npm audit --audit-level=high` in CI | `.github/workflows/ci.yml`, `pyproject.toml`, `uv.lock` |
+
+### Verify
+
+```bash
+pytest tests/unit/test_ingest_cache.py tests/unit/test_pipeline_stages.py tests/linters/test_assumption_defaults.py -v
+cd frontend && npm test
+uv run pip-audit
+```
+
+---
+
 ## 2026-06-10 — Milestone 1: calibration visibility + service hardening (audit 2026-06-09)
 
 **Trigger:** `SpaceX_Modeler_Repo_Audit_2026-06-09.md` Milestone 1 (1.2–1.5 shipped; 1.1 burn-down remains open).

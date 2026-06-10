@@ -11,7 +11,10 @@ from dataclasses import dataclass
 import numpy as np
 
 from spacex_model.config import canonical_labels as cl
-from spacex_model.config.constants import CONSERVATION_RESIDUAL_TOLERANCE_MM, HORIZON_YEARS
+from spacex_model.config.constants import (
+    CONSERVATION_RESIDUAL_TOLERANCE_MM,
+    HORIZON_YEARS,
+)
 from spacex_model.domain.assumption_helpers import assumption_scalar
 from spacex_model.domain.year_vector import YearVector
 from spacex_model.inputs.assumptions import Assumptions
@@ -81,17 +84,17 @@ def compute_terafab_facility(inputs: TerafabFacilityInputs) -> TerafabFacilityRe
     Excel label:       "Facility draw ($mm)" … "Conservation: Σdraw − Σrepay − balance"
     Architecture ref:  §5.4 D5 (project-finance debt, out of IRR)
     Principle:         4 (debt layer on enabling-infra CapEx)
-    
+
     Formula: Terafab construction facility debt layer — CAE R103–R111.
 
     """
     a = inputs.assumptions
-    facility_cap = assumption_scalar(a, cl.TERAFAB_FACILITY_CAP_MM, default=0.0)
-    interest_rate = assumption_scalar(a, cl.TERAFAB_FACILITY_INTEREST_RATE_ANNUAL, default=0.0)
-    min_cash_buffer = assumption_scalar(a, cl.MINIMUM_CASH_BUFFER_MM, default=0.0)
-    fcf_sweep = assumption_scalar(a, cl.FCF_REPAYMENT_SWEEP_OF_EXCESS_FCF, default=0.5)
-    repaid_by_year = int(assumption_scalar(a, cl.TERAFAB_FACILITY_REPAID_BY_YEAR, default=2035.0))
-    draw_end_year = int(assumption_scalar(a, cl.TERAFAB_FACILITY_DRAW_WINDOW_END_YEAR, default=2030.0))
+    facility_cap = assumption_scalar(a, cl.TERAFAB_FACILITY_CAP_MM)
+    interest_rate = assumption_scalar(a, cl.TERAFAB_FACILITY_INTEREST_RATE_ANNUAL)
+    min_cash_buffer = assumption_scalar(a, cl.MINIMUM_CASH_BUFFER_MM)
+    fcf_sweep = assumption_scalar(a, cl.FCF_REPAYMENT_SWEEP_OF_EXCESS_FCF)
+    repaid_by_year = int(assumption_scalar(a, cl.TERAFAB_FACILITY_REPAID_BY_YEAR))
+    draw_end_year = int(assumption_scalar(a, cl.TERAFAB_FACILITY_DRAW_WINDOW_END_YEAR))
 
     cash_eoy = _vec_or_zero(inputs.cash_eoy)
     ipo = _vec_or_zero(inputs.ipo_injection)
@@ -152,7 +155,7 @@ def compute_odc_facility(inputs: OdcFacilityInputs) -> OdcFacilityResult:
     Excel label:       "ODC facility draw ($mm)" … "Conservation: ODC Σdraw − Σrepay − balance"
     Architecture ref:  PRD U3 fold ODC bypass into spine
     Principle:         4 (no pool bypass; seed + allocation only)
-    
+
     Formula: ODC facility retired — funding via strategic seed + pool allocation (U3 / F5).
 
     """
@@ -171,8 +174,7 @@ def compute_odc_facility(inputs: OdcFacilityInputs) -> OdcFacilityResult:
 
 
 def compute_chip_transfer_revenue_mm(
-    chips_demanded: YearVector,
-    chip_at_cost_per_sat: YearVector,
+    chips_demanded: YearVector, chip_at_cost_per_sat: YearVector
 ) -> YearVector:
     """At-cost chip transfer revenue — Terafab debt repayment source (bucket 2).
 
@@ -180,7 +182,7 @@ def compute_chip_transfer_revenue_mm(
     Excel label:       "Chip purchases (internal transfer) ($mm)"
     Architecture ref:  §5.1 bucket-2 at-cost transfer + D5
     Principle:         9 (predetermined transfer price funds project debt)
-    
+
     Formula: At-cost chip transfer revenue — Terafab debt repayment source (bucket 2).
 
     """
@@ -189,17 +191,16 @@ def compute_chip_transfer_revenue_mm(
 
 
 def compute_debt_facilities(
-    terafab_inputs: TerafabFacilityInputs,
-    odc_inputs: OdcFacilityInputs,
+    terafab_inputs: TerafabFacilityInputs, odc_inputs: OdcFacilityInputs
 ) -> DebtFacilitiesResult:
     """Both CAE debt layers.
     Excel cell:        V4.113 (canonical label registry)
     Excel label:       (see module docstring)
     Architecture ref:  PRD V4.113 §2 / context.md §6
     Principle:         6 (one-tab-one-module)
-    
+
     Formula: Both CAE debt layers.
-"""
+    """
     return DebtFacilitiesResult(
         terafab=compute_terafab_facility(terafab_inputs),
         odc=compute_odc_facility(odc_inputs),
@@ -212,9 +213,9 @@ def terafab_debt_conservation_ok(result: TerafabFacilityResult) -> bool:
     Excel label:       (see module docstring)
     Architecture ref:  PRD V4.113 §2 / context.md §6
     Principle:         6 (one-tab-one-module)
-    
+
     Formula: CAE R111: Σdraw − Σrepay − balance = 0.
-"""
+    """
     residual = np.abs(result.conservation_draw_repay_balance.values)
     return bool(np.all(residual <= CONSERVATION_RESIDUAL_TOLERANCE_MM))
 
@@ -225,8 +226,8 @@ def odc_debt_conservation_ok(result: OdcFacilityResult) -> bool:
     Excel label:       (see module docstring)
     Architecture ref:  PRD V4.113 §2 / context.md §6
     Principle:         6 (one-tab-one-module)
-    
+
     Formula: CAE R140: ODC Σdraw − Σrepay − balance = 0.
-"""
+    """
     residual = np.abs(result.conservation_draw_repay_balance.values)
     return bool(np.all(residual <= CONSERVATION_RESIDUAL_TOLERANCE_MM))

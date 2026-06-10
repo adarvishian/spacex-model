@@ -10,7 +10,7 @@ import numpy as np
 from spacex_model.config.constants import (
     SOLVER_DAMPING,
     SOLVER_MAX_ITERATIONS,
-    SOLVER_TOLERANCE,
+    SOLVER_TOLERANCE
 )
 
 
@@ -34,7 +34,7 @@ def damped_blend(
     prior: np.ndarray,
     proposed: np.ndarray,
     *,
-    alpha: float,
+    alpha: float
 ) -> np.ndarray:
     """Convex blend: alpha × proposed + (1 − alpha) × prior."""
     return alpha * proposed + (1.0 - alpha) * prior
@@ -63,7 +63,7 @@ def solve_fixed_point(
     max_iterations: int = SOLVER_MAX_ITERATIONS,
     tolerance: float = SOLVER_TOLERANCE,
     damping: float = SOLVER_DAMPING,
-    extract_monitored: Callable[[dict[str, Any]], dict[str, np.ndarray]] | None = None,
+    extract_monitored: Callable[[dict[str, Any]], dict[str, np.ndarray]] | None = None
 ) -> tuple[dict[str, Any], SolverTrace]:
     """Damped fixed-point iteration until max monitored residual < tolerance.
 
@@ -114,13 +114,13 @@ def solve_fixed_point(
         raise NonConvergenceError(
             f"Solver did not converge in {max_iterations} iterations "
             f"(max_residual={max_residual:.6f}, holder={trace[-1]['residual_holder_quantity']})",
-            diagnostic_trace=trace,
+            diagnostic_trace=trace
         )
 
     solver_trace = SolverTrace(
         iterations=iterations,
         converged=converged,
         max_residual=max_residual,
-        per_iteration=trace,
+        per_iteration=trace
     )
     return state, solver_trace

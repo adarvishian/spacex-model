@@ -30,11 +30,10 @@ def compute_demand(inputs: DemandInputs) -> DemandResult:
     Excel label:       "AI Stack cash demand ($mm)"
     Architecture ref:  §12 AI Stack (v1 stub)
     Principle:         12 (demand decoupled from output)
-    
+
     Formula: Exogenous demand — zeros in v1 (Sprint 6 pre-wire).
 
     """
     return DemandResult(
-        cash_demand_mm=inputs.cash_demand_mm,
-        kg_demand_kg=inputs.kg_demand_kg,
+        cash_demand_mm=inputs.cash_demand_mm, kg_demand_kg=inputs.kg_demand_kg
     )

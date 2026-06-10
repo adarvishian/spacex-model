@@ -9,6 +9,7 @@ from pydantic import BaseModel, Field, field_validator
 
 from spacex_model.config.constants import FIRST_YEAR, HORIZON_YEARS
 from spacex_model.inputs.mc_ranges import DistributionType, MCInputMeta, MCRanges
+from spacex_model.inputs.ingest_scalar_defaults import INGEST_SCALAR_DEFAULTS
 from spacex_model.io.excel_ingest import AssumptionRowRecord, IngestResult
 
 
@@ -31,7 +32,9 @@ class AssumptionInput(BaseModel):
             if year in self.year_values and self.year_values[year] is not None:
                 val = self.year_values[year]
                 vec[idx] = float(val) if isinstance(val, (int, float)) else 0.0
-            elif self.base_case is not None and isinstance(self.base_case, (int, float)):
+            elif self.base_case is not None and isinstance(
+                self.base_case, (int, float)
+            ):
                 vec[idx] = float(self.base_case)
         return vec
 
@@ -153,7 +156,9 @@ class Assumptions(BaseModel):
     global_: GlobalAssumptions = Field(default_factory=GlobalAssumptions)
     allocator: AllocatorAssumptions = Field(default_factory=AllocatorAssumptions)
     capacity: CapacityAssumptions = Field(default_factory=CapacityAssumptions)
-    customer_launch: CustomerLaunchAssumptions = Field(default_factory=CustomerLaunchAssumptions)
+    customer_launch: CustomerLaunchAssumptions = Field(
+        default_factory=CustomerLaunchAssumptions
+    )
     starlink: StarlinkAssumptions = Field(default_factory=StarlinkAssumptions)
     odc: ODCAssumptions = Field(default_factory=ODCAssumptions)
     ai_stack: AIStackAssumptions = Field(default_factory=AIStackAssumptions)
@@ -191,7 +196,9 @@ class Assumptions(BaseModel):
 
     @property
     def tax_rate(self) -> float:
-        return self.global_.require_scalar("Tax rate (corporate, US federal + state blended)")
+        return self.global_.require_scalar(
+            "Tax rate (corporate, US federal + state blended)"
+        )
 
     @property
     def starting_cash_eoy_2024(self) -> float:
@@ -207,7 +214,9 @@ def _parse_distribution(raw: str | None) -> DistributionType | None:
         return None
 
 
-def _rows_to_sections(rows: list[AssumptionRowRecord]) -> dict[str, dict[str, AssumptionInput]]:
+def _rows_to_sections(
+    rows: list[AssumptionRowRecord],
+) -> dict[str, dict[str, AssumptionInput]]:
     buckets: dict[str, dict[str, AssumptionInput]] = {}
     current_section = "section_unassigned"
     for row in rows:
@@ -230,12 +239,35 @@ def _rows_to_sections(rows: list[AssumptionRowRecord]) -> dict[str, dict[str, As
     return buckets
 
 
+def _apply_ingest_scalar_defaults(by_label: dict[str, AssumptionInput]) -> list[str]:
+    """Fill workbook-missing scalars from documented ingest defaults (M2.4)."""
+    warnings: list[str] = []
+    for label, default in INGEST_SCALAR_DEFAULTS.items():
+        row = by_label.get(label)
+        if row is None:
+            by_label[label] = AssumptionInput(
+                label=label,
+                section="ingest_default",
+                base_case=default,
+                notes="Filled from INGEST_SCALAR_DEFAULTS — not present in workbook",
+            )
+            warnings.append(label)
+            continue
+    return warnings
+
+
 def assumptions_from_ingest(ingest: IngestResult) -> Assumptions:
     """Build Assumptions + MCRanges from an excel ingest result."""
     buckets = _rows_to_sections(ingest.value_pass.assumptions_rows)
     by_label: dict[str, AssumptionInput] = {}
     for section_inputs in buckets.values():
         by_label.update(section_inputs)
+
+    filled = _apply_ingest_scalar_defaults(by_label)
+    if filled:
+        ingest.value_pass.warnings.extend(
+            [f"Ingest default applied for missing scalar: {label}" for label in filled]
+        )
 
     mc_by_label: dict[str, MCInputMeta] = {}
     for row in ingest.value_pass.assumptions_rows:

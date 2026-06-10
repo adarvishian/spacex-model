@@ -14,7 +14,7 @@ from spacex_model.config.constants import (
     CONSERVATION_RESIDUAL_TOLERANCE_MM,
     FIRST_YEAR,
     HORIZON_YEARS,
-    LAST_YEAR,
+    LAST_YEAR
 )
 from spacex_model.domain.year_vector import YearVector
 
@@ -94,7 +94,7 @@ def conservation_tolerance_mm(*, reference_mm: float) -> float:
 
 def _sum_module_field(
     module_outputs: dict[str, AllocatorOut],
-    field: str,
+    field: str
 ) -> YearVector:
     total = np.zeros(HORIZON_YEARS, dtype=np.float64)
     for key in _MODULE_KEYS:
@@ -111,7 +111,7 @@ def _non_module_capex_claim(capex: CapExResult, module_outputs: dict[str, Alloca
 
 def compute_r110_module_fcf_residual(
     group_fcf: YearVector,
-    module_outputs: dict[str, AllocatorOut],
+    module_outputs: dict[str, AllocatorOut]
 ) -> YearVector:
     """R110 Σ Module FCF reconciliation residual (memo only; excluded from R108).
 
@@ -130,7 +130,7 @@ def compute_r109_cash_identity(
     group_fcf: YearVector,
     total_group_capex: YearVector,
     mars_carveout: YearVector,
-    cash_identity: CashIdentityInputs,
+    cash_identity: CashIdentityInputs
 ) -> dict[int, float]:
     """R109 cash flow identity per PRD §5.4 and Sprint 10 cash-pool tracker.
 
@@ -180,7 +180,7 @@ def compute_conservation(
     taxes: YearVector,
     mars_carveout: YearVector,
     internal_flows: InternalFlowConservationInputs,
-    cash_identity: CashIdentityInputs | None = None,
+    cash_identity: CashIdentityInputs | None = None
 ) -> ConservationResult:
     """Conservation block R99-R110 per Architecture §15.2.
 
@@ -272,20 +272,20 @@ def compute_conservation(
             group_fcf=group_fcf,
             total_group_capex=capex.total_group_capex,
             mars_carveout=mars_carveout,
-            cash_identity=cash_identity,
+            cash_identity=cash_identity
         )
     else:
         residuals["R109"] = {y: 0.0 for y in years}
 
     return ConservationResult(
         r108_ok_by_year=r108_ok,
-        residuals_by_check=residuals,
+        residuals_by_check=residuals
     )
 
 
 def merge_allocator_conservation(
     base: ConservationResult,
-    allocator_result: object,
+    allocator_result: object
 ) -> ConservationResult:
     """Fold U4 allocator guardrails (R14 + unified identities) into conservation block."""
     from spacex_model.calc.allocator.conservation import AllocatorConservationResult
@@ -297,7 +297,7 @@ def merge_allocator_conservation(
         r108_ok_by_year=base.r108_ok_by_year,
         residuals_by_check=merged_residuals,
         allocator_ok=allocator_result.all_ok,
-        r14_ok=allocator_result.ok_by_check.get("R14", True),
+        r14_ok=allocator_result.ok_by_check.get("R14", True)
     )
 
 
@@ -336,7 +336,7 @@ def check_allocation_bounds(
     cash: CashAllocations,
     available_cash: YearVector,
     *,
-    tolerance_mm: float = CONSERVATION_RESIDUAL_TOLERANCE_MM,
+    tolerance_mm: float = CONSERVATION_RESIDUAL_TOLERANCE_MM
 ) -> AllocationBoundsResult:
     """Σ module cash allocations ≤ available cash for IRR queue every year (Block A).
 
@@ -364,7 +364,7 @@ def check_kg_allocation_bounds(
     kg: KgAllocations,
     capacity_available_kg: YearVector,
     *,
-    tolerance_kg: float = 1.0,
+    tolerance_kg: float = 1.0
 ) -> AllocationBoundsResult:
     """Σ module kg allocations ≤ capacity available for IRR queue every year (Block A).
 

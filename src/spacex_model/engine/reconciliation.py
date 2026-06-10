@@ -54,7 +54,7 @@ class ReconciliationHarnessResult:
 def run_reconciliation_harness(
     *,
     scenarios: tuple[str, ...] = STRESS_SCENARIOS,
-    write_outputs: bool = False,
+    write_outputs: bool = False
 ) -> ReconciliationHarnessResult:
     """Run Base Case + stress scenarios; build divergence report from Base Case."""
     settings = get_settings()

@@ -62,11 +62,7 @@ class KgAllocations:
     def zeros(cls) -> KgAllocations:
         z = YearVector.zeros()
         return cls(
-            customer_launch=z,
-            starlink_v3_bb=z,
-            starlink_v3_dtc=z,
-            odc=z,
-            ai_stack=z,
+            customer_launch=z, starlink_v3_bb=z, starlink_v3_dtc=z, odc=z, ai_stack=z
         )
 
     def as_tuple(self) -> tuple[YearVector, ...]:
@@ -253,14 +249,14 @@ class AllocatorResult:
             capped_share_customer_launch=z,
             ship_slots_used=z,
             ship_slots_idle=z,
-        strategic_seed_cash=z,
-        strategic_seed_kg=z,
-        odc_graduated=z,
-        odc_total_cash=z,
-        debt_odc_draw=z,
-        debt_terafab_draw=z,
-        odc_pool_cash=z,
-        cash_available_for_year=z,
-        cash_eoy=z,
-        debt=None,
-    )
+            strategic_seed_cash=z,
+            strategic_seed_kg=z,
+            odc_graduated=z,
+            odc_total_cash=z,
+            debt_odc_draw=z,
+            debt_terafab_draw=z,
+            odc_pool_cash=z,
+            cash_available_for_year=z,
+            cash_eoy=z,
+            debt=None,
+        )

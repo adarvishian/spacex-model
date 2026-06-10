@@ -64,13 +64,17 @@ def compute_r14_cash_flow_identity(
     Excel label:       "Cash-flow identity"
     Architecture ref:  PRD U4 / MASTER CONTEXT §4.7
     Principle:         19 (R14 repaired: … − R134 + R135 + R136)
-    
+
     Formula: Conservation tab R14 — CAE cash spine includes all facility flows (F6).
 
     residual = R56 − R11 − R55 + R106 + R107 − R134 + R135 + R136
 
     """
-    bridge = bridge_drawdown.values if bridge_drawdown is not None else np.zeros(HORIZON_YEARS)
+    bridge = (
+        bridge_drawdown.values
+        if bridge_drawdown is not None
+        else np.zeros(HORIZON_YEARS)
+    )
     ipo = ipo_drawdown.values if ipo_drawdown is not None else np.zeros(HORIZON_YEARS)
     years = range(FIRST_YEAR, LAST_YEAR + 1)
     residuals: dict[int, float] = {}
@@ -99,14 +103,16 @@ def _sum_cash_alloc(cash) -> np.ndarray:
     return total
 
 
-def compute_allocator_conservation(inputs: AllocatorConservationInputs) -> AllocatorConservationResult:
+def compute_allocator_conservation(
+    inputs: AllocatorConservationInputs,
+) -> AllocatorConservationResult:
     """Unified allocator guardrails: bounds, deploy identity, leftovers, R14.
 
     Excel cell:        Conservation tab + CAE unified spine
     Excel label:       "ALL OK (R108-equivalent)" … "Cash-flow identity"
     Architecture ref:  PRD U4 gate
     Principle:         19 (F6 repaired; superseded paths retired)
-    
+
     Formula: Unified allocator guardrails: bounds, deploy identity, leftovers, R14.
 
     """
@@ -162,8 +168,7 @@ def compute_allocator_conservation(inputs: AllocatorConservationInputs) -> Alloc
 
     if inputs.chips_demanded is not None and alloc.chip_at_cost_per_sat is not None:
         expected = compute_chip_transfer_revenue_mm(
-            inputs.chips_demanded,
-            alloc.chip_at_cost_per_sat,
+            inputs.chips_demanded, alloc.chip_at_cost_per_sat
         )
         chip_residuals: dict[int, float] = {}
         for year in years:
@@ -171,12 +176,15 @@ def compute_allocator_conservation(inputs: AllocatorConservationInputs) -> Alloc
             chips = inputs.chips_demanded.values[idx]
             if chips > 0.0:
                 chip_residuals[year] = float(
-                    expected.values[idx] - chips * alloc.chip_at_cost_per_sat.values[idx] / 1e6
+                    expected.values[idx]
+                    - chips * alloc.chip_at_cost_per_sat.values[idx] / 1e6
                 )
             else:
                 chip_residuals[year] = 0.0
         residuals["chip_transfer_absorption"] = chip_residuals
-        ok["chip_transfer_absorption"] = all(abs(v) <= tol for v in chip_residuals.values())
+        ok["chip_transfer_absorption"] = all(
+            abs(v) <= tol for v in chip_residuals.values()
+        )
 
     cash_eoy = alloc.cash_eoy or YearVector.zeros()
     cash_avail = alloc.cash_available_for_year or alloc.available_cash

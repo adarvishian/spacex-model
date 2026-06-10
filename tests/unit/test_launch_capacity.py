@@ -6,13 +6,18 @@ from pathlib import Path
 
 import pytest
 
-from spacex_model.calc.launch_capacity import LaunchCapacityInputs, compute_launch_capacity
+from spacex_model.calc.launch_capacity import (
+    LaunchCapacityInputs,
+    compute_launch_capacity,
+)
 from spacex_model.config.constants import FIRST_YEAR
 from spacex_model.inputs.assumptions import Assumptions, assumptions_from_ingest
 from spacex_model.io.excel_ingest import ingest_workbook
 
 REPO = Path(__file__).resolve().parents[2]
-WORKBOOK = REPO / "Pre Existing Model Package" / "01_Current_State" / "SpaceX Model V2.16.xlsx"
+WORKBOOK = (
+    REPO / "Pre Existing Model Package" / "01_Current_State" / "SpaceX Model V2.16.xlsx"
+)
 
 
 @pytest.fixture(scope="module")

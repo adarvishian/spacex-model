@@ -57,7 +57,9 @@ class DemandCurves:
     dtc_breakpoints_q: np.ndarray
     dtc_breakpoints_rev: np.ndarray
 
-    def lookup_bb_revenue(self, gbps: float, year_index: int, *, tam_shift: float = 1.0) -> float:
+    def lookup_bb_revenue(
+        self, gbps: float, year_index: int, *, tam_shift: float = 1.0
+    ) -> float:
         """BB revenue ($mm) from Available BB Gbps × TAM shift.
 
         Excel cell:        Demand Curves!D144
@@ -75,7 +77,9 @@ class DemandCurves:
         )
         return base * tam_shift
 
-    def lookup_dtc_revenue(self, gbps: float, year_index: int, *, tam_shift: float = 1.0) -> float:
+    def lookup_dtc_revenue(
+        self, gbps: float, year_index: int, *, tam_shift: float = 1.0
+    ) -> float:
         """DTC revenue ($mm) from Available DTC Gbps × TAM shift.
 
         Excel cell:        Demand Curves!D145

@@ -32,14 +32,20 @@ from spacex_model.calc.allocator.strategic_seed import (
     compute_strategic_seed,
 )
 from spacex_model.calc.allocator.demand_builders import compute_exogenous_demands
-from spacex_model.calc.allocator.deployment import apply_first_year_override, cap_cash_allocations_to_available
+from spacex_model.calc.allocator.deployment import (
+    apply_first_year_override,
+    cap_cash_allocations_to_available,
+)
 from spacex_model.calc.allocator.irr_display import compute_four_program_prior_irrs
 from spacex_model.calc.allocator.physical_gates import (
     apply_f9_supply_gate,
     apply_v2_phase_out_gate,
     apply_v3_startup_gate,
 )
-from spacex_model.calc.allocator.queue_gate import compute_non_module_claims, compute_queue_gate
+from spacex_model.calc.allocator.queue_gate import (
+    compute_non_module_claims,
+    compute_queue_gate,
+)
 from spacex_model.calc.allocator.types import (
     AllocatorResult,
     CashAllocations,
@@ -91,7 +97,9 @@ class AllocatorInputs:
     shared_rd: YearVector | None = None
 
 
-def _scale_by_ratio(original: YearVector, scaled_launches: YearVector, base_launches: np.ndarray) -> YearVector:
+def _scale_by_ratio(
+    original: YearVector, scaled_launches: YearVector, base_launches: np.ndarray
+) -> YearVector:
     out = original.values.copy()
     for t in range(HORIZON_YEARS):
         base = base_launches[t]
@@ -101,11 +109,11 @@ def _scale_by_ratio(original: YearVector, scaled_launches: YearVector, base_laun
 
 
 def _v2_launch_anchors(assumptions: Assumptions) -> tuple[np.ndarray, np.ndarray]:
-    lr = assumption_scalar(assumptions, cl.SATELLITE_COST_PER_KG_LEARNING_RATE, default=0.0)
+    lr = assumption_scalar(assumptions, cl.SATELLITE_COST_PER_KG_LEARNING_RATE)
     offsets = np.arange(HORIZON_YEARS, dtype=np.float64)
     learn = np.power(1.0 + lr, offsets)
-    bb_anchor = assumption_scalar(assumptions, cl.V2_MINI_BB_SATS_LAUNCHED_2025, default=2987.0)
-    dtc_anchor = assumption_scalar(assumptions, cl.V2_MINI_DTC_SATS_LAUNCHED_2025, default=182.0)
+    bb_anchor = assumption_scalar(assumptions, cl.V2_MINI_BB_SATS_LAUNCHED_2025)
+    dtc_anchor = assumption_scalar(assumptions, cl.V2_MINI_DTC_SATS_LAUNCHED_2025)
     return bb_anchor * learn, dtc_anchor * learn
 
 
@@ -116,23 +124,33 @@ def _apply_physical_gates(
     f9_launches: YearVector | None,
     f9_customer_launches: YearVector | None,
 ) -> QueueSubBlockDemands:
-    phase_out = int(assumption_scalar(assumptions, V2_PHASE_OUT_YEAR, default=2028.0))
-    v3_startup = int(assumption_scalar(assumptions, cl.V3_STARLINK_LAUNCH_TRIGGER_YEAR, default=2027.0))
+    phase_out = int(assumption_scalar(assumptions, V2_PHASE_OUT_YEAR))
+    v3_startup = int(assumption_scalar(assumptions, cl.V3_STARLINK_LAUNCH_TRIGGER_YEAR))
 
-    v2_bb_cash = apply_v2_phase_out_gate(demands.starlink_v2_bb_cash, phase_out_year=phase_out)
-    v2_dtc_cash = apply_v2_phase_out_gate(demands.starlink_v2_dtc_cash, phase_out_year=phase_out)
-    v3_bb_cash = apply_v3_startup_gate(demands.starlink_v3_bb_cash, startup_year=v3_startup)
-    v3_dtc_cash = apply_v3_startup_gate(demands.starlink_v3_dtc_cash, startup_year=v3_startup)
+    v2_bb_cash = apply_v2_phase_out_gate(
+        demands.starlink_v2_bb_cash, phase_out_year=phase_out
+    )
+    v2_dtc_cash = apply_v2_phase_out_gate(
+        demands.starlink_v2_dtc_cash, phase_out_year=phase_out
+    )
+    v3_bb_cash = apply_v3_startup_gate(
+        demands.starlink_v3_bb_cash, startup_year=v3_startup
+    )
+    v3_dtc_cash = apply_v3_startup_gate(
+        demands.starlink_v3_dtc_cash, startup_year=v3_startup
+    )
     v3_bb_kg = apply_v3_startup_gate(demands.starlink_v3_bb_kg, startup_year=v3_startup)
-    v3_dtc_kg = apply_v3_startup_gate(demands.starlink_v3_dtc_kg, startup_year=v3_startup)
+    v3_dtc_kg = apply_v3_startup_gate(
+        demands.starlink_v3_dtc_kg, startup_year=v3_startup
+    )
 
     bb_launches, dtc_launches = _v2_launch_anchors(assumptions)
     if f9_launches is not None and f9_customer_launches is not None:
         f9_internal = YearVector(
             np.maximum(0.0, f9_launches.values - f9_customer_launches.values)
         )
-        sats_bb = assumption_scalar(assumptions, SATS_PER_F9_LAUNCH_V2_BB, default=29.0)
-        sats_dtc = assumption_scalar(assumptions, SATS_PER_F9_LAUNCH_V2_DTC, default=7.0)
+        sats_bb = assumption_scalar(assumptions, SATS_PER_F9_LAUNCH_V2_BB)
+        sats_dtc = assumption_scalar(assumptions, SATS_PER_F9_LAUNCH_V2_DTC)
         gated_bb = apply_f9_supply_gate(
             YearVector(bb_launches), f9_internal, sats_per_f9_launch=sats_bb
         )
@@ -154,8 +172,7 @@ def _apply_physical_gates(
 
 
 def _resolve_facilities(
-    inputs: AllocatorInputs,
-    forward_kg: dict[str, YearVector],
+    inputs: AllocatorInputs, forward_kg: dict[str, YearVector]
 ) -> FacilitiesBuildResult | None:
     if inputs.facilities_build is not None:
         return inputs.facilities_build
@@ -169,13 +186,11 @@ def _gigabay_throughput(fb: FacilitiesBuildResult | None) -> YearVector:
 
 
 def _chip_transfer_revenue_estimate(
-    assumptions: Assumptions,
-    odc_kg: YearVector,
-    chip_at_cost_per_sat: YearVector,
+    assumptions: Assumptions, odc_kg: YearVector, chip_at_cost_per_sat: YearVector
 ) -> YearVector:
     """Estimate at-cost chip transfer from exogenous ODC kg demand (acyclic)."""
-    mass = assumption_scalar(assumptions, cl.V3_MASS_KG, default=2000.0)
-    chips_per_sat = assumption_scalar(assumptions, cl.CHIPS_PER_SAT, default=0.0)
+    mass = assumption_scalar(assumptions, cl.V3_MASS_KG)
+    chips_per_sat = assumption_scalar(assumptions, cl.CHIPS_PER_SAT)
     if mass <= 0.0 or chips_per_sat <= 0.0:
         return YearVector.zeros()
     sats = odc_kg.values / mass
@@ -190,7 +205,7 @@ def compute_allocator(inputs: AllocatorInputs) -> AllocatorResult:
     Excel label:       "▸ Cash Allocation Engine inputs"
     Architecture ref:  §2.3 CAE map + PRD U2
     Principle:         4 (queue gate before IRR-weighted allocation)
-    
+
     Formula: Run full CAE spine: pool → gate → carve-out → two-resource fill → debt.
 
     """
@@ -223,12 +238,10 @@ def compute_allocator(inputs: AllocatorInputs) -> AllocatorResult:
     )
 
     forward_kg = inputs.forward_kg_demands or cae_dem.unified_kg.forward_kg_by_program(
-        inputs.lunar_mars_kg_reserved,
+        inputs.lunar_mars_kg_reserved
     )
     vehicle_build_claim = compute_vehicle_build_claim(
-        a,
-        forward_kg,
-        inputs.launch_capacity,
+        a, forward_kg, inputs.launch_capacity
     )
 
     corp_sga = inputs.corp_sga if inputs.corp_sga is not None else inputs.opex
@@ -283,15 +296,9 @@ def compute_allocator(inputs: AllocatorInputs) -> AllocatorResult:
         total_desired_launch_kg=cae_dem.unified_kg.total,
     )
 
-    (
-        cl_cash,
-        sl_v2_bb,
-        sl_v2_dtc,
-        sl_v3_bb,
-        sl_v3_dtc,
-        odc_cash,
-        ai_stack_cash,
-    ) = four_cash_to_sub_blocks(fill.allocated_cash, demands)
+    cl_cash, sl_v2_bb, sl_v2_dtc, sl_v3_bb, sl_v3_dtc, odc_cash, ai_stack_cash = (
+        four_cash_to_sub_blocks(fill.allocated_cash, demands)
+    )
     odc_total_cash = YearVector(fill.allocated_cash.odc.values + seed.cash_claim.values)
     cash_alloc = CashAllocations(
         customer_launch=cl_cash,
@@ -304,8 +311,7 @@ def compute_allocator(inputs: AllocatorInputs) -> AllocatorResult:
     )
 
     cl_kg, sl_v3_bb_kg, sl_v3_dtc_kg, odc_kg, ai_stack_kg = four_kg_to_sub_blocks(
-        fill.allocated_kg,
-        demands,
+        fill.allocated_kg, demands
     )
     odc_total_kg = YearVector(odc_kg.values + seed.kg_reserved.values)
     kg_alloc = KgAllocations(
@@ -318,9 +324,7 @@ def compute_allocator(inputs: AllocatorInputs) -> AllocatorResult:
 
     if inputs.historical_2025:
         cash_alloc, kg_alloc = apply_first_year_override(
-            cash_alloc,
-            kg_alloc,
-            inputs.historical_2025,
+            cash_alloc, kg_alloc, inputs.historical_2025
         )
 
     available_cash = seed.remaining_pool
@@ -335,7 +339,9 @@ def compute_allocator(inputs: AllocatorInputs) -> AllocatorResult:
         vehicle_build_claim,
     )
 
-    group_fcf_for_debt = inputs.group_fcf or inputs.prior_year_group_fcf or YearVector.zeros()
+    group_fcf_for_debt = (
+        inputs.group_fcf or inputs.prior_year_group_fcf or YearVector.zeros()
+    )
     cash_eoy = YearVector(cash_boy.values + group_fcf_for_debt.values)
 
     debt: DebtFacilitiesResult | None = None

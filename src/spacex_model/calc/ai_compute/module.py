@@ -70,7 +70,7 @@ def odc_bandwidth_claim(inputs: AiComputeInputs) -> tuple[YearVector, YearVector
     Excel label:       "ODC BB Gbps demand"
     Architecture ref:  §7.2
     Principle:         3 (canonical cross-tab labels)
-    
+
     Formula: Re-export for Starlink Capacity / internal-flow wiring.
 
     """
@@ -84,7 +84,7 @@ def compute_revenue(inputs: AiComputeInputs | None = None) -> YearVector:
     Excel label:       "Revenue: AI - Compute"
     Architecture ref:  §9 unified AI - Compute
     Principle:         8 (vending-machine module)
-    
+
     Formula: Total revenue — Orbital DC + Terrestrial DC + AI Apps.
 
     """
@@ -102,7 +102,7 @@ def compute_orbital_dc_revenue(inputs: AiComputeInputs) -> YearVector:
     Excel label:       "Revenue: Orbital DC"
     Architecture ref:  §9 unified AI - Compute
     Principle:         8 (vending-machine module)
-    
+
     Formula: Sub-line: Orbital DC external revenue.
 
     """
@@ -116,7 +116,7 @@ def compute_terrestrial_dc_revenue_line(inputs: AiComputeInputs) -> YearVector:
     Excel label:       "Revenue: Terrestrial DC"
     Architecture ref:  §9 unified AI - Compute
     Principle:         8 (vending-machine module)
-    
+
     Formula: Sub-line: Terrestrial DC external revenue.
 
     """
@@ -130,7 +130,7 @@ def compute_ai_apps_revenue_line(inputs: AiComputeInputs) -> YearVector:
     Excel label:       "Revenue: AI Apps"
     Architecture ref:  §9 unified AI - Compute
     Principle:         8 (vending-machine module)
-    
+
     Formula: Sub-line: AI Apps external revenue.
 
     """
@@ -144,7 +144,7 @@ def compute_cogs(inputs: AiComputeInputs | None = None) -> YearVector:
     Excel label:       "COGS: AI - Compute"
     Architecture ref:  §9 unified COGS
     Principle:         9 (at-cost internal transfers)
-    
+
     Formula: Total COGS — orbital bandwidth + terrestrial cost ratio.
 
     """
@@ -162,7 +162,7 @@ def compute_gross_profit(inputs: AiComputeInputs | None = None) -> YearVector:
     Excel label:       "Gross Profit ($mm)"
     Architecture ref:  §3 module framing
     Principle:         7 (Module EBITDA = Gross Profit)
-    
+
     Formula: Gross profit = revenue − COGS.
 
     """
@@ -178,7 +178,7 @@ def compute_capex(inputs: AiComputeInputs | None = None) -> YearVector:
     Excel label:       "Module CapEx ($mm)"
     Architecture ref:  §9 unified AI - Compute + U1 three-bucket split
     Principle:         8 (vending-machine module; enabling infra out of IRR base)
-    
+
     Formula: Growth-slice Module CapEx — demand-buildable only; Terafab excluded (bucket 2).
 
     """
@@ -194,13 +194,15 @@ def compute_fcf(inputs: AiComputeInputs | None = None) -> YearVector:
     Excel label:       "Module FCF ($mm)"
     Architecture ref:  §3 module framing
     Principle:         8 (vending-machine module)
-    
+
     Formula: Module FCF = EBITDA − CapEx.
 
     """
     if inputs is None:
         return YearVector.zeros()
-    return YearVector(compute_gross_profit(inputs).values - compute_capex(inputs).values)
+    return YearVector(
+        compute_gross_profit(inputs).values - compute_capex(inputs).values
+    )
 
 
 def compute_allocator_out(inputs: AiComputeInputs | None = None) -> AllocatorOut:
@@ -210,7 +212,7 @@ def compute_allocator_out(inputs: AiComputeInputs | None = None) -> AllocatorOut
     Excel label:       "CENTRAL ALLOCATOR OUTPUTS"
     Architecture ref:  §9 Allocator OUT (V4.113 CAE AI-Compute roll-up)
     Principle:         3 (canonical labels via registry)
-    
+
     Formula: Allocator OUT — blended orbital IRR + terrestrial revenue.
 
     """
@@ -231,4 +233,3 @@ def compute_allocator_out(inputs: AiComputeInputs | None = None) -> AllocatorOut
         forward_irr=irr_vec,
         blended_irr=irr_vec,
     )
-

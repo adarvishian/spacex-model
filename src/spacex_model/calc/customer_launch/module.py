@@ -15,8 +15,14 @@ from spacex_model.calc.internal_flows.launch_services import internal_transfer_r
 from spacex_model.calc.launch_capacity import LaunchCapacityResult
 from spacex_model.config import canonical_labels as cl
 from spacex_model.config.constants import FIRST_YEAR, HORIZON_YEARS
-from spacex_model.domain.assumption_helpers import assumption_scalar, assumption_year_vector
-from spacex_model.inputs.s1_profiles import f9_customer_launches_per_year, starship_customer_launches_per_year
+from spacex_model.domain.assumption_helpers import (
+    assumption_scalar,
+    assumption_year_vector,
+)
+from spacex_model.inputs.s1_profiles import (
+    f9_customer_launches_per_year,
+    starship_customer_launches_per_year,
+)
 from spacex_model.domain.irr import compute_irr_engine
 from spacex_model.domain.year_vector import YearVector
 from spacex_model.inputs.assumptions import Assumptions
@@ -40,7 +46,7 @@ def f9_effective_dep_lifetime(assumptions: Assumptions) -> float:
     Excel label:       "F9 effective dep lifetime (flights)"
     Architecture ref:  §4 Customer Launch COGS / MDA §11.5
     Principle:         8 (accounting cap on booster depreciation)
-    
+
     Formula: F9 booster D&A denominator — min(engineering reuses, 25-flight accounting cap) P1-3.
 
     """
@@ -48,7 +54,6 @@ def f9_effective_dep_lifetime(assumptions: Assumptions) -> float:
     cap = assumption_scalar(
         assumptions,
         cl.F9_BOOSTER_ACCOUNTING_DEPRECIATION_CAP_FLIGHTS,
-        default=25.0,
     )
     return min(engineering, cap)
 
@@ -97,8 +102,7 @@ def _starship_customer_launches(inputs: CustomerLaunchInputs) -> YearVector:
 
 def _starship_customer_price(inputs: CustomerLaunchInputs) -> YearVector:
     return assumption_year_vector(
-        inputs.assumptions,
-        "Starship customer launch price ($mm/launch) — year-row",
+        inputs.assumptions, "Starship customer launch price ($mm/launch) — year-row"
     )
 
 
@@ -109,7 +113,7 @@ def compute_revenue(inputs: CustomerLaunchInputs) -> YearVector:
     Excel label:       "Total Revenue ($mm)"
     Architecture ref:  §4 Customer Launch revenue
     Principle:         8 (vending-machine; no OpEx on module tab)
-    
+
     Formula: External + internal launch revenue.
 
     """
@@ -138,7 +142,7 @@ def compute_cogs(inputs: CustomerLaunchInputs) -> YearVector:
     Excel label:       "Total COGS ($mm)"
     Architecture ref:  §4 Customer Launch COGS
     Principle:         9 (internal transfers at fully-allocated cost)
-    
+
     Formula: Launch COGS at fully-allocated at-cost rate.
 
     """
@@ -153,12 +157,16 @@ def compute_cogs(inputs: CustomerLaunchInputs) -> YearVector:
         ship_cust = _starship_customer_launches(inputs)
     ship_int = inputs.starship_internal_launches or YearVector.zeros()
 
-    f9_var_per_launch = lc.f9_at_cost_rate.values - (lc.f9_at_cost_rate.values * 0)  # full at-cost
+    f9_var_per_launch = lc.f9_at_cost_rate.values - (
+        lc.f9_at_cost_rate.values * 0
+    )  # full at-cost
     # Variable + D&A decomposition from Launch Capacity
     f9_booster_cost = assumption_scalar(a, "F9 booster (1st stage) mfg cost ($mm/unit)")
     f9_lifetime = f9_effective_dep_lifetime(a)
     f9_2nd = assumption_scalar(a, "F9 2nd stage mfg cost ($mm/unit)")
-    f9_fairing = assumption_scalar(a, "F9 fairing cost net of 75% recovery ($mm/flight)")
+    f9_fairing = assumption_scalar(
+        a, "F9 fairing cost net of 75% recovery ($mm/flight)"
+    )
     f9_ops = assumption_scalar(a, "F9 per-launch ops cost ($mm)")
     f9_refurb = assumption_scalar(a, "F9 booster refurb % of mfg")
     f9_var = f9_2nd + f9_fairing + f9_ops + f9_refurb * f9_booster_cost
@@ -169,19 +177,22 @@ def compute_cogs(inputs: CustomerLaunchInputs) -> YearVector:
     f9_da_cogs = total_f9_launches * f9_da
 
     total_ship = ship_cust.values + ship_int.values
-    ship_var = total_ship * lc.starship_at_cost_rate.values * 0  # Starship var embedded in at-cost
+    ship_var = (
+        total_ship * lc.starship_at_cost_rate.values * 0
+    )  # Starship var embedded in at-cost
     ship_da = total_ship * (
         lc.starship_at_cost_rate.values - lc.starship_at_cost_rate.values * 0
     )
 
     revenue = compute_revenue(inputs)
-    insurance_pct = assumption_scalar(a, "Launch insurance % of external revenue", default=0.05)
-    other_pct = assumption_scalar(a, "Launch other COGS % of external revenue", default=0.02)
-    ground_ops_pct = assumption_scalar(
-        a, "Customer Launch ground ops % of revenue", default=0.01
-    )
+    insurance_pct = assumption_scalar(a, "Launch insurance % of external revenue")
+    other_pct = assumption_scalar(a, "Launch other COGS % of external revenue")
+    ground_ops_pct = assumption_scalar(a, "Customer Launch ground ops % of revenue")
 
-    external_rev = f9_cust.values * _f9_customer_price(inputs).values + ship_cust.values * _starship_customer_price(inputs).values
+    external_rev = (
+        f9_cust.values * _f9_customer_price(inputs).values
+        + ship_cust.values * _starship_customer_price(inputs).values
+    )
     insurance = external_rev * insurance_pct
     other = external_rev * other_pct
     ground_ops = revenue.values * ground_ops_pct
@@ -200,7 +211,7 @@ def compute_gross_profit(inputs: CustomerLaunchInputs) -> YearVector:
     Excel label:       "Gross Profit ($mm)"
     Architecture ref:  §3 module framing
     Principle:         7 (Module EBITDA = Gross Profit)
-    
+
     Formula: Gross profit = revenue − COGS.
 
     """
@@ -214,7 +225,7 @@ def compute_capex(inputs: CustomerLaunchInputs) -> YearVector:
     Excel label:       "Module CapEx ($mm)"
     Architecture ref:  §4 Customer Launch CapEx
     Principle:         8 (vehicle build at queue gate, not module CapEx)
-    
+
     Formula: Ground equipment + integration CapEx; excludes vehicle build.
 
     """
@@ -222,7 +233,6 @@ def compute_capex(inputs: CustomerLaunchInputs) -> YearVector:
     capex_pct = assumption_scalar(
         inputs.assumptions,
         "Customer Launch ground equipment CapEx % of revenue",
-        default=0.005,
     )
     return YearVector(revenue.values * capex_pct)
 
@@ -234,7 +244,7 @@ def compute_fcf(inputs: CustomerLaunchInputs) -> YearVector:
     Excel label:       "Module FCF ($mm)"
     Architecture ref:  §3 module FCF definition
     Principle:         8 (pre-tax module FCF; no corp overhead)
-    
+
     Formula: Module FCF = EBITDA + D&A add-back − CapEx.
 
     """
@@ -242,9 +252,13 @@ def compute_fcf(inputs: CustomerLaunchInputs) -> YearVector:
     capex = compute_capex(inputs)
     f9_launches = _f9_customer_launches(inputs)
     f9_int = inputs.f9_internal_launches or YearVector.zeros()
-    f9_booster_cost = assumption_scalar(inputs.assumptions, "F9 booster (1st stage) mfg cost ($mm/unit)")
+    f9_booster_cost = assumption_scalar(
+        inputs.assumptions, "F9 booster (1st stage) mfg cost ($mm/unit)"
+    )
     f9_lifetime = f9_effective_dep_lifetime(inputs.assumptions)
-    da_addback = YearVector((f9_launches.values + f9_int.values) * (f9_booster_cost / f9_lifetime))
+    da_addback = YearVector(
+        (f9_launches.values + f9_int.values) * (f9_booster_cost / f9_lifetime)
+    )
     return YearVector(ebitda.values + da_addback.values - capex.values)
 
 
@@ -255,7 +269,7 @@ def compute_launch_services_revenue_memo(inputs: CustomerLaunchInputs) -> YearVe
     Excel label:       "Launch Services revenue ($mm) — S-1 memo"
     Architecture ref:  §4 Customer Launch + MDA §1.3
     Principle:         3 (reconciliation memo; total revenue unchanged)
-    
+
     Formula: P1-11 memo: Launch Services vs L&D split of external CL revenue (S-1 Space sub-mix).
 
     """
@@ -263,11 +277,11 @@ def compute_launch_services_revenue_memo(inputs: CustomerLaunchInputs) -> YearVe
     f9_price = _f9_customer_price(inputs)
     ship_launches = _starship_customer_launches(inputs)
     ship_price = _starship_customer_price(inputs)
-    external = f9_launches.values * f9_price.values + ship_launches.values * ship_price.values
+    external = (
+        f9_launches.values * f9_price.values + ship_launches.values * ship_price.values
+    )
     share = assumption_year_vector(
-        inputs.assumptions,
-        cl.LAUNCH_SERVICES_REVENUE_SHARE_YEAR_ROW,
-        default=0.63,
+        inputs.assumptions, cl.LAUNCH_SERVICES_REVENUE_SHARE_YEAR_ROW, default=0.63
     )
     return YearVector(external * share.values)
 
@@ -279,7 +293,7 @@ def compute_launch_development_revenue_memo(inputs: CustomerLaunchInputs) -> Yea
     Excel label:       "Launch & Development revenue ($mm) — S-1 memo"
     Architecture ref:  §4 Customer Launch + MDA §1.3
     Principle:         3 (reconciliation memo)
-    
+
     Formula: P1-11 memo: L&D portion of external CL revenue.
 
     """
@@ -287,11 +301,11 @@ def compute_launch_development_revenue_memo(inputs: CustomerLaunchInputs) -> Yea
     f9_price = _f9_customer_price(inputs)
     ship_launches = _starship_customer_launches(inputs)
     ship_price = _starship_customer_price(inputs)
-    external = f9_launches.values * f9_price.values + ship_launches.values * ship_price.values
+    external = (
+        f9_launches.values * f9_price.values + ship_launches.values * ship_price.values
+    )
     share = assumption_year_vector(
-        inputs.assumptions,
-        cl.LAUNCH_SERVICES_REVENUE_SHARE_YEAR_ROW,
-        default=0.63,
+        inputs.assumptions, cl.LAUNCH_SERVICES_REVENUE_SHARE_YEAR_ROW, default=0.63
     )
     return YearVector(external * (1.0 - share.values))
 
@@ -304,13 +318,13 @@ def _compute_f9_irr(inputs: CustomerLaunchInputs) -> YearVector:
     cost_slug = f9_booster_cost
     f9_price = _f9_customer_price(inputs).at(FIRST_YEAR)
     at_cost = lc.f9_at_cost_rate.at(FIRST_YEAR)
-    insurance_pct = assumption_scalar(a, "Launch insurance % of external revenue", default=0.05)
-    other_pct = assumption_scalar(a, "Launch other COGS % of external revenue", default=0.02)
+    insurance_pct = assumption_scalar(a, "Launch insurance % of external revenue")
+    other_pct = assumption_scalar(a, "Launch other COGS % of external revenue")
     f9_cadence = assumption_scalar(a, "F9 cadence per booster (flights/year, flat)")
     margin_per_launch = f9_price - at_cost - f9_price * (insurance_pct + other_pct)
     annual_margin = margin_per_launch * f9_cadence
 
-    n = int(assumption_scalar(a, cl.CUSTOMER_LAUNCH_DEPRECIATION_USEFUL_LIFE_YEARS, default=5.0))
+    n = int(assumption_scalar(a, cl.CUSTOMER_LAUNCH_DEPRECIATION_USEFUL_LIFE_YEARS))
     rev_vec = np.full(n, annual_margin)
     result = compute_irr_engine(cost_slug, rev_vec, forward_weight=0.7, horizon_n=n)
     blended = np.full(HORIZON_YEARS, result.blended)
@@ -324,7 +338,7 @@ def compute_allocator_out(inputs: CustomerLaunchInputs | None = None) -> Allocat
     Excel label:       "CENTRAL ALLOCATOR OUTPUTS"
     Architecture ref:  §4 Allocator OUT contract
     Principle:         3 (canonical cross-tab labels via registry)
-    
+
     Formula: Assemble Allocator OUT from vending-machine sections.
 
     """

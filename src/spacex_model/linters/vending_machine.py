@@ -54,7 +54,9 @@ def find_vending_machine_violations() -> list[str]:
             elif isinstance(node, ast.ImportFrom) and node.module:
                 errors.extend(_check_import(rel, node.module))
                 for alias in node.names:
-                    if any(frag in alias.name.lower() for frag in FORBIDDEN_NAME_FRAGMENTS):
+                    if any(
+                        frag in alias.name.lower() for frag in FORBIDDEN_NAME_FRAGMENTS
+                    ):
                         errors.append(
                             f"{rel}: forbidden import name {alias.name!r} from {node.module}"
                         )

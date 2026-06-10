@@ -32,14 +32,18 @@ def compute_output(
     Excel label:       "ODC proposed allocation ($mm)"
     Architecture ref:  §20.8 (cash-driven deployment)
     Principle:         12 (output never feeds demand)
-    
+
     Formula: Actual deployment = MIN(cash/unit, kg/mass, exogenous demand cap).
 
     """
     units = np.zeros(HORIZON_YEARS, dtype=np.float64)
     for t in range(HORIZON_YEARS):
-        cash_units = allocation.cash_mm.values[t] / unit_cost_mm if unit_cost_mm > 0 else 0.0
+        cash_units = (
+            allocation.cash_mm.values[t] / unit_cost_mm if unit_cost_mm > 0 else 0.0
+        )
         kg_units = allocation.kg_to_leo.values[t] / mass_kg if mass_kg > 0 else 0.0
-        demand_units = demand.cash_demand_mm.values[t] / unit_cost_mm if unit_cost_mm > 0 else 0.0
+        demand_units = (
+            demand.cash_demand_mm.values[t] / unit_cost_mm if unit_cost_mm > 0 else 0.0
+        )
         units[t] = max(0.0, min(cash_units, kg_units, demand_units))
     return OutputResult(sats_deployed=YearVector(units))

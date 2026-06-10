@@ -45,7 +45,9 @@ def parse_docstring_tags(doc: str) -> dict[str, str]:
     return out
 
 
-def iter_public_calc_functions() -> Iterable[tuple[Path, ast.FunctionDef | ast.AsyncFunctionDef]]:
+def iter_public_calc_functions() -> (
+    Iterable[tuple[Path, ast.FunctionDef | ast.AsyncFunctionDef]]
+):
     """Yield (source_path, AST node) for every public top-level calc function."""
     for path in iter_calc_sources():
         tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))

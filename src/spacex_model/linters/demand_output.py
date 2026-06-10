@@ -24,7 +24,11 @@ def find_demand_output_violations() -> list[str]:
             continue
         tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
         for node in ast.walk(tree):
-            if isinstance(node, ast.ImportFrom) and node.module and "output" in node.module:
+            if (
+                isinstance(node, ast.ImportFrom)
+                and node.module
+                and "output" in node.module
+            ):
                 errors.append(f"{rel}: imports from output module {node.module!r}")
             if isinstance(node, ast.Name):
                 if node.id in FORBIDDEN_NAMES or node.id.startswith("output_"):

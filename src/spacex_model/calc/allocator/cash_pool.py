@@ -24,14 +24,13 @@ def starting_cash_mm(assumptions: Assumptions) -> float:
     Excel label:       "Starting cash position EoY 2024 ($mm)"
     Architecture ref:  §6.1 + §15.2 R109
     Principle:         4 (cash pool feeds queue gate)
-    
+
     Formula: Starting cash position EoY 2024 ($mm) for R109 identity.
 
     """
     return assumption_scalar(
         assumptions,
         cl.STARTING_CASH_POSITION_EOY_2024_MM,
-        default=_STARTING_CASH_MM,
     )
 
 
@@ -41,7 +40,6 @@ def _bridge_drawdown_year(assumptions: Assumptions) -> int:
         assumption_scalar(
             assumptions,
             cl.PRE_IPO_BRIDGE_DRAWDOWN_YEAR,
-            default=float(BRIDGE_DRAWDOWN_YEAR),
         )
     )
 
@@ -53,14 +51,13 @@ def compute_bridge_drawdown(assumptions: Assumptions) -> YearVector:
     Excel label:       "Pre-IPO debt facility ($mm)"
     Architecture ref:  §2.13 + §15.2 R109
     Principle:         4 (bridge inflow in cash pool tracker)
-    
+
     Formula: Pre-IPO bridge loan drawdown by year ($mm); $20B in bridge year per §2.13.
 
     """
     bridge = assumption_scalar(
         assumptions,
         cl.PRE_IPO_DEBT_FACILITY_MM,
-        default=_BRIDGE_LOAN_2025_MM,
     )
     bridge_year = _bridge_drawdown_year(assumptions)
     values = np.zeros(HORIZON_YEARS, dtype=np.float64)
@@ -77,17 +74,14 @@ def compute_ipo_drawdown(assumptions: Assumptions) -> YearVector:
     Excel label:       "IPO injection amount ($mm)"
     Architecture ref:  §6.1 + §15.2 R109
     Principle:         4 (IPO inflow in cash pool tracker)
-    
+
     Formula: IPO injection by year ($mm).
 
     """
-    ipo_year = int(
-        assumption_scalar(assumptions, cl.IPO_INJECTION_YEAR, default=float(_IPO_YEAR))
-    )
+    ipo_year = int(assumption_scalar(assumptions, cl.IPO_INJECTION_YEAR))
     ipo_amount = assumption_scalar(
         assumptions,
         cl.IPO_INJECTION_AMOUNT_MM,
-        default=_IPO_AMOUNT_MM,
     )
     values = np.zeros(HORIZON_YEARS, dtype=np.float64)
     for t in range(HORIZON_YEARS):
@@ -98,8 +92,7 @@ def compute_ipo_drawdown(assumptions: Assumptions) -> YearVector:
 
 
 def compute_cash_boy(
-    assumptions: Assumptions,
-    prior_year_group_fcf: YearVector | None = None,
+    assumptions: Assumptions, prior_year_group_fcf: YearVector | None = None
 ) -> YearVector:
     """Year-chained Cash BoY with IPO and pre-IPO bridge inflows.
 
@@ -113,18 +106,14 @@ def compute_cash_boy(
 
     """
     starting = starting_cash_mm(assumptions)
-    ipo_year = int(
-        assumption_scalar(assumptions, cl.IPO_INJECTION_YEAR, default=float(_IPO_YEAR))
-    )
+    ipo_year = int(assumption_scalar(assumptions, cl.IPO_INJECTION_YEAR))
     ipo_amount = assumption_scalar(
         assumptions,
         cl.IPO_INJECTION_AMOUNT_MM,
-        default=_IPO_AMOUNT_MM,
     )
     bridge = assumption_scalar(
         assumptions,
         cl.PRE_IPO_DEBT_FACILITY_MM,
-        default=_BRIDGE_LOAN_2025_MM,
     )
     bridge_year = _bridge_drawdown_year(assumptions)
 

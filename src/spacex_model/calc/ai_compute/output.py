@@ -36,15 +36,18 @@ def compute_output(
     Excel label:       "Orbital DC proposed allocation ($mm)"
     Architecture ref:  §9.2 (cash-driven deployment)
     Principle:         12 (output never feeds demand)
-    
+
     Formula: Actual deployment = MIN(cash/unit, kg/mass, exogenous demand cap).
 
     """
     if assumptions is not None:
-        if unit_cost_mm is None and assumptions.lookup(cl.V3_BB_SAT_UNIT_COST_MM_SAT) is not None:
-            unit_cost_mm = assumption_scalar(assumptions, cl.V3_BB_SAT_UNIT_COST_MM_SAT, default=50.0)
+        if (
+            unit_cost_mm is None
+            and assumptions.lookup(cl.V3_BB_SAT_UNIT_COST_MM_SAT) is not None
+        ):
+            unit_cost_mm = assumption_scalar(assumptions, cl.V3_BB_SAT_UNIT_COST_MM_SAT)
         if mass_kg is None:
-            mass_kg = assumption_scalar(assumptions, cl.V3_BB_SAT_MASS_KG, default=2000.0)
+            mass_kg = assumption_scalar(assumptions, cl.V3_BB_SAT_MASS_KG)
     cost = unit_cost_mm if unit_cost_mm is not None else 50.0
     mass = mass_kg if mass_kg is not None else 2000.0
 

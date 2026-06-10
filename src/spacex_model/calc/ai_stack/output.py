@@ -16,14 +16,16 @@ class OutputResult:
     units_deployed: YearVector
 
 
-def compute_output(demand: DemandResult, allocation: AllocatorAllocation) -> OutputResult:
+def compute_output(
+    demand: DemandResult, allocation: AllocatorAllocation
+) -> OutputResult:
     """Zero deployment in v1.
 
     Excel cell:        AI Stack!— (v1.x)
     Excel label:       "AI Stack proposed allocation ($mm)"
     Architecture ref:  §12 AI Stack stub
     Principle:         12 (output never feeds demand)
-    
+
     Formula: Zero deployment in v1.
 
     """

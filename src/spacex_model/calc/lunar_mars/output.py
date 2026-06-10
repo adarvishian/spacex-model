@@ -16,14 +16,16 @@ class OutputResult:
     ships_deployed: YearVector
 
 
-def compute_output(demand: DemandResult, allocation: AllocatorAllocation) -> OutputResult:
+def compute_output(
+    demand: DemandResult, allocation: AllocatorAllocation
+) -> OutputResult:
     """Bounded by carve-out allocation; Phase B returns zeros.
 
     Excel cell:        Lunar Mars!— (Phase C)
     Excel label:       "Lunar Mars proposed allocation ($mm)"
     Architecture ref:  §11 deployment
     Principle:         12 (output never feeds demand)
-    
+
     Formula: Bounded by carve-out allocation; Phase B returns zeros.
 
     """

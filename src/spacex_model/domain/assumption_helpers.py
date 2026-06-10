@@ -9,9 +9,9 @@ from spacex_model.domain.year_vector import YearVector
 from spacex_model.inputs.assumptions import Assumptions
 
 
-def assumption_scalar(assumptions: Assumptions, label: str, *, default: float | None = None) -> float:
-    """Return scalar base-case value for an Assumptions label."""
-    return assumptions.lookup_scalar(label, default=default)
+def assumption_scalar(assumptions: Assumptions, label: str) -> float:
+    """Return scalar base-case value for an Assumptions label (missing → KeyError/ValueError)."""
+    return assumptions.lookup_scalar(label)
 
 
 def assumption_year_vector(
@@ -46,7 +46,9 @@ def wrights_law_cost(
     return anchor_cost * np.power(ratio, exponent)
 
 
-def year_chained_eoy(boy: np.ndarray, adds: np.ndarray, retires: np.ndarray) -> np.ndarray:
+def year_chained_eoy(
+    boy: np.ndarray, adds: np.ndarray, retires: np.ndarray
+) -> np.ndarray:
     """EoY stock = BoY + adds − retires with next-year BoY = prior EoY (Rule 23)."""
     eoy = np.zeros(HORIZON_YEARS, dtype=np.float64)
     for t in range(HORIZON_YEARS):

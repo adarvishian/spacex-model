@@ -30,11 +30,10 @@ def compute_demand(inputs: DemandInputs) -> DemandResult:
     Excel label:       "Starlink cash demand ($mm)"
     Architecture ref:  §8.1 / §20.2 (vehicle-level queue)
     Principle:         12 (demand purely exogenous)
-    
+
     Formula: Exogenous demand per vehicle pool; no output feedback (Sprint 11f Option A).
 
     """
     return DemandResult(
-        cash_demand_mm=inputs.cash_demand_mm,
-        kg_demand_kg=inputs.kg_demand_kg,
+        cash_demand_mm=inputs.cash_demand_mm, kg_demand_kg=inputs.kg_demand_kg
     )

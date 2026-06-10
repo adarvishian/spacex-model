@@ -7,7 +7,10 @@ from dataclasses import dataclass
 import numpy as np
 
 from spacex_model.calc._allocator_out import AllocatorOut
-from spacex_model.calc.allocator.demand_spine import UnifiedKgDemands, compute_unified_kg_demands
+from spacex_model.calc.allocator.demand_spine import (
+    UnifiedKgDemands,
+    compute_unified_kg_demands,
+)
 from spacex_model.calc.allocator.priority import FourProgramIrrs, ModuleSpotIrrs
 from spacex_model.calc.allocator.two_resource_fill import FourProgramDemands
 from spacex_model.calc.allocator.types import QueueSubBlockDemands
@@ -37,7 +40,7 @@ def aggregate_cae_demands(
     Excel label:       "Desired cash: Starlink ($mm)" … "Desired cash: AI-Compute ($mm)"
     Architecture ref:  §2.3 desired cash rows; U0 unified kg spine
     Principle:         12 (exogenous demand only)
-    
+
     Formula: Roll seven sub-block demands into CAE three-module totals.
 
     """
@@ -78,7 +81,7 @@ def four_program_demands(
     Excel label:       "Cap: Starlink max deployable ($mm)" … "Desired launch kg: Starlink"
     Architecture ref:  PRD U2 two-resource fill inputs
     Principle:         12 (exogenous demand; growth slice only)
-    
+
     Formula: Map cap-base + unified kg spine into four first-class program demands (U2).
 
     """
@@ -99,16 +102,17 @@ def four_program_demands(
 
 
 def four_cash_to_sub_blocks(
-    four_cash: FourProgramIrrs,
-    sub_demands: QueueSubBlockDemands,
-) -> tuple[YearVector, YearVector, YearVector, YearVector, YearVector, YearVector, YearVector]:
+    four_cash: FourProgramIrrs, sub_demands: QueueSubBlockDemands
+) -> tuple[
+    YearVector, YearVector, YearVector, YearVector, YearVector, YearVector, YearVector
+]:
     """Split four-program cash into seven legacy sub-blocks for pipeline consumers.
 
     Excel cell:        Cash Allocation Engine!D39:D41 (sub-block roll-up)
     Excel label:       "Allocated cash to Starlink ($mm)" … seven sub-blocks
     Architecture ref:  PRD U2 four-program → legacy pipeline consumers
     Principle:         6 (one-tab-one-module; shim until sub-blocks retire)
-    
+
     Formula: Split four-program cash into seven legacy sub-blocks for pipeline consumers.
 
     """
@@ -118,16 +122,12 @@ def four_cash_to_sub_blocks(
         ai_compute=YearVector(four_cash.odc.values + four_cash.terrestrial.values),
     )
     return cae_cash_to_sub_blocks(
-        module_cash,
-        four_cash.odc,
-        four_cash.terrestrial,
-        sub_demands,
+        module_cash, four_cash.odc, four_cash.terrestrial, sub_demands
     )
 
 
 def four_kg_to_sub_blocks(
-    four_kg: FourProgramIrrs,
-    sub_demands: QueueSubBlockDemands,
+    four_kg: FourProgramIrrs, sub_demands: QueueSubBlockDemands
 ) -> tuple[YearVector, YearVector, YearVector, YearVector, YearVector]:
     """Split four-program kg into five legacy kg sub-blocks.
 
@@ -135,7 +135,7 @@ def four_kg_to_sub_blocks(
     Excel label:       "Launch capacity allotment: Starlink (kg)" … five sub-blocks
     Architecture ref:  PRD U2 four-program → legacy pipeline consumers
     Principle:         6 (one-tab-one-module; shim until sub-blocks retire)
-    
+
     Formula: Split four-program kg into five legacy kg sub-blocks.
 
     """
@@ -152,15 +152,17 @@ def cae_cash_to_sub_blocks(
     level2_odc: YearVector,
     level2_terrestrial: YearVector,
     sub_demands: QueueSubBlockDemands,
-) -> tuple[YearVector, YearVector, YearVector, YearVector, YearVector, YearVector, YearVector]:
+) -> tuple[
+    YearVector, YearVector, YearVector, YearVector, YearVector, YearVector, YearVector
+]:
     """Split CAE module cash back into seven legacy sub-blocks for pipeline consumers.
     Excel cell:        V4.113 (canonical label registry)
     Excel label:       (see module docstring)
     Architecture ref:  PRD V4.113 §2 / context.md §6
     Principle:         6 (one-tab-one-module)
-    
+
     Formula: Split CAE module cash back into seven legacy sub-blocks for pipeline consumers.
-"""
+    """
     sl_parts = [
         sub_demands.starlink_v2_bb_cash.values,
         sub_demands.starlink_v2_dtc_cash.values,
@@ -186,17 +188,16 @@ def cae_cash_to_sub_blocks(
 
 
 def cae_kg_to_sub_blocks(
-    kg: ModuleSpotIrrs,
-    sub_demands: QueueSubBlockDemands,
+    kg: ModuleSpotIrrs, sub_demands: QueueSubBlockDemands
 ) -> tuple[YearVector, YearVector, YearVector, YearVector, YearVector]:
     """Split CAE kg allotments into five legacy kg sub-blocks.
     Excel cell:        V4.113 (canonical label registry)
     Excel label:       (see module docstring)
     Architecture ref:  PRD V4.113 §2 / context.md §6
     Principle:         6 (one-tab-one-module)
-    
+
     Formula: Split CAE kg allotments into five legacy kg sub-blocks.
-"""
+    """
     v3_parts = [
         sub_demands.starlink_v3_bb_kg.values,
         sub_demands.starlink_v3_dtc_kg.values,
@@ -210,7 +211,9 @@ def cae_kg_to_sub_blocks(
         odc_parts = [sub_demands.odc_kg.values, sub_demands.ai_stack_kg.values]
         odc_total = odc_parts[0] + odc_parts[1]
         ai_kg = kg.ai_compute.values
-        odc_kg = np.where(odc_total > 0.0, ai_kg * odc_parts[0] / odc_total, ai_kg * 0.5)
+        odc_kg = np.where(
+            odc_total > 0.0, ai_kg * odc_parts[0] / odc_total, ai_kg * 0.5
+        )
     ai_stack_kg = ai_kg - odc_kg
 
     return (

@@ -21,6 +21,7 @@ from spacex_model.engine.pipeline import run_base_case
 from spacex_model.inputs.block_b_anchors import BLOCK_B_CALIBRATION_PENDING_BUDGET
 from spacex_model.inputs.v4_113_2025_anchors import V4_113_INGEST_ANCHORS_2025
 from spacex_model.io.divergence import build_divergence_report, finalize_triage
+from spacex_model.linters.assumption_defaults import find_assumption_scalar_defaults
 from spacex_model.linters.architecture_coverage import (
     find_uncovered_architecture_sections,
 )
@@ -120,6 +121,11 @@ def test_r4_block_d_docstrings() -> None:
 def test_r4_block_d_architecture_coverage() -> None:
     uncovered = find_uncovered_architecture_sections()
     assert uncovered == [], f"Uncovered sections: {uncovered}"
+
+
+def test_r4_block_d_no_assumption_scalar_defaults() -> None:
+    violations = find_assumption_scalar_defaults()
+    assert violations == [], "\n".join(violations[:20])
 
 
 def test_r4_divergence_all_triaged(base_case) -> None:

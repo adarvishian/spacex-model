@@ -40,7 +40,7 @@ class StrategicSeedResult:
 
 
 def _graduation_irr(assumptions: Assumptions) -> float:
-    explicit = assumption_scalar(assumptions, ODC_STRATEGIC_SEED_GRADUATION_IRR, default=-1.0)
+    explicit = assumption_scalar(assumptions, ODC_STRATEGIC_SEED_GRADUATION_IRR)
     if explicit >= 0.0:
         return explicit
     return _soft_floor(assumptions)
@@ -62,15 +62,13 @@ def compute_strategic_seed(inputs: StrategicSeedInputs) -> StrategicSeedResult:
     Excel label:       "ODC strategic seed cash ($mm)"
     Architecture ref:  PRD §5.2 + D4 strategic seed
     Principle:         2 (prior-yr IRR graduation; no this-year returns)
-    
+
     Formula: ODC pre-revenue seed — senior claim after LM carve-out, sunsets on prior-yr IRR.
 
     """
     a = inputs.assumptions
-    first_build = int(
-        assumption_scalar(a, cl.AI_ODC_FIRST_COMPUTE_SAT_BUILD_YEAR, default=2028.0)
-    )
-    ramp_years = int(assumption_scalar(a, ODC_STRATEGIC_SEED_RAMP_YEARS, default=5.0))
+    first_build = int(assumption_scalar(a, cl.AI_ODC_FIRST_COMPUTE_SAT_BUILD_YEAR))
+    ramp_years = int(assumption_scalar(a, ODC_STRATEGIC_SEED_RAMP_YEARS))
     grad_irr = _graduation_irr(a)
 
     cash_claim = np.zeros(HORIZON_YEARS, dtype=np.float64)

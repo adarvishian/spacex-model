@@ -12,7 +12,10 @@ from spacex_model.calc.ai_compute.orbital_dc import (
 )
 from spacex_model.config import canonical_labels as cl
 from spacex_model.config.constants import HORIZON_YEARS
-from spacex_model.domain.assumption_helpers import assumption_scalar, assumption_year_vector
+from spacex_model.domain.assumption_helpers import (
+    assumption_scalar,
+    assumption_year_vector,
+)
 from spacex_model.domain.year_vector import YearVector
 
 
@@ -22,13 +25,15 @@ def _module_out(outputs: dict[str, AllocatorOut], key: str) -> AllocatorOut:
 
 def _fleet_pflop_hrs(inputs: AiComputeInputs) -> YearVector:
     deployed = inputs.sats_deployed or YearVector.zeros()
-    compute_kw = assumption_scalar(inputs.assumptions, cl.COMPUTE_POWER_PER_SAT_KW, default=140.0)
-    chip_tdp = assumption_year_vector(inputs.assumptions, cl.CHIP_TDP_PER_CHIP_W_YEAR_ROW, default=700.0)
+    compute_kw = assumption_scalar(inputs.assumptions, cl.COMPUTE_POWER_PER_SAT_KW)
+    chip_tdp = assumption_year_vector(
+        inputs.assumptions, cl.CHIP_TDP_PER_CHIP_W_YEAR_ROW, default=700.0
+    )
     chip_fp8 = assumption_year_vector(
         inputs.assumptions, cl.CHIP_FP8_PERFORMANCE_TFLOPS_YEAR_ROW, default=1979.0
     )
-    util = assumption_scalar(inputs.assumptions, cl.ODC_UTILIZATION_FACTOR, default=0.85)
-    ecr = assumption_scalar(inputs.assumptions, cl.EFFECTIVE_COMPUTE_RATIO_RATIO, default=0.6)
+    util = assumption_scalar(inputs.assumptions, cl.ODC_UTILIZATION_FACTOR)
+    ecr = assumption_scalar(inputs.assumptions, cl.EFFECTIVE_COMPUTE_RATIO_RATIO)
 
     fleet = np.zeros(HORIZON_YEARS, dtype=np.float64)
     active = 0.0
@@ -57,11 +62,13 @@ def _fully_allocated_annual_cost_mm(inputs: AiComputeInputs) -> YearVector:
         if count <= 0:
             continue
         combined_rev = per_sat_combined_revenue_mm(inputs.assumptions, t)
-        ground = assumption_scalar(inputs.assumptions, cl.ODC_GROUND_OPS_PCT_REV, default=0.05)
-        insurance = assumption_scalar(inputs.assumptions, cl.ODC_INSURANCE_PCT_REV, default=0.01)
-        other = assumption_scalar(inputs.assumptions, cl.ODC_OTHER_COGS_PCT_REV, default=0.03)
+        ground = assumption_scalar(inputs.assumptions, cl.ODC_GROUND_OPS_PCT_REV)
+        insurance = assumption_scalar(inputs.assumptions, cl.ODC_INSURANCE_PCT_REV)
+        other = assumption_scalar(inputs.assumptions, cl.ODC_OTHER_COGS_PCT_REV)
         opex = combined_rev * (ground + insurance + other)
-        bandwidth = per_sat_bandwidth_cost_mm(inputs.assumptions, inputs.starlink_capacity, t)
+        bandwidth = per_sat_bandwidth_cost_mm(
+            inputs.assumptions, inputs.starlink_capacity, t
+        )
         values[t] = count * (opex + bandwidth)
     return YearVector(values)
 
@@ -72,28 +79,28 @@ def rate_per_unit(inputs: AiComputeInputs) -> YearVector:
     Excel label:       (see module docstring)
     Architecture ref:  PRD V4.113 §2 / context.md §6
     Principle:         6 (one-tab-one-module)
-    
+
     Formula: Fully-allocated at-cost compute rate ($/PFLOP-hr).
-"""
+    """
     cost = _fully_allocated_annual_cost_mm(inputs).values
     hours = _fleet_pflop_hrs(inputs).values
-    rate = np.nan_to_num(np.where(hours > 0, cost * 1e6 / np.maximum(hours, 1e-12), 0.0))
+    rate = np.nan_to_num(
+        np.where(hours > 0, cost * 1e6 / np.maximum(hours, 1e-12), 0.0)
+    )
     return YearVector(rate)
 
 
 def internal_transfer_revenue(
-    inputs: AiComputeInputs,
-    *,
-    internal_pflop_hrs: YearVector | None = None,
+    inputs: AiComputeInputs, *, internal_pflop_hrs: YearVector | None = None
 ) -> YearVector:
     """ODC internal compute transfer revenue = internal PFLOP-hrs × at-cost rate.
     Excel cell:        V4.113 (canonical label registry)
     Excel label:       (see module docstring)
     Architecture ref:  PRD V4.113 §2 / context.md §6
     Principle:         6 (one-tab-one-module)
-    
+
     Formula: ODC internal compute transfer revenue = internal PFLOP-hrs × at-cost rate.
-"""
+    """
     rate = rate_per_unit(inputs)
     if internal_pflop_hrs is None:
         fleet_hrs = _fleet_pflop_hrs(inputs)
@@ -102,7 +109,9 @@ def internal_transfer_revenue(
             cl.ODC_EXTERNAL_COMPUTE_SHARE_CUSTOMERS_YEAR_ROW,
             default=0.05,
         )
-        internal_pflop_hrs = YearVector(fleet_hrs.values * (1.0 - internal_share.values))
+        internal_pflop_hrs = YearVector(
+            fleet_hrs.values * (1.0 - internal_share.values)
+        )
     values = internal_pflop_hrs.values * rate.values / 1e6
     return YearVector(values)
 
@@ -116,9 +125,9 @@ def conservation_residual(
     Excel label:       (see module docstring)
     Architecture ref:  PRD V4.113 §2 / context.md §6
     Principle:         6 (one-tab-one-module)
-    
+
     Formula: Compute elimination check — source rev − consumer COGS.
-"""
+    """
     return YearVector(
         internal_transfer_revenue_vec.values - consumer_internal_compute_cost.values
     )

@@ -30,9 +30,7 @@ class ValuationResult:
 
 
 def compute_implied_ev_multiple(
-    group_revenue_net: YearVector,
-    *,
-    multiple: float = 10.0,
+    group_revenue_net: YearVector, *, multiple: float = 10.0
 ) -> YearVector:
     """Implied EV = revenue multiple × Group Revenue net of eliminations.
 
@@ -40,7 +38,7 @@ def compute_implied_ev_multiple(
     Excel label:       "Implied EV (10× rev cross-check)"
     Architecture ref:  §14.3 SoTP multiples / PRD §5.5 calibration
     Principle:         3 (canonical valuation cross-check)
-    
+
     Formula: Implied EV = revenue multiple × Group Revenue net of eliminations.
 
     """
@@ -54,20 +52,18 @@ def compute_valuation(inputs: ValuationInputs) -> ValuationResult:
     Excel label:       "VALUATION -- DCF off Group FCF + Sum-of-parts ..."
     Architecture ref:  §14 Valuation tab (stub)
     Principle:         3 (EV cross-check against group revenue)
-    
+
     Formula: Valuation stub — implied EV 2025 = 10× Group Revenue ($146.5B target).
 
     Full Group DCF, SoTP, comparables, and sensitivity land in Phase D after
     Allocator closes the iterative loop.
     """
-    wacc = inputs.assumptions.lookup_scalar("Group WACC", default=0.10)
+    wacc = inputs.assumptions.lookup_scalar("Group WACC")
     terminal_g = inputs.assumptions.lookup_scalar(
-        "Terminal growth rate g (group + most modules)",
-        default=0.025,
+        "Terminal growth rate g (group + most modules)"
     )
     implied = compute_implied_ev_multiple(
-        inputs.group_pnl.group_revenue_net,
-        multiple=inputs.revenue_multiple,
+        inputs.group_pnl.group_revenue_net, multiple=inputs.revenue_multiple
     )
     ev_2025_mm = float(implied.at(FIRST_YEAR))
     ev_2025_b = ev_2025_mm / 1000.0

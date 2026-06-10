@@ -9,8 +9,7 @@ from spacex_model.domain.year_vector import YearVector
 
 
 def historical_opening_balance_deorbit(
-    baseline_sats: float,
-    useful_life_years: float,
+    baseline_sats: float, useful_life_years: float
 ) -> YearVector:
     """Linear retirement of SoY 2025 historical fleet over N years.
 
@@ -18,7 +17,7 @@ def historical_opening_balance_deorbit(
     Excel label:       "V2 BB historical retirement"
     Architecture ref:  §8.3
     Principle:         23 (anchor-and-offset; not year-chained cumulative)
-    
+
     Formula: Linear retirement of SoY 2025 historical fleet over N years.
 
     """
@@ -31,9 +30,7 @@ def historical_opening_balance_deorbit(
 
 
 def launch_cohort_deorbit(
-    launches: YearVector,
-    *,
-    useful_life_years: int,
+    launches: YearVector, *, useful_life_years: int
 ) -> YearVector:
     """Retire launch cohorts after useful life (Rule 23 year-chained exception).
 
@@ -41,7 +38,7 @@ def launch_cohort_deorbit(
     Excel label:       "V2 BB launch-cohort retirement"
     Architecture ref:  §8.3
     Principle:         23 (year-chained cumulative deorbit)
-    
+
     Formula: Retire launch cohorts after useful life (Rule 23 year-chained exception).
 
     """

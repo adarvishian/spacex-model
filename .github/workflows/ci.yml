@@ -50,6 +50,9 @@ jobs:
       - name: Audit artifact drift check
         run: uv run spacex-audit --check
 
+      - name: pip-audit (dependency security)
+        run: uv run pip-audit
+
       - name: Pytest (excludes slow hypothesis by default)
         run: uv run pytest -n auto -m "not slow" --cov=spacex_model --cov-report=term-missing:skip-covered --cov-report=xml --tb=short -q
 
@@ -100,6 +103,14 @@ jobs:
       - name: Install frontend dependencies
         working-directory: frontend
         run: npm ci
+
+      - name: npm audit (high severity)
+        working-directory: frontend
+        run: npm audit --audit-level=high
+
+      - name: Vitest unit tests (shared logic)
+        working-directory: frontend
+        run: npm test
 
       - name: Build frontend
         working-directory: frontend

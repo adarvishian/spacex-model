@@ -93,7 +93,7 @@ def build_revenue_bases(
     Excel label:       "OpEx revenue bases"
     Architecture ref:  §12 OpEx tab
     Principle:         3 (canonical cross-tab labels)
-    
+
     Formula: Derive OpEx revenue bases from module Allocator OUT dict.
 
     """
@@ -133,9 +133,7 @@ def build_revenue_bases(
 
 
 def switching_rd(
-    dollar_profile: YearVector,
-    pct_rate: YearVector,
-    revenue: YearVector,
+    dollar_profile: YearVector, pct_rate: YearVector, revenue: YearVector
 ) -> YearVector:
     """Pre-revenue R&D switch: MAX($-profile, % × revenue) per Architecture §12.1.
 
@@ -143,7 +141,7 @@ def switching_rd(
     Excel label:       "ODC R&D ($mm) — MAX($-profile, % × rev)"
     Architecture ref:  §12.1 (pre-revenue R&D switch)
     Principle:         12 (anchor-and-offset year rows)
-    
+
     Formula: Pre-revenue R&D switch: MAX($-profile, % × revenue) per Architecture §12.1.
 
     """
@@ -158,13 +156,10 @@ def _pct_rd(
     end_label: str,
     cagr_label: str,
     revenue: YearVector,
-    start_default: float,
-    end_default: float,
-    cagr_default: float,
 ) -> YearVector:
-    start = assumption_scalar(assumptions, start_label, default=start_default)
-    end = assumption_scalar(assumptions, end_label, default=end_default)
-    cagr = assumption_scalar(assumptions, cagr_label, default=cagr_default)
+    start = assumption_scalar(assumptions, start_label)
+    end = assumption_scalar(assumptions, end_label)
+    cagr = assumption_scalar(assumptions, cagr_label)
     pct = bounded_cagr_pct_vector(start, end, cagr)
     return YearVector(pct * revenue.values)
 
@@ -176,7 +171,7 @@ def compute_starlink_rd(inputs: OpExInputs, bases: OpExRevenueBases) -> YearVect
     Excel label:       "Starlink R&D ($mm)"
     Architecture ref:  §12.1 R&D by module
     Principle:         12 (anchor-and-offset bounded CAGR)
-    
+
     Formula: Starlink R&D = bounded-CAGR % × (Starlink + Starshield) revenue.
 
     """
@@ -186,20 +181,19 @@ def compute_starlink_rd(inputs: OpExInputs, bases: OpExRevenueBases) -> YearVect
         end_label=cl.STARLINK_R_D_END_STATE_FLOOR,
         cagr_label=cl.STARLINK_R_D_CAGR_TAPER,
         revenue=bases.starlink_total_revenue,
-        start_default=0.08,
-        end_default=0.03,
-        cagr_default=-0.10,
     )
 
 
-def compute_customer_launch_rd(inputs: OpExInputs, bases: OpExRevenueBases) -> YearVector:
+def compute_customer_launch_rd(
+    inputs: OpExInputs, bases: OpExRevenueBases
+) -> YearVector:
     """Customer Launch R&D = bounded-CAGR % × external revenue.
 
     Excel cell:        OpEx!D19
     Excel label:       "Customer Launch R&D ($mm)"
     Architecture ref:  §12.1 R&D by module
     Principle:         12 (anchor-and-offset bounded CAGR)
-    
+
     Formula: Customer Launch R&D = bounded-CAGR % × external revenue.
 
     """
@@ -209,9 +203,6 @@ def compute_customer_launch_rd(inputs: OpExInputs, bases: OpExRevenueBases) -> Y
         end_label=cl.CUSTOMER_LAUNCH_R_D_END_STATE_FLOOR,
         cagr_label=cl.CUSTOMER_LAUNCH_R_D_CAGR_TAPER,
         revenue=bases.customer_launch_external_revenue,
-        start_default=0.25,
-        end_default=0.04,
-        cagr_default=-0.20,
     )
 
 
@@ -222,18 +213,20 @@ def compute_odc_rd(inputs: OpExInputs, bases: OpExRevenueBases) -> YearVector:
     Excel label:       "ODC R&D ($mm) — MAX($-profile, % × rev)"
     Architecture ref:  §12.1 (pre-revenue R&D switch)
     Principle:         12 (anchor-and-offset bounded CAGR)
-    
+
     Formula: ODC R&D = MAX($-profile, bounded-CAGR % × ODC revenue).
 
     """
     a = inputs.assumptions
-    start = assumption_scalar(a, cl.ODC_R_D_START_OF_ODC_REV, default=0.30)
-    end = assumption_scalar(a, cl.ODC_R_D_END_STATE_FLOOR, default=0.08)
-    cagr = assumption_scalar(a, cl.ODC_R_D_CAGR_TAPER, default=-0.15)
+    start = assumption_scalar(a, cl.ODC_R_D_START_OF_ODC_REV)
+    end = assumption_scalar(a, cl.ODC_R_D_END_STATE_FLOOR)
+    cagr = assumption_scalar(a, cl.ODC_R_D_CAGR_TAPER)
     pct = YearVector(bounded_cagr_pct_vector(start, end, cagr))
     profile = assumption_year_vector(a, cl.ODC_R_D_PROFILE_MM_YR_YEAR_ROW, default=0.0)
     if profile.at(FIRST_YEAR) == 0.0:
-        profile = assumption_year_vector(a, cl.ODC_R_D_PROFILE_MM_PRE_REVENUE_FLOOR, default=200.0)
+        profile = assumption_year_vector(
+            a, cl.ODC_R_D_PROFILE_MM_PRE_REVENUE_FLOOR, default=200.0
+        )
     return switching_rd(profile, pct, bases.odc_revenue)
 
 
@@ -244,18 +237,22 @@ def compute_ai_stack_rd(inputs: OpExInputs, bases: OpExRevenueBases) -> YearVect
     Excel label:       "AI Stack R&D ($mm) — MAX($-profile, % × rev)"
     Architecture ref:  §12.1 (pre-revenue R&D switch)
     Principle:         12 (anchor-and-offset bounded CAGR)
-    
+
     Formula: AI Stack R&D = MAX($-profile, bounded-CAGR % × AI Stack revenue).
 
     """
     a = inputs.assumptions
-    start = assumption_scalar(a, cl.AI_STACK_R_D_START_OF_AI_STACK_REV, default=0.15)
-    end = assumption_scalar(a, cl.AI_STACK_R_D_END_STATE_FLOOR, default=0.05)
-    cagr = assumption_scalar(a, cl.AI_STACK_R_D_CAGR_TAPER, default=-0.10)
+    start = assumption_scalar(a, cl.AI_STACK_R_D_START_OF_AI_STACK_REV)
+    end = assumption_scalar(a, cl.AI_STACK_R_D_END_STATE_FLOOR)
+    cagr = assumption_scalar(a, cl.AI_STACK_R_D_CAGR_TAPER)
     pct = YearVector(bounded_cagr_pct_vector(start, end, cagr))
-    profile = assumption_year_vector(a, cl.AI_STACK_R_D_PROFILE_MM_YR_YEAR_ROW, default=0.0)
+    profile = assumption_year_vector(
+        a, cl.AI_STACK_R_D_PROFILE_MM_YR_YEAR_ROW, default=0.0
+    )
     if profile.at(FIRST_YEAR) == 0.0:
-        profile = assumption_year_vector(a, cl.AI_STACK_R_D_PROFILE_MM_PRE_REVENUE_FLOOR, default=50.0)
+        profile = assumption_year_vector(
+            a, cl.AI_STACK_R_D_PROFILE_MM_PRE_REVENUE_FLOOR, default=50.0
+        )
     return switching_rd(profile, pct, bases.ai_stack_revenue)
 
 
@@ -266,14 +263,12 @@ def compute_starship_precommercial_rd(inputs: OpExInputs) -> YearVector:
     Excel label:       "Starship pre-commercialization R&D ($mm/yr) — memo"
     Architecture ref:  §12.1 S-1 segment reconciliation
     Principle:         8 (memo-only; port capitalizes Starship via vehicle build)
-    
+
     Formula: Starship pre-commercialization R&D $-profile — MDA §9 / §11.6 (P1-4).
 
     """
     return assumption_year_vector(
-        inputs.assumptions,
-        cl.STARSHIP_PRECOMMERCIAL_RD_MM_YEAR_ROW,
-        default=0.0,
+        inputs.assumptions, cl.STARSHIP_PRECOMMERCIAL_RD_MM_YEAR_ROW, default=0.0
     )
 
 
@@ -284,20 +279,16 @@ def compute_moon_mars_rd(inputs: OpExInputs) -> YearVector:
     Excel label:       "Mars/Moon R&D ($mm/yr) — year-row"
     Architecture ref:  §12.1 R&D — Moon/Mars
     Principle:         12 (anchor-and-offset year rows)
-    
+
     Formula: Moon/Mars R&D = Assumptions $-profile year-row (pre-revenue).
 
     """
     profile = assumption_year_vector(
-        inputs.assumptions,
-        cl.R_D_MOON_MARS_MM_YR_YEAR_ROW,
-        default=700.0,
+        inputs.assumptions, cl.R_D_MOON_MARS_MM_YR_YEAR_ROW, default=700.0
     )
     if profile.at(FIRST_YEAR) == 0.0:
         profile = assumption_year_vector(
-            inputs.assumptions,
-            cl.MARS_MOON_R_D_MM_YR_YEAR_ROW,
-            default=700.0,
+            inputs.assumptions, cl.MARS_MOON_R_D_MM_YR_YEAR_ROW, default=700.0
         )
     return profile
 
@@ -332,15 +323,13 @@ def compute_s1_segment_memo(
     Excel label:       "S-1 segment R&D / SG&A rollup"
     Architecture ref:  §12.1 + MDA §4.1 / §4.2
     Principle:         3 (reconciliation memo; not a second P&L)
-    
+
     Formula: Roll port module R&D/SG&A into S-1 Space / Connectivity / AI segments (P1-6).
 
     """
     cl_rev = bases.customer_launch_external_revenue
     conn_rev = _module_out(module_outputs, "starlink").total_revenue
-    ai_rev = YearVector(
-        bases.odc_revenue.values + bases.ai_stack_revenue.values
-    )
+    ai_rev = YearVector(bases.odc_revenue.values + bases.ai_stack_revenue.values)
     rd_space = YearVector(
         opex_rd.customer_launch_rd.values
         + opex_rd.moon_mars_rd.values
@@ -368,7 +357,7 @@ def compute_sales_marketing(inputs: OpExInputs, bases: OpExRevenueBases) -> Year
     Excel label:       "S&M ($mm)"
     Architecture ref:  §12.2 SG&A by function
     Principle:         12 (anchor-and-offset bounded CAGR)
-    
+
     Formula: Sales & Marketing = bounded-CAGR % × expanded revenue base.
 
     """
@@ -376,10 +365,9 @@ def compute_sales_marketing(inputs: OpExInputs, bases: OpExRevenueBases) -> Year
     start = assumption_scalar(
         a,
         cl.SALES_MARKETING_START_OF_STARLINK_STARSHIELD_CUSTOMER_LAUNCH_EXT_REV,
-        default=0.04,
     )
-    end = assumption_scalar(a, cl.SALES_MARKETING_END_STATE_FLOOR, default=0.02)
-    cagr = assumption_scalar(a, cl.SALES_MARKETING_CAGR_TAPER, default=-0.08)
+    end = assumption_scalar(a, cl.SALES_MARKETING_END_STATE_FLOOR)
+    cagr = assumption_scalar(a, cl.SALES_MARKETING_CAGR_TAPER)
     pct = bounded_cagr_pct_vector(start, end, cagr)
     sm_base = YearVector(
         bases.starlink_total_revenue.values
@@ -389,28 +377,28 @@ def compute_sales_marketing(inputs: OpExInputs, bases: OpExRevenueBases) -> Year
     return YearVector(pct * sm_base.values)
 
 
-def compute_general_administrative(inputs: OpExInputs, bases: OpExRevenueBases) -> YearVector:
+def compute_general_administrative(
+    inputs: OpExInputs, bases: OpExRevenueBases
+) -> YearVector:
     """General & Administrative = bounded-CAGR % × group revenue net of eliminations.
 
     Excel cell:        OpEx!D47
     Excel label:       "G&A ($mm)"
     Architecture ref:  §12.2 SG&A by function
     Principle:         12 (anchor-and-offset bounded CAGR)
-    
+
     Formula: General & Administrative = bounded-CAGR % × group revenue net of eliminations.
 
     """
     a = inputs.assumptions
-    start = assumption_scalar(a, cl.GENERAL_ADMINISTRATIVE_START_OF_GROUP_REV, default=0.05)
+    start = assumption_scalar(a, cl.GENERAL_ADMINISTRATIVE_START_OF_GROUP_REV)
     end = assumption_scalar(
         a,
         "General & Administrative — end-state % (ceiling)",
-        default=0.06,
     )
     cagr = assumption_scalar(
         a,
         "General & Administrative — CAGR (taper)",
-        default=0.01,
     )
     pct = bounded_cagr_pct_vector(start, end, cagr)
     return YearVector(pct * bases.group_revenue_net_of_elims.values)
@@ -423,33 +411,33 @@ def compute_customer_service(inputs: OpExInputs, bases: OpExRevenueBases) -> Yea
     Excel label:       "Customer Service ($mm) — 2% × Starlink subscription rev"
     Architecture ref:  §12.2 SG&A by function
     Principle:         12 (flat rate on subscription base)
-    
+
     Formula: Customer Service = flat % × Starlink subscription revenue (BB + DTC).
 
     """
     flat_pct = assumption_scalar(
         inputs.assumptions,
         "Customer Service — flat % of Starlink subscription rev",
-        default=0.02,
     )
     return YearVector(flat_pct * bases.starlink_subscription_revenue.values)
 
 
-def compute_other_corporate_operating(inputs: OpExInputs, bases: OpExRevenueBases) -> YearVector:
+def compute_other_corporate_operating(
+    inputs: OpExInputs, bases: OpExRevenueBases
+) -> YearVector:
     """Other corporate operating = flat % × group revenue net of eliminations.
 
     Excel cell:        OpEx!D49
     Excel label:       "Other corporate operating ($mm) — 1% × group rev"
     Architecture ref:  §12.2 SG&A by function
     Principle:         12 (flat rate on group revenue)
-    
+
     Formula: Other corporate operating = flat % × group revenue net of eliminations.
 
     """
     flat_pct = assumption_scalar(
         inputs.assumptions,
         cl.OTHER_CORPORATE_OPERATING_FLAT_OF_GROUP_REV,
-        default=0.01,
     )
     return YearVector(flat_pct * bases.group_revenue_net_of_elims.values)
 
@@ -461,7 +449,7 @@ def compute_opex(inputs: OpExInputs) -> OpExResult:
     Excel label:       "Total OpEx ($mm)"
     Architecture ref:  §12 OpEx tab
     Principle:         8 (corporate OpEx excluded from module tabs)
-    
+
     Formula: Total OpEx = Σ R&D + Σ SG&A per Architecture §12.
 
     """
