@@ -30,9 +30,13 @@ When custom MC returns: Vercel Sandbox executor (~8 vCPU per job, progress to Bl
 ### Verify
 
 ```bash
-uv run python scripts/check_precache_artifacts.py
-cd frontend && VITE_DEPLOY_SHA=$(git rev-parse HEAD) npm run build
-uv run pytest tests/service/test_serverless_smoke.py -m slow -q
+# Run from repo root. Chain with && so pytest is not run from frontend/.
+uv run python scripts/check_precache_artifacts.py && \
+  (cd frontend && VITE_DEPLOY_SHA=$(git rev-parse HEAD) npm run build) && \
+  uv run pytest tests/service/test_serverless_smoke.py -m slow -q
+
+# After git commit --amend, restamp artifact tags without re-running MC:
+uv run python scripts/stamp_precache_git_sha.py
 ```
 
 ---
