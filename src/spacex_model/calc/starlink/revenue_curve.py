@@ -19,12 +19,12 @@ def tam_shift_vector(assumptions: Assumptions) -> np.ndarray:
     Excel label:       "Annual TAM shift multiplier"
     Architecture ref:  §8.4 / Sprint 10.5
     Principle:         12 (anchor-and-offset year exponent)
-
+    
     Formula: Annual TAM shift = (1 + inflation)^t × (1 + GNI)^t per Sprint 10.5.
 
     """
-    inflation = assumption_scalar(assumptions, cl.TAM_INFLATION_RATE_ANNUAL)
-    gni = 0.03  # V4.131 retired GNI per capita CAGR from Assumptions
+    inflation = assumption_scalar(assumptions, cl.TAM_INFLATION_RATE_ANNUAL, default=0.025)
+    gni = assumption_scalar(assumptions, cl.GNI_PER_CAPITA_GROWTH_RATE_ANNUAL, default=0.03)
     offsets = np.arange(HORIZON_YEARS, dtype=np.float64)
     return np.power(1.0 + inflation, offsets) * np.power(1.0 + gni, offsets)
 
@@ -41,7 +41,7 @@ def compute_bb_revenue(
     Excel label:       "BB Revenue ($mm)"
     Architecture ref:  §8.4
     Principle:         3 (bandwidth-driven revenue)
-
+    
     Formula: BB revenue from piecewise-linear Demand Curves lookup × TAM shift.
 
     """
@@ -66,7 +66,7 @@ def compute_dtc_revenue(
     Excel label:       "DTC Revenue ($mm)"
     Architecture ref:  §8.4
     Principle:         3 (bandwidth-driven revenue)
-
+    
     Formula: DTC revenue from piecewise-linear Demand Curves lookup × TAM shift.
 
     """

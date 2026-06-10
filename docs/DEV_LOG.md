@@ -11,6 +11,38 @@ Chronological record of material changes to the Python port. Read this after `co
 
 ---
 
+## 2026-06-10 — Milestone 1.3: V4.131 remap audit + solver convergence (audit 2026-06-10)
+
+**Trigger:** `SpaceX_Modeler_Repo_Audit_2026-06-10.md` §5 task 1.3; unblocks M0 task 0.2.
+
+### Root cause
+
+Solver non-convergence at `05c34af` was **not** primarily bad individual remaps — the V4.131 rebase calc refactor (`src/spacex_model/calc/`, `engine/pipeline.py`) broke the iterative loop (`group_fcf` limit cycle, residual ≈145). Bisect: `cc78fcf` calc converges on both V4.113 and V4.131 workbooks (~135 iter).
+
+### Shipped
+
+| Task | Change | Primary files |
+|------|--------|---------------|
+| 1.3-a | Reverted calc engine + supplement to `cc78fcf`; kept M0 `s1_overrides.py` + `cash_pool.py` S-1 bridge | `src/spacex_model/calc/**`, `engine/pipeline.py`, `engine/iterative_solver.py`, `config/canonical_labels_supplement.py` |
+| 1.3-b | Versioned remap audit table: 69 `LABEL_REMAP` + 26 `SUPPLEMENT_OVERRIDES` entries with `status: faithful/flagged/fixed` | `data/label_remaps/v4_113__v4_131.json` |
+| 1.3-c | Flagged remaps documented; fixed (dimensional) remaps blocked pending sign-off | `docs/intentional_divergences.md` |
+| 0.2-unblock | Regenerated precache + reconciliation report at converging HEAD on V4.131 | `frontend/public/data/*.json`, `docs/reconciliation_report.md` |
+
+### Open (post-M1.3)
+
+- Apply faithful remaps + re-land V4.131 calc changes only after owner sign-off on flagged pairs and calc reconciliation.
+- Milestone 2.3: replace hand-edited `rebase_v4131.py` with CLI + unit-dimension gate.
+
+### Verify
+
+```bash
+uv run python -m spacex_model.cli.run_model --base-case          # 135 iter, converged
+uv run python scripts/check_precache_artifacts.py
+pytest tests/reconciliation/test_block_b.py -v
+```
+
+---
+
 ## 2026-06-10 — Milestone 0: safety net (audit 2026-06-10)
 
 **Trigger:** `SpaceX_Modeler_Repo_Audit_2026-06-10.md` §5 Milestone 0.
@@ -20,7 +52,7 @@ Chronological record of material changes to the Python port. Read this after `co
 | Task | Change | Primary files |
 |------|--------|---------------|
 | 0.1 | Committed V4.113→V4.131 rebase script; README + `context.md` baseline → V4.131 | `scripts/rebase_v4131.py`, `README.md`, `context.md` |
-| 0.2 | Regenerated precache artifacts + reconciliation report at HEAD on V4.131 | `frontend/public/data/*.json`, `docs/reconciliation_report.md` | **Blocked:** solver non-convergence at HEAD (`group_fcf` limit cycle, residual ≈146); `./scripts/regenerate_precache.sh` fails until Milestone 1.3 remap fixes land |
+| 0.2 | Regenerated precache artifacts + reconciliation report at HEAD on V4.131 | `frontend/public/data/*.json`, `docs/reconciliation_report.md` | **Unblocked in M1.3** — calc reverted to `cc78fcf`; solver converges in ~135 iter |
 | 0.2-partial | Restored S-1 override coverage; fixed dimensionally-wrong Anthropic/EchoStar supplement remaps; hardcoded $20B bridge in `cash_pool.py` | `inputs/s1_overrides.py`, `config/canonical_labels_supplement.py`, `calc/allocator/cash_pool.py`, `domain/assumption_helpers.py` | Pipeline runs but does not converge — partial progress toward unblock |
 | 0.3 | CI gate: committed artifact `git_sha` must match `HEAD` | `scripts/check_precache_artifacts.py`, `.github/workflows/ci.yml` |
 | 0.4 | Removed root `Monte Carlo/` UNO engine (different project); Python port MC is canonical | repo hygiene |

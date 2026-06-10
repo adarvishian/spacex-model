@@ -71,7 +71,11 @@ def _from_array(values: np.ndarray) -> FourProgramIrrs:
     )
 
 
-def _proportional_fill(pool: float, shares: np.ndarray, caps: np.ndarray) -> np.ndarray:
+def _proportional_fill(
+    pool: float,
+    shares: np.ndarray,
+    caps: np.ndarray,
+) -> np.ndarray:
     """Two-pass proportional fill capped at per-program limits."""
     out = np.zeros(_N_PROGRAMS, dtype=np.float64)
     if pool <= 0.0 or shares.sum() <= 0.0:
@@ -148,9 +152,7 @@ def _reconcile_year(
         cash_kg = 0.0
         if cash_caps[i] > 0.0:
             cash_kg = kg_demands[i] * (final_cash[i] / cash_caps[i])
-        slot_kg = (
-            ship_funded[i] * kg_per_ship_yr if kg_per_ship_yr > 0.0 else kg_demands[i]
-        )
+        slot_kg = ship_funded[i] * kg_per_ship_yr if kg_per_ship_yr > 0.0 else kg_demands[i]
         final_kg[i] = min(kg_demands[i], cash_kg, slot_kg)
 
     ships_used = ship_funded.sum()
@@ -176,7 +178,7 @@ def compute_two_resource_fill(
     Excel label:       "▸ TOP-LEVEL IRR-WEIGHTED ALLOCATION"
     Architecture ref:  PRD §5.2 unified engine + U2
     Principle:         2 (prior-yr IRR; cash + launch one pass)
-
+    
     Formula: Cash + Gigabay two-resource fill with cross-resource MIN (U2).
 
     """
@@ -195,9 +197,7 @@ def compute_two_resource_fill(
     capped_share = np.zeros((_N_PROGRAMS, HORIZON_YEARS), dtype=np.float64)
     binding = np.zeros(HORIZON_YEARS, dtype=np.float64)
 
-    lm = (
-        lm_kg_reserved.values if lm_kg_reserved is not None else np.zeros(HORIZON_YEARS)
-    )
+    lm = lm_kg_reserved.values if lm_kg_reserved is not None else np.zeros(HORIZON_YEARS)
     spine_total = (
         total_desired_launch_kg.values
         if total_desired_launch_kg is not None
@@ -230,9 +230,7 @@ def compute_two_resource_fill(
 
         launch_kg_cap = gigabay_throughput.values[t] * kg_per_ship_yr.values[t]
         cap_after_lm = max(0.0, launch_kg_cap - lm[t])
-        binding[t] = (
-            1.0 if spine_total[t] > cap_after_lm and cap_after_lm > 0.0 else 0.0
-        )
+        binding[t] = 1.0 if spine_total[t] > cap_after_lm and cap_after_lm > 0.0 else 0.0
 
     return TwoResourceFillResult(
         prior_irr_avg=prior_avg,
@@ -247,21 +245,20 @@ def compute_two_resource_fill(
     )
 
 
-def kg_per_ship_year(
-    assumptions: Assumptions, launch_per_launch_upmass: YearVector
-) -> YearVector:
+def kg_per_ship_year(assumptions: Assumptions, launch_per_launch_upmass: YearVector) -> YearVector:
     """Annual kg throughput per Starship ship slot (payload × cadence).
 
     Excel cell:        Facilities Build!D19
     Excel label:       "Installed Starship build capacity (ships/yr): rate-limited ramp"
     Architecture ref:  PRD D8 Gigabay throughput
     Principle:         12 (predetermined capacity inputs)
-
+    
     Formula: Annual kg throughput per Starship ship slot (payload × cadence).
 
     """
     cadence = assumption_scalar(
         assumptions,
         cl.LAUNCHES_PER_STARSHIP_VEHICLE_PER_YEAR_CADENCE_VARIANT_BLEND_USED_FOR_SIZING,
+        default=24.0,
     )
     return YearVector(launch_per_launch_upmass.values * cadence)

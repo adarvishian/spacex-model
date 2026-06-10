@@ -8,10 +8,7 @@ import numpy as np
 
 from spacex_model.config import canonical_labels as cl
 from spacex_model.config.constants import HORIZON_YEARS
-from spacex_model.domain.assumption_helpers import (
-    assumption_scalar,
-    assumption_year_vector,
-)
+from spacex_model.domain.assumption_helpers import assumption_scalar, assumption_year_vector
 from spacex_model.domain.year_vector import YearVector
 from spacex_model.inputs.assumptions import Assumptions
 
@@ -41,31 +38,29 @@ def compute_bv_engine(
     Excel label:       "Lunar Accumulated Book Value ($mm)"
     Architecture ref:  §11 BV engine
     Principle:         8 (BV decay memo-only, not Group D&A)
-
+    
     Formula: Accumulated BV from labour output + hardware value add; memo decay for Valuation.
 
     """
     capital_life = assumption_scalar(
-        assumptions, cl.CAPITAL_LIFETIME_BV_STRAIGHT_LINE_DEPRECIATION_YEARS
+        assumptions, cl.CAPITAL_LIFETIME_BV_STRAIGHT_LINE_DEPRECIATION_YEARS, default=10.0
     )
-    labour_mass = assumption_scalar(assumptions, "Labour unit mass (kg)")
+    labour_mass = assumption_scalar(assumptions, "Labour unit mass (kg)", default=60.0)
     labour_output = assumption_scalar(
-        assumptions, "Labour unit base hourly output ($/hr; burdened $22/0.7)"
+        assumptions, "Labour unit base hourly output ($/hr; burdened $22/0.7)", default=31.43
     )
-    daily_hours = assumption_scalar(assumptions, "Labour unit daily working hours")
-    prod_factor = assumption_scalar(
-        assumptions, "Labour unit productivity factor vs human baseline"
-    )
-    prod_lr = assumption_scalar(
-        assumptions, "Labour unit productivity learning rate (%/yr)"
-    )
+    daily_hours = assumption_scalar(assumptions, "Labour unit daily working hours", default=22.0)
+    prod_factor = assumption_scalar(assumptions, "Labour unit productivity factor vs human baseline", default=1.0)
+    prod_lr = assumption_scalar(assumptions, "Labour unit productivity learning rate (%/yr)", default=0.05)
     hardware_cost = assumption_year_vector(
-        assumptions,
-        cl.HARDWARE_REPLACEMENT_COST_FACTOR_KG_LANDED_DECLINING,
-        default=1000.0,
+        assumptions, "Hardware replacement cost factor ($/kg landed) — declining", default=1000.0
     )
-    lunar_labour_share = YearVector.constant(0.3)
-    mars_labour_share = YearVector.constant(0.3)
+    lunar_labour_share = assumption_year_vector(
+        assumptions, cl.LUNAR_LABOUR_SHARE_SURFACE_PAYLOAD_YEAR_ROW, default=0.3
+    )
+    mars_labour_share = assumption_year_vector(
+        assumptions, cl.MARS_LABOUR_SHARE_SURFACE_PAYLOAD_YEAR_ROW, default=0.3
+    )
 
     lunar_bv = np.zeros(HORIZON_YEARS, dtype=np.float64)
     mars_bv = np.zeros(HORIZON_YEARS, dtype=np.float64)
@@ -78,27 +73,17 @@ def compute_bv_engine(
         prod_mult = prod_factor * np.power(1.0 + prod_lr, t)
         annual_labour_output = labour_output * daily_hours * 365.0 * prod_mult / 1000.0
 
-        lunar_labour_kg = (
-            lunar_surface_payload_kg.values[t] * lunar_labour_share.values[t]
-        )
+        lunar_labour_kg = lunar_surface_payload_kg.values[t] * lunar_labour_share.values[t]
         mars_labour_kg = mars_surface_payload_kg.values[t] * mars_labour_share.values[t]
         active_lunar_labour += lunar_labour_kg / labour_mass if labour_mass > 0 else 0.0
         active_mars_labour += mars_labour_kg / labour_mass if labour_mass > 0 else 0.0
 
-        lunar_hw_kg = lunar_surface_payload_kg.values[t] * (
-            1.0 - lunar_labour_share.values[t]
-        )
-        mars_hw_kg = mars_surface_payload_kg.values[t] * (
-            1.0 - mars_labour_share.values[t]
-        )
+        lunar_hw_kg = lunar_surface_payload_kg.values[t] * (1.0 - lunar_labour_share.values[t])
+        mars_hw_kg = mars_surface_payload_kg.values[t] * (1.0 - mars_labour_share.values[t])
         hw_cost = hardware_cost.values[t]
 
-        lunar_contrib = (
-            active_lunar_labour * annual_labour_output + lunar_hw_kg * hw_cost / 1000.0
-        )
-        mars_contrib = (
-            active_mars_labour * annual_labour_output + mars_hw_kg * hw_cost / 1000.0
-        )
+        lunar_contrib = active_lunar_labour * annual_labour_output + lunar_hw_kg * hw_cost / 1000.0
+        mars_contrib = active_mars_labour * annual_labour_output + mars_hw_kg * hw_cost / 1000.0
 
         if t == 0:
             lunar_bv[t] = lunar_contrib

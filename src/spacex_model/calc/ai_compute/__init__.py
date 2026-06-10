@@ -1,10 +1,6 @@
 """AI - Compute — unified ODC + Terrestrial DC + AI Apps (V4.113 tab)."""
 
-from spacex_model.calc.ai_compute.demand import (
-    DemandInputs,
-    DemandResult,
-    compute_demand,
-)
+from spacex_model.calc.ai_compute.demand import DemandInputs, DemandResult, compute_demand
 from spacex_model.calc.ai_compute.module import (
     AiComputeInputs,
     compute_allocator_out,

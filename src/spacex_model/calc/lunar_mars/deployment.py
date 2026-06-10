@@ -8,10 +8,7 @@ import numpy as np
 
 from spacex_model.config import canonical_labels as cl
 from spacex_model.config.constants import FIRST_YEAR, HORIZON_YEARS
-from spacex_model.domain.assumption_helpers import (
-    assumption_scalar,
-    assumption_year_vector,
-)
+from spacex_model.domain.assumption_helpers import assumption_scalar, assumption_year_vector
 from spacex_model.domain.year_vector import YearVector
 from spacex_model.inputs.assumptions import Assumptions
 
@@ -30,7 +27,8 @@ class DeploymentResult:
 
 
 def compute_deployment(
-    assumptions: Assumptions, carveout_cash_mm: YearVector
+    assumptions: Assumptions,
+    carveout_cash_mm: YearVector,
 ) -> DeploymentResult:
     """Deploy Lunar/Mars ships from carve-out cash shares; zero before first mission year.
 
@@ -38,13 +36,11 @@ def compute_deployment(
     Excel label:       "Lunar ships deployed"
     Architecture ref:  §11 deployment
     Principle:         22 (carve-out cash deployment)
-
+    
     Formula: Deploy Lunar/Mars ships from carve-out cash shares; zero before first mission year.
 
     """
-    first_mission = int(
-        assumption_scalar(assumptions, cl.FIRST_MISSION_YEAR_LUNAR_MARS)
-    )
+    first_mission = int(assumption_scalar(assumptions, cl.FIRST_MISSION_YEAR_LUNAR_MARS, default=2028.0))
     lunar_share = assumption_year_vector(
         assumptions, cl.LUNAR_SHARE_OF_MARS_MOON_CARVE_OUT_CASH_YEAR_ROW, default=1.0
     )
@@ -52,21 +48,19 @@ def compute_deployment(
         assumptions, cl.MARS_SHARE_OF_CARVE_OUT_CASH_YEAR_ROW, default=0.0
     )
     lunar_payload = assumption_scalar(
-        assumptions, cl.LUNAR_PAYLOAD_PER_SURFACE_LANDED_STARSHIP_KG
+        assumptions, cl.LUNAR_PAYLOAD_PER_SURFACE_LANDED_STARSHIP_KG, default=50000.0
     )
     mars_payload = assumption_scalar(
-        assumptions, cl.MARS_PAYLOAD_PER_SURFACE_LANDED_STARSHIP_KG
+        assumptions, cl.MARS_PAYLOAD_PER_SURFACE_LANDED_STARSHIP_KG, default=100000.0
     )
     lunar_depot = assumption_scalar(
-        assumptions, cl.LUNAR_FUEL_DEPOT_MULTIPLIER_PER_OUTBOUND_STARSHIP
+        assumptions, cl.LUNAR_FUEL_DEPOT_MULTIPLIER_PER_OUTBOUND_STARSHIP, default=1.0
     )
     mars_depot = assumption_scalar(
-        assumptions, cl.MARS_FUEL_DEPOT_MULTIPLIER_PER_OUTBOUND_STARSHIP
+        assumptions, cl.MARS_FUEL_DEPOT_MULTIPLIER_PER_OUTBOUND_STARSHIP, default=5.0
     )
     ship_cost = 100.0
-    leo_payload = assumption_scalar(
-        assumptions, cl.PAYLOAD_FULLY_REUSABLE_MODE_KG_TO_LEO
-    )
+    leo_payload = assumption_scalar(assumptions, cl.PAYLOAD_FULLY_REUSABLE_MODE_KG_TO_LEO, default=100_000.0)
 
     lunar_ships = np.zeros(HORIZON_YEARS, dtype=np.float64)
     mars_ships = np.zeros(HORIZON_YEARS, dtype=np.float64)
@@ -89,9 +83,7 @@ def compute_deployment(
     mars_surface = mars_ships / (1.0 + mars_depot)
     lunar_payload_kg = lunar_surface * lunar_payload
     mars_payload_kg = mars_surface * mars_payload
-    kg_demand = (
-        lunar_ships * (1.0 + lunar_depot) + mars_ships * (1.0 + mars_depot)
-    ) * leo_payload
+    kg_demand = (lunar_ships * (1.0 + lunar_depot) + mars_ships * (1.0 + mars_depot)) * leo_payload
 
     return DeploymentResult(
         lunar_ships=YearVector(lunar_ships),

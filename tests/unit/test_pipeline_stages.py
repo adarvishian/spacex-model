@@ -1,4 +1,7 @@
-"""Milestone 2.2 — unit tests for decomposed pipeline stages."""
+"""Milestone 2.2 — unit tests for decomposed pipeline stages.
+
+Skipped when pipeline is on the pre-05c34af monolithic pass (M1.3 convergence revert).
+"""
 
 from __future__ import annotations
 
@@ -7,15 +10,19 @@ import pytest
 from spacex_model.calc.allocator.types import CashAllocations, KgAllocations
 from spacex_model.config.settings import get_settings
 from spacex_model.domain.year_vector import YearVector
-from spacex_model.engine.pipeline import (
-    PipelineState,
-    _blend_allocations,
-    _pass_blend_context,
-    _pass_capacity_layer,
-    _zero_initial_pipeline,
-)
+from spacex_model.engine import pipeline as pipeline_mod
+from spacex_model.engine.pipeline import PipelineState, _blend_allocations, _zero_initial_pipeline
 from spacex_model.inputs.assumptions import assumptions_from_ingest
 from spacex_model.io.excel_ingest import clear_ingest_cache, ingest_workbook
+
+_pass_blend_context = getattr(pipeline_mod, "_pass_blend_context", None)
+_pass_capacity_layer = getattr(pipeline_mod, "_pass_capacity_layer", None)
+HAS_DECOMPOSED_STAGES = _pass_blend_context is not None and _pass_capacity_layer is not None
+
+decomposed_stages = pytest.mark.skipif(
+    not HAS_DECOMPOSED_STAGES,
+    reason="Pipeline lacks decomposed stages (M1.3 cc78fcf revert)",
+)
 
 
 @pytest.fixture
@@ -58,6 +65,7 @@ def test_blend_allocations_applies_monitored_blend() -> None:
     )
 
 
+@decomposed_stages
 def test_pass_blend_context_produces_solver_fields(assumptions) -> None:
     prior = _zero_initial_pipeline()
     blend = _pass_blend_context(prior, assumptions, None)
@@ -65,6 +73,7 @@ def test_pass_blend_context_produces_solver_fields(assumptions) -> None:
     assert blend.prior_fcf is None
 
 
+@decomposed_stages
 def test_pass_capacity_layer_wires_launch_and_pools(assumptions) -> None:
     prior = _zero_initial_pipeline()
     blend = _pass_blend_context(prior, assumptions, None)
@@ -74,6 +83,7 @@ def test_pass_capacity_layer_wires_launch_and_pools(assumptions) -> None:
     assert isinstance(capacity.f9_customer, YearVector)
 
 
+@decomposed_stages
 def test_pass_capacity_layer_customer_launch_inputs(assumptions) -> None:
     prior = PipelineState(
         cash_alloc=CashAllocations.zeros(),

@@ -8,16 +8,10 @@ import numpy as np
 
 from spacex_model.calc._allocator_allocation import AllocatorAllocation
 from spacex_model.calc._vehicle_allocations import VehicleAllocations
-from spacex_model.calc.starlink.deorbit import (
-    historical_opening_balance_deorbit,
-    launch_cohort_deorbit,
-)
+from spacex_model.calc.starlink.deorbit import historical_opening_balance_deorbit, launch_cohort_deorbit
 from spacex_model.config import canonical_labels as cl
 from spacex_model.config.constants import FIRST_YEAR, HORIZON_YEARS
-from spacex_model.domain.assumption_helpers import (
-    assumption_scalar,
-    assumption_year_vector,
-)
+from spacex_model.domain.assumption_helpers import assumption_scalar, assumption_year_vector
 from spacex_model.domain.year_vector import YearVector
 from spacex_model.inputs.assumptions import Assumptions
 
@@ -73,93 +67,77 @@ class VehiclePoolsResult:
 
 def _pool_spec_v2_bb(assumptions: Assumptions) -> VehiclePoolSpec:
     a = assumptions
-    cost_kg = assumption_scalar(a, cl.V2_MINI_COST_PER_KG_BASE_YEAR)
-    mass = assumption_scalar(a, cl.V2_BB_SAT_MASS_KG)
+    cost_kg = assumption_scalar(a, cl.V2_MINI_COST_PER_KG_BASE_YEAR, default=650.0)
+    mass = assumption_scalar(a, cl.V2_BB_SAT_MASS_KG, default=575.0)
     return VehiclePoolSpec(
         name="V2 BB",
         mass_kg=mass,
-        bb_gbps_per_sat=assumption_scalar(a, cl.V2_MINI_BANDWIDTH_PER_SAT_BB_GBPS),
+        bb_gbps_per_sat=assumption_scalar(a, cl.V2_MINI_BANDWIDTH_PER_SAT_BB_GBPS, default=96.0),
         dtc_gbps_per_sat=0.0,
         unit_cost_mm=cost_kg * mass / 1e6,
-        sats_per_f9_launch=assumption_scalar(a, cl.SATS_PER_F9_LAUNCH_V2_BB),
+        sats_per_f9_launch=assumption_scalar(a, cl.SATS_PER_F9_LAUNCH_V2_BB, default=29.0),
         sats_per_starship_launch=0.0,
-        useful_life_years=int(
-            assumption_scalar(a, cl.SATELLITE_USEFUL_LIFE_V2_MINI_YEARS)
-        ),
-        historical_baseline=assumption_scalar(
-            a, cl.V2_MINI_BB_HISTORICAL_BASELINE_SOY_2025
-        ),
-        launch_anchor_2025=0.0,
+        useful_life_years=int(assumption_scalar(a, cl.SATELLITE_USEFUL_LIFE_V2_MINI_YEARS, default=5.0)),
+        historical_baseline=assumption_scalar(a, cl.V2_MINI_BB_HISTORICAL_BASELINE_SOY_2025, default=5246.0),
+        launch_anchor_2025=assumption_scalar(a, cl.V2_MINI_BB_SATS_LAUNCHED_2025, default=2987.0),
     )
 
 
 def _pool_spec_v2_dtc(assumptions: Assumptions) -> VehiclePoolSpec:
     a = assumptions
-    cost_kg = assumption_scalar(a, cl.V2_MINI_COST_PER_KG_BASE_YEAR)
-    mass = assumption_scalar(a, cl.V2_BB_SAT_MASS_KG)
+    cost_kg = assumption_scalar(a, cl.V2_MINI_COST_PER_KG_BASE_YEAR, default=650.0)
+    mass = assumption_scalar(a, cl.V2_BB_SAT_MASS_KG, default=575.0)
     return VehiclePoolSpec(
         name="V2 DTC",
         mass_kg=mass,
         bb_gbps_per_sat=0.0,
-        dtc_gbps_per_sat=assumption_scalar(a, cl.V2_MINI_BANDWIDTH_PER_SAT_DTC_GBPS),
+        dtc_gbps_per_sat=assumption_scalar(a, cl.V2_MINI_BANDWIDTH_PER_SAT_DTC_GBPS, default=0.2),
         unit_cost_mm=cost_kg * mass / 1e6,
-        sats_per_f9_launch=assumption_scalar(a, cl.SATS_PER_F9_LAUNCH_V2_DTC),
+        sats_per_f9_launch=assumption_scalar(a, cl.SATS_PER_F9_LAUNCH_V2_DTC, default=7.0),
         sats_per_starship_launch=0.0,
         useful_life_years=int(
-            assumption_scalar(a, cl.SATELLITE_USEFUL_LIFE_V2_DTC_YEARS)
+            assumption_scalar(a, cl.SATELLITE_USEFUL_LIFE_V2_DTC_YEARS, default=3.0)
         ),
-        historical_baseline=assumption_scalar(
-            a, cl.V2_MINI_DTC_HISTORICAL_BASELINE_SOY_2025
-        ),
-        launch_anchor_2025=0.0,
+        historical_baseline=assumption_scalar(a, cl.V2_MINI_DTC_HISTORICAL_BASELINE_SOY_2025, default=650.0),
+        launch_anchor_2025=assumption_scalar(a, cl.V2_MINI_DTC_SATS_LAUNCHED_2025, default=182.0),
     )
-
-
-def _mass_derived_starship_sats(assumptions: Assumptions, sat_mass_kg: float) -> float:
-    """V4.131: sats/launch derived from Starship payload ÷ sat mass (no Assumptions row)."""
-    if sat_mass_kg <= 0:
-        return 0.0
-    payload = assumption_scalar(
-        assumptions, "Starship payload for pre-build sizing (kg)"
-    )
-    return payload / sat_mass_kg
 
 
 def _pool_spec_v3_bb(assumptions: Assumptions) -> VehiclePoolSpec:
     a = assumptions
-    cost_kg = assumption_scalar(a, cl.V2_MINI_COST_PER_KG_BASE_YEAR)
-    mass = assumption_scalar(a, cl.V3_BB_SAT_MASS_KG)
+    cost_kg = assumption_scalar(a, cl.V2_MINI_COST_PER_KG_BASE_YEAR, default=650.0)
+    mass = assumption_scalar(a, cl.V3_BB_SAT_MASS_KG, default=2000.0)
     return VehiclePoolSpec(
         name="V3 BB",
         mass_kg=mass,
-        bb_gbps_per_sat=assumption_scalar(a, cl.V3_BB_BANDWIDTH_PER_SAT_BASE_YEAR_GBPS),
+        bb_gbps_per_sat=assumption_scalar(a, cl.V3_BB_BANDWIDTH_PER_SAT_BASE_YEAR_GBPS, default=1000.0),
         dtc_gbps_per_sat=0.0,
         unit_cost_mm=cost_kg * mass / 1e6,
         sats_per_f9_launch=0.0,
-        sats_per_starship_launch=_mass_derived_starship_sats(a, mass),
-        useful_life_years=int(assumption_scalar(a, cl.SATELLITE_USEFUL_LIFE_V3_YEARS)),
+        sats_per_starship_launch=assumption_scalar(a, cl.SATS_PER_STARSHIP_LAUNCH_V3_BB, default=60.0),
+        useful_life_years=int(assumption_scalar(a, cl.SATELLITE_USEFUL_LIFE_V3_YEARS, default=5.0)),
         historical_baseline=0.0,
-        launch_anchor_2025=0.0,
+        launch_anchor_2025=assumption_scalar(a, cl.V3_BB_SATS_LAUNCHED_2025, default=0.0),
     )
 
 
 def _pool_spec_v3_dtc(assumptions: Assumptions) -> VehiclePoolSpec:
     a = assumptions
-    cost_kg = assumption_scalar(a, cl.V2_MINI_COST_PER_KG_BASE_YEAR)
-    mass = assumption_scalar(a, cl.V3_BB_SAT_MASS_KG)
+    cost_kg = assumption_scalar(a, cl.V2_MINI_COST_PER_KG_BASE_YEAR, default=650.0)
+    mass = assumption_scalar(a, cl.V3_BB_SAT_MASS_KG, default=2000.0)
     return VehiclePoolSpec(
         name="V3 DTC",
         mass_kg=mass,
         bb_gbps_per_sat=0.0,
-        dtc_gbps_per_sat=assumption_scalar(a, cl.V3_DTC_BANDWIDTH_PER_SAT_GBPS),
+        dtc_gbps_per_sat=assumption_scalar(a, cl.V3_DTC_BANDWIDTH_PER_SAT_GBPS, default=2.75),
         unit_cost_mm=cost_kg * mass / 1e6,
         sats_per_f9_launch=0.0,
-        sats_per_starship_launch=_mass_derived_starship_sats(a, mass),
+        sats_per_starship_launch=assumption_scalar(a, cl.SATS_PER_STARSHIP_LAUNCH_V3_DTC, default=15.0),
         useful_life_years=int(
-            assumption_scalar(a, cl.SATELLITE_USEFUL_LIFE_V3_DTC_YEARS)
+            assumption_scalar(a, cl.SATELLITE_USEFUL_LIFE_V3_DTC_YEARS, default=3.0)
         ),
         historical_baseline=0.0,
-        launch_anchor_2025=0.0,
+        launch_anchor_2025=assumption_scalar(a, cl.V3_DTC_SATS_LAUNCHED_2025, default=0.0),
     )
 
 
@@ -176,7 +154,9 @@ def _launches_for_pool(
     """Exogenous demand + bounded output; 2025 first-year anchors per §2.16."""
     launches = np.zeros(HORIZON_YEARS, dtype=np.float64)
     phase_out = int(
-        assumption_scalar(assumptions, cl.V2_PHASE_OUT_YEAR) if is_v2 else 9999
+        assumption_scalar(assumptions, cl.V2_PHASE_OUT_YEAR, default=2028.0)
+        if is_v2
+        else 9999
     )
     v2_dtc_cap = is_v2 and is_dtc
 
@@ -200,9 +180,7 @@ def _launches_for_pool(
         if allocation is not None and spec.unit_cost_mm > 0:
             cash_units = allocation.cash_mm.values[t] / spec.unit_cost_mm
             kg_units = (
-                allocation.kg_to_leo.values[t] / spec.mass_kg
-                if spec.mass_kg > 0
-                else 0.0
+                allocation.kg_to_leo.values[t] / spec.mass_kg if spec.mass_kg > 0 else 0.0
             )
             launches[t] = max(0.0, min(cash_units, kg_units))
     return launches
@@ -217,9 +195,7 @@ def _active_fleet(
 ) -> np.ndarray:
     """Active fleet = historical baseline + cum launches − deorbit (Rule 23 exception)."""
     hist_deorbit = (
-        historical_opening_balance_deorbit(
-            spec.historical_baseline, spec.useful_life_years
-        ).values
+        historical_opening_balance_deorbit(spec.historical_baseline, spec.useful_life_years).values
         if include_historical
         else np.zeros(HORIZON_YEARS)
     )
@@ -235,17 +211,13 @@ def _active_fleet(
         cum_launched += launches[t]
         cum_hist_deorbit += hist_deorbit[t]
         cum_cohort_deorbit += cohort_deorbit[t]
-        active[t] = max(
-            0.0, baseline + cum_launched - cum_hist_deorbit - cum_cohort_deorbit
-        )
+        active[t] = max(0.0, baseline + cum_launched - cum_hist_deorbit - cum_cohort_deorbit)
         if t == 0 and end_2025_anchor is not None:
             active[t] = end_2025_anchor
     return active
 
 
-def _pool_state(
-    spec: VehiclePoolSpec, launches: np.ndarray, active: np.ndarray
-) -> VehiclePoolState:
+def _pool_state(spec: VehiclePoolSpec, launches: np.ndarray, active: np.ndarray) -> VehiclePoolState:
     f9 = np.zeros(HORIZON_YEARS)
     ship = np.zeros(HORIZON_YEARS)
     kg = np.zeros(HORIZON_YEARS)
@@ -278,7 +250,7 @@ def compute_vehicle_pools(
     Excel label:       "V2 BB launches per year"
     Architecture ref:  §8.1 / §8.2 / §8.3
     Principle:         12 (demand/output decoupling at module boundary)
-
+    
     Formula: Track four vehicle pools; 2025 launch anchors; V2 phase-out + V3 startup gates.
 
     """
@@ -292,8 +264,8 @@ def compute_vehicle_pools(
     else:
         alloc_v2_bb = alloc_v2_dtc = alloc_v3_bb = alloc_v3_dtc = None
 
-    v3_bb_start = int(assumption_scalar(assumptions, cl.V3_BB_FIRST_LAUNCH_YEAR))
-    v3_dtc_start = int(assumption_scalar(assumptions, cl.V3_DTC_FIRST_LAUNCH_YEAR))
+    v3_bb_start = int(assumption_scalar(assumptions, cl.V3_BB_FIRST_LAUNCH_YEAR, default=2026.0))
+    v3_dtc_start = int(assumption_scalar(assumptions, cl.V3_DTC_FIRST_LAUNCH_YEAR, default=2028.0))
 
     ratchet = np.zeros(HORIZON_YEARS)
     v3_bb_launches = _launches_for_pool(
@@ -317,40 +289,20 @@ def compute_vehicle_pools(
     v3_dtc_spec = _pool_spec_v3_dtc(assumptions)
 
     v2_bb_launches = _launches_for_pool(
-        v2_bb_spec,
-        assumptions,
-        is_v2=True,
-        is_dtc=False,
-        ratchet_active=ratchet,
-        v3_startup_year=None,
-        allocation=alloc_v2_bb,
+        v2_bb_spec, assumptions, is_v2=True, is_dtc=False,
+        ratchet_active=ratchet, v3_startup_year=None, allocation=alloc_v2_bb,
     )
     v2_dtc_launches = _launches_for_pool(
-        v2_dtc_spec,
-        assumptions,
-        is_v2=True,
-        is_dtc=True,
-        ratchet_active=ratchet,
-        v3_startup_year=None,
-        allocation=alloc_v2_dtc,
+        v2_dtc_spec, assumptions, is_v2=True, is_dtc=True,
+        ratchet_active=ratchet, v3_startup_year=None, allocation=alloc_v2_dtc,
     )
     v3_bb_launches = _launches_for_pool(
-        v3_bb_spec,
-        assumptions,
-        is_v2=False,
-        is_dtc=False,
-        ratchet_active=ratchet,
-        v3_startup_year=v3_bb_start,
-        allocation=alloc_v3_bb,
+        v3_bb_spec, assumptions, is_v2=False, is_dtc=False,
+        ratchet_active=ratchet, v3_startup_year=v3_bb_start, allocation=alloc_v3_bb,
     )
     v3_dtc_launches = _launches_for_pool(
-        v3_dtc_spec,
-        assumptions,
-        is_v2=False,
-        is_dtc=True,
-        ratchet_active=ratchet,
-        v3_startup_year=v3_dtc_start,
-        allocation=alloc_v3_dtc,
+        v3_dtc_spec, assumptions, is_v2=False, is_dtc=True,
+        ratchet_active=ratchet, v3_startup_year=v3_dtc_start, allocation=alloc_v3_dtc,
     )
 
     v2_bb_active = _active_fleet(
@@ -358,7 +310,7 @@ def compute_vehicle_pools(
         v2_bb_launches,
         include_historical=True,
         end_2025_anchor=assumption_scalar(
-            assumptions, cl.V2_MINI_BB_ACTIVE_SATS_END_2025
+            assumptions, cl.V2_MINI_BB_ACTIVE_SATS_END_2025, default=5246.0
         ),
     )
     v2_dtc_active = _active_fleet(
@@ -366,24 +318,20 @@ def compute_vehicle_pools(
         v2_dtc_launches,
         include_historical=True,
         end_2025_anchor=assumption_scalar(
-            assumptions, cl.V2_MINI_DTC_ACTIVE_SATS_END_2025
+            assumptions, cl.V2_MINI_DTC_ACTIVE_SATS_END_2025, default=650.0
         ),
     )
     v3_bb_active = _active_fleet(v3_bb_spec, v3_bb_launches, include_historical=False)
-    v3_dtc_active = _active_fleet(
-        v3_dtc_spec, v3_dtc_launches, include_historical=False
-    )
+    v3_dtc_active = _active_fleet(v3_dtc_spec, v3_dtc_launches, include_historical=False)
 
     v2_bb = _pool_state(v2_bb_spec, v2_bb_launches, v2_bb_active)
     v2_dtc = _pool_state(v2_dtc_spec, v2_dtc_launches, v2_dtc_active)
     v3_bb = _pool_state(v3_bb_spec, v3_bb_launches, v3_bb_active)
     v3_dtc = _pool_state(v3_dtc_spec, v3_dtc_launches, v3_dtc_active)
 
-    v1_sats = assumption_scalar(assumptions, cl.LEGACY_V1_ACTIVE_SATS_END_2025)
-    v1_gbps = assumption_scalar(assumptions, cl.LEGACY_V1_GBPS_PER_SAT)
-    v15_sats = assumption_scalar(assumptions, cl.LEGACY_V1_5_ACTIVE_SATS_END_2025)
-    v15_gbps = assumption_scalar(assumptions, cl.LEGACY_V1_5_GBPS_PER_SAT)
-    legacy_bb = YearVector.constant(v1_sats * v1_gbps + v15_sats * v15_gbps)
+    legacy_bb = assumption_year_vector(
+        assumptions, cl.LEGACY_V1_V1_5_ACTIVE_BANDWIDTH_YEAR_ROW, default=71888.0
+    )
 
     total_bb = YearVector(
         v2_bb.bb_gbps.values + v3_bb.bb_gbps.values + legacy_bb.values

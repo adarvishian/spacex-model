@@ -30,10 +30,11 @@ def compute_demand(inputs: DemandInputs) -> DemandResult:
     Excel label:       "ODC cash demand ($mm)"
     Architecture ref:  §9.2 / demand⊥output decoupling
     Principle:         12 (demand purely exogenous)
-
+    
     Formula: Wanted deployment = exogenous cash and kg demand (Option A).
 
     """
     return DemandResult(
-        cash_demand_mm=inputs.cash_demand_mm, kg_demand_kg=inputs.kg_demand_kg
+        cash_demand_mm=inputs.cash_demand_mm,
+        kg_demand_kg=inputs.kg_demand_kg,
     )

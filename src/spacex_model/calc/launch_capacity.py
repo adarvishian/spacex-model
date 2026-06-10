@@ -65,7 +65,7 @@ def compute_launch_capacity(inputs: LaunchCapacityInputs) -> LaunchCapacityResul
     Excel label:       "Total Annual Capacity (kg-to-LEO)"
     Architecture ref:  §20.4 capacity supply
     Principle:         3 (supply-side tab; no module P&L)
-
+    
     Formula: Compute full Launch Capacity tab per V2.16 mechanics / Architecture §20.4.
 
     """
@@ -73,70 +73,71 @@ def compute_launch_capacity(inputs: LaunchCapacityInputs) -> LaunchCapacityResul
     cap = a.capacity
 
     # --- Assumption scalars (§3 Capacity; V4.113 defaults where labels absent) ---
-    sh_mfg_base = assumption_scalar(a, "F9 booster (1st stage) mfg cost ($mm/unit)")
-    ship_mfg_base = assumption_scalar(
-        a, cl.STARSHIP_2ND_STAGE_MANUFACTURING_COST_MM_UNIT_BASE
+    sh_mfg_base = assumption_scalar(
+        a, "Super Heavy manufacturing cost ($mm/unit, base year)", default=54.0
     )
-    payload_booster_only = assumption_scalar(a, cl.PAYLOAD_BOOSTER_ONLY_MODE_KG_TO_LEO)
+    ship_mfg_base = assumption_scalar(
+        a, cl.STARSHIP_2ND_STAGE_MANUFACTURING_COST_MM_UNIT_BASE, default=36.0
+    )
+    payload_booster_only = assumption_scalar(
+        a, cl.PAYLOAD_BOOSTER_ONLY_MODE_KG_TO_LEO, default=0.0
+    )
     payload_fully_reusable = assumption_scalar(
-        a, cl.STARSHIP_PAYLOAD_2025_BASELINE_KG_TO_LEO_FULLY_REUSABLE_MODE
+        a, cl.STARSHIP_PAYLOAD_2025_BASELINE_KG_TO_LEO_FULLY_REUSABLE_MODE, default=100_000.0
     )
     alt = a.lookup(cl.PAYLOAD_FULLY_REUSABLE_MODE_KG_TO_LEO)
     if alt and alt.scalar() is not None:
         payload_fully_reusable = float(alt.scalar())
 
-    cadence_ceiling = assumption_scalar(a, "Cadence ceiling (flights/booster/year)")
+    cadence_ceiling = assumption_scalar(a, "Cadence ceiling (flights/booster/year)", default=24.0)
     wl_turnaround = assumption_scalar(
-        a, cl.WL_LEARNING_RATE_TURNAROUND_VS_CUM_UPMASS_DOUBLING
+        a, cl.WL_LEARNING_RATE_TURNAROUND_VS_CUM_UPMASS_DOUBLING, default=0.15
     )
     base_turnaround = assumption_scalar(
-        a, cl.BASE_TURNAROUND_TIME_PER_BOOSTER_YEARS_FLIGHT
+        a, cl.BASE_TURNAROUND_TIME_PER_BOOSTER_YEARS_FLIGHT, default=1.0
     )
 
     f9_booster_cost = assumption_scalar(a, "F9 booster (1st stage) mfg cost ($mm/unit)")
     f9_2nd_stage = assumption_scalar(a, "F9 2nd stage mfg cost ($mm/unit)")
-    f9_fairing = assumption_scalar(
-        a, "F9 fairing cost net of 75% recovery ($mm/flight)"
-    )
+    f9_fairing = assumption_scalar(a, "F9 fairing cost net of 75% recovery ($mm/flight)")
     f9_ops = assumption_scalar(a, "F9 per-launch ops cost ($mm)")
     f9_refurb_pct = assumption_scalar(a, "F9 booster refurb % of mfg")
     f9_payload = assumption_scalar(a, "F9 payload to LEO (kg)")
     f9_lifetime_reuses = assumption_scalar(a, "F9 lifetime reuses per booster")
     f9_cadence = assumption_scalar(a, "F9 cadence per booster (flights/year, flat)")
-    f9_base_build_rate = assumption_scalar(
-        a, "F9 base booster build rate (boosters/year, pre-V3-trigger)"
-    )
-    v3_trigger_year = int(assumption_scalar(a, cl.V3_STARLINK_LAUNCH_TRIGGER_YEAR))
+    f9_base_build_rate = assumption_scalar(a, "F9 base booster build rate (boosters/year, pre-V3-trigger)")
+    v3_trigger_year = int(assumption_scalar(a, cl.V3_STARLINK_LAUNCH_TRIGGER_YEAR, default=2027.0))
     f9_decay_window = assumption_scalar(a, "F9 build-rate decay window (years)")
     f9_starting_fleet = assumption_scalar(a, "F9 starting fleet at 2025 SoY (boosters)")
-    f9_retirement_rate = 0.01
+    f9_retirement_rate = assumption_scalar(
+        a, "F9 retirement rate (% of launches/year)", default=0.01
+    )
 
     starship_mfg_anchor = assumption_scalar(
-        a, "Starship manufacturing cost anchor ($mm/stack, 2024 baseline)"
+        a, "Starship manufacturing cost anchor ($mm/stack, 2024 baseline)", default=90.0
     )
     starship_mfg_wl = assumption_scalar(
-        a,
-        "Starship manufacturing WL learning rate (% reduction per doubling cum stacks)",
+        a, "Starship manufacturing WL learning rate (% reduction per doubling cum stacks)", default=0.15
     )
     starship_ops_anchor = assumption_scalar(
-        a, "Starship ops + fuel cost anchor ($mm/launch, 2024 baseline)"
+        a, "Starship ops + fuel cost anchor ($mm/launch, 2024 baseline)", default=12.0
     )
     starship_ops_wl = assumption_scalar(
-        a,
-        "Starship ops/refurb WL learning rate (% reduction per doubling cum stacks)",
+        a, "Starship ops/refurb WL learning rate (% reduction per doubling cum stacks)",
+        default=0.1,
     )
     starship_wl_anchor_cum = assumption_scalar(
-        a, "Starship cost WL anchor cum units (= cum stacks at end-2024 baseline)"
+        a, "Starship cost WL anchor cum units (= cum stacks at end-2024 baseline)", default=4.0
     )
     starship_booster_share = assumption_scalar(
-        a, "Starship booster share of manufacturing cost (% of stack mfg)"
+        a, "Starship booster share of manufacturing cost (% of stack mfg)", default=0.6
     )
-    lifetime_reuses_ship = assumption_scalar(a, cl.LIFETIME_REUSES_PER_BOOSTER_YEAR_CAP)
+    lifetime_reuses_ship = assumption_scalar(a, "Lifetime reuses per ship (cap)", default=30.0)
 
-    variant_mix = np.ones(HORIZON_YEARS, dtype=np.float64)
-    lifetime_reuses_booster = assumption_year_vector(
-        a, "Lifetime reuses per booster (year cap)"
+    variant_mix = assumption_year_vector(
+        a, "Variant mix (% fully reusable)", default=1.0
     ).values
+    lifetime_reuses_booster = assumption_year_vector(a, "Lifetime reuses per booster (year cap)").values
 
     vehicle_build = (
         inputs.vehicle_build_claim_mm.values
@@ -165,7 +166,9 @@ def compute_launch_capacity(inputs: LaunchCapacityInputs) -> LaunchCapacityResul
     # --- Starship fleet (Rule 23 year-chained) ---
     blended_vehicle_cost = sh_mfg_base + ship_mfg_base
     boosters_built = np.where(
-        blended_vehicle_cost > 0, vehicle_build / blended_vehicle_cost, 0.0
+        blended_vehicle_cost > 0,
+        vehicle_build / blended_vehicle_cost,
+        0.0,
     )
     boosters_retired = np.zeros(HORIZON_YEARS)
     starship_fleet_eoy = year_chained_eoy(
@@ -178,10 +181,7 @@ def compute_launch_capacity(inputs: LaunchCapacityInputs) -> LaunchCapacityResul
         cum_stacks[t] = cum_stacks[t - 1] + boosters_built[t]
 
     # --- Starship cadence (Wright's Law on lagged cum upmass) ---
-    per_launch_upmass = (
-        variant_mix * payload_fully_reusable
-        + (1.0 - variant_mix) * payload_booster_only
-    )
+    per_launch_upmass = variant_mix * payload_fully_reusable + (1.0 - variant_mix) * payload_booster_only
     cum_upmass = np.zeros(HORIZON_YEARS)
     wl_alpha = -np.log2(1.0 - wl_turnaround) if wl_turnaround < 1.0 else 0.0
 
@@ -206,10 +206,7 @@ def compute_launch_capacity(inputs: LaunchCapacityInputs) -> LaunchCapacityResul
         if t == 0:
             cum_upmass[t] = 0.0
         else:
-            cum_upmass[t] = (
-                cum_upmass[t - 1]
-                + total_starship_launches[t - 1] * per_launch_upmass[t - 1]
-            )
+            cum_upmass[t] = cum_upmass[t - 1] + total_starship_launches[t - 1] * per_launch_upmass[t - 1]
 
     total_annual_capacity = total_starship_launches * per_launch_upmass
 
@@ -268,17 +265,13 @@ def compute_launch_capacity(inputs: LaunchCapacityInputs) -> LaunchCapacityResul
         if year == 2025:
             f9_fleet_eoy[t] = 39.0
         elif year == 2026:
-            f9_retired[t] = min(
-                f9_boy[t] + f9_manufactured[t], f9_launches[t] * f9_retirement_rate
-            )
+            f9_retired[t] = min(f9_boy[t] + f9_manufactured[t], f9_launches[t] * f9_retirement_rate)
             f9_fleet_eoy[t] = f9_boy[t] + f9_manufactured[t] - f9_retired[t]
         else:
             supply_cap = f9_boy[t] * f9_cadence
             demand = f9_customer[t] + f9_sl_bb[t] + f9_sl_dtc[t]
             f9_launches[t] = min(supply_cap, demand)
-            f9_retired[t] = min(
-                f9_boy[t] + f9_manufactured[t], f9_launches[t] * f9_retirement_rate
-            )
+            f9_retired[t] = min(f9_boy[t] + f9_manufactured[t], f9_launches[t] * f9_retirement_rate)
             f9_fleet_eoy[t] = max(0.0, f9_boy[t] + f9_manufactured[t] - f9_retired[t])
 
     f9_annual_capacity = f9_boy * f9_cadence * f9_payload
@@ -289,17 +282,11 @@ def compute_launch_capacity(inputs: LaunchCapacityInputs) -> LaunchCapacityResul
 
     total_launches = f9_launches + total_starship_launches
     total_upmass = f9_launches * f9_payload + total_annual_capacity
-    total_launch_capex = (
-        f9_launches * f9_at_cost + total_starship_launches * starship_at_cost
-    )
+    total_launch_capex = f9_launches * f9_at_cost + total_starship_launches * starship_at_cost
     with np.errstate(divide="ignore", invalid="ignore"):
-        blended_kg = np.where(
-            total_upmass > 0, total_launch_capex * 1e6 / total_upmass, 0.0
-        )
+        blended_kg = np.where(total_upmass > 0, total_launch_capex * 1e6 / total_upmass, 0.0)
 
-    annual_vehicle_da = (
-        total_starship_launches * starship_da_share + f9_launches * f9_da_share
-    )
+    annual_vehicle_da = total_starship_launches * starship_da_share + f9_launches * f9_da_share
 
     return LaunchCapacityResult(
         total_starship_launches=YearVector(total_starship_launches),
@@ -325,7 +312,7 @@ def total_annual_capacity_kg(inputs: LaunchCapacityInputs | None = None) -> Year
     Excel label:       "Total Annual Capacity (kg-to-LEO)"
     Architecture ref:  §20.4 capacity supply
     Principle:         3 (supply-side tab; no module P&L)
-
+    
     Formula: Total Annual Capacity (kg-to-LEO) — Starship-only canonical label.
 
     """

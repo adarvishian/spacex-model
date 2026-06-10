@@ -32,16 +32,21 @@ def compute_vehicle_build_claim(
     Excel label:       "Vehicle build claim ($mm)"
     Architecture ref:  §6.6 (forward-aggregate kg demand)
     Principle:         8 (vehicle build at queue gate, not module CapEx)
-
+    
     Formula: Non-module Starship build cash claim sized at T+lead aggregate kg gap.
 
     """
     lead = int(
-        assumptions.lookup_scalar(cl.VEHICLE_BUILD_LEAD_TIME_YEARS, default=2.0)
+        assumption_scalar(
+            assumptions,
+            cl.VEHICLE_BUILD_LEAD_TIME_YEARS,
+            default=float(lead_time),
+        )
     )
     launches_per_vehicle = assumption_scalar(
         assumptions,
         cl.LAUNCHES_PER_STARSHIP_VEHICLE_PER_YEAR_CADENCE_VARIANT_BLEND_USED_FOR_SIZING,
+        default=24.0,
     )
 
     capacity_kg = launch_capacity.total_annual_capacity_kg.values

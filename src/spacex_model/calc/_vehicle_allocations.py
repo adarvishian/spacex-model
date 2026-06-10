@@ -20,17 +20,21 @@ class VehicleAllocations:
 
     @classmethod
     def from_allocator(
-        cls, cash: CashAllocations, kg: KgAllocations
+        cls,
+        cash: CashAllocations,
+        kg: KgAllocations,
     ) -> VehicleAllocations:
         z = YearVector.zeros()
         return cls(
             v2_bb=AllocatorAllocation(cash_mm=cash.starlink_v2_bb, kg_to_leo=z),
             v2_dtc=AllocatorAllocation(cash_mm=cash.starlink_v2_dtc, kg_to_leo=z),
             v3_bb=AllocatorAllocation(
-                cash_mm=cash.starlink_v3_bb, kg_to_leo=kg.starlink_v3_bb
+                cash_mm=cash.starlink_v3_bb,
+                kg_to_leo=kg.starlink_v3_bb,
             ),
             v3_dtc=AllocatorAllocation(
-                cash_mm=cash.starlink_v3_dtc, kg_to_leo=kg.starlink_v3_dtc
+                cash_mm=cash.starlink_v3_dtc,
+                kg_to_leo=kg.starlink_v3_dtc,
             ),
         )
 

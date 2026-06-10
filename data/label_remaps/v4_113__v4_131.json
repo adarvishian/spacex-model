@@ -1,0 +1,1017 @@
+{
+  "from_workbook": "SpaceX V4.113.xlsx",
+  "to_workbook": "SpaceX V4.131.xlsx",
+  "generated": "2026-06-10",
+  "source_script": "scripts/rebase_v4131.py",
+  "applied_in_code": false,
+  "resolution": "M1.3: Reverted calc engine + canonical_labels_supplement to cc78fcf (pre-05c34af rebase calc). Legacy V4.113 label strings retained in Python; V4.131 workbook still contains matching rows. Flagged and fixed remaps from rebase_v4131.py are documented here but NOT applied until owner sign-off.",
+  "label_remaps": [
+    {
+      "old_label": "AI Stack R&D — CAGR (taper)",
+      "new_label": "AI Stack R&D CAGR",
+      "status": "faithful",
+      "old_unit_hints": [
+        "CAGR"
+      ],
+      "new_unit_hints": [
+        "CAGR"
+      ],
+      "reason": "Cosmetic rename or same-dimension relabel"
+    },
+    {
+      "old_label": "AI Stack R&D — end-state % (floor)",
+      "new_label": "AI Stack R&D floor pct",
+      "status": "faithful",
+      "old_unit_hints": [
+        "pct"
+      ],
+      "new_unit_hints": [
+        "unknown"
+      ],
+      "reason": "Cosmetic rename or same-dimension relabel"
+    },
+    {
+      "old_label": "AI Stack R&D — start % of AI Stack rev",
+      "new_label": "AI Stack R&D start pct",
+      "status": "faithful",
+      "old_unit_hints": [
+        "pct"
+      ],
+      "new_unit_hints": [
+        "unknown"
+      ],
+      "reason": "Cosmetic rename or same-dimension relabel"
+    },
+    {
+      "old_label": "BB-share of ODC bandwidth claim",
+      "new_label": "BB-share of bandwidth (ratio)",
+      "status": "faithful",
+      "old_unit_hints": [
+        "unknown"
+      ],
+      "new_unit_hints": [
+        "ratio"
+      ],
+      "reason": "Cosmetic rename or same-dimension relabel"
+    },
+    {
+      "old_label": "Credence on Model A (Pr(A))",
+      "new_label": "Model A credence Pr(A)",
+      "status": "faithful",
+      "old_unit_hints": [
+        "unknown"
+      ],
+      "new_unit_hints": [
+        "unknown"
+      ],
+      "reason": "Cosmetic rename or same-dimension relabel"
+    },
+    {
+      "old_label": "Customer Service — flat % of Starlink subscription rev",
+      "new_label": "Customer Service: flat % of Starlink subscription rev",
+      "status": "faithful",
+      "old_unit_hints": [
+        "pct"
+      ],
+      "new_unit_hints": [
+        "pct"
+      ],
+      "reason": "Cosmetic rename or same-dimension relabel"
+    },
+    {
+      "old_label": "DTC ARPU ($/sub/mo): year-row",
+      "new_label": "Broadband ARPU floor ($/mo)",
+      "status": "flagged",
+      "old_unit_hints": [
+        "year_row"
+      ],
+      "new_unit_hints": [
+        "$/mo"
+      ],
+      "reason": "Many-to-one collapse or semantic shift — owner sign-off required"
+    },
+    {
+      "old_label": "F9 booster accounting depreciation cap (flights)",
+      "new_label": "F9 booster economic life (years)",
+      "status": "fixed",
+      "old_unit_hints": [
+        "flights"
+      ],
+      "new_unit_hints": [
+        "years"
+      ],
+      "reason": "Dimensional mismatch: flights (count) → years (time)"
+    },
+    {
+      "old_label": "GNI per capita growth rate (annual)",
+      "new_label": "GNI per capita CAGR",
+      "status": "faithful",
+      "old_unit_hints": [
+        "unknown"
+      ],
+      "new_unit_hints": [
+        "CAGR"
+      ],
+      "reason": "Cosmetic rename or same-dimension relabel"
+    },
+    {
+      "old_label": "Gbps per GWh/yr of ODC compute energy",
+      "new_label": "Gbps per GWh/yr",
+      "status": "faithful",
+      "old_unit_hints": [
+        "unknown"
+      ],
+      "new_unit_hints": [
+        "unknown"
+      ],
+      "reason": "Cosmetic rename or same-dimension relabel"
+    },
+    {
+      "old_label": "General & Administrative — CAGR (taper)",
+      "new_label": "General & Administrative: CAGR (taper)",
+      "status": "faithful",
+      "old_unit_hints": [
+        "CAGR"
+      ],
+      "new_unit_hints": [
+        "CAGR"
+      ],
+      "reason": "Cosmetic rename or same-dimension relabel"
+    },
+    {
+      "old_label": "General & Administrative — end-state % (ceiling)",
+      "new_label": "General & Administrative: end-state % (floor)",
+      "status": "flagged",
+      "old_unit_hints": [
+        "pct"
+      ],
+      "new_unit_hints": [
+        "pct"
+      ],
+      "reason": "Many-to-one collapse or semantic shift — owner sign-off required"
+    },
+    {
+      "old_label": "Impairment charges ($mm/yr) — year-row",
+      "new_label": "S-1 AI: Impairment ($mm)",
+      "status": "faithful",
+      "old_unit_hints": [
+        "$mm",
+        "year_row"
+      ],
+      "new_unit_hints": [
+        "$mm"
+      ],
+      "reason": "Cosmetic rename or same-dimension relabel"
+    },
+    {
+      "old_label": "Launch insurance % of external revenue",
+      "new_label": "Launch insurance % of external rev",
+      "status": "faithful",
+      "old_unit_hints": [
+        "pct"
+      ],
+      "new_unit_hints": [
+        "pct"
+      ],
+      "reason": "Cosmetic rename or same-dimension relabel"
+    },
+    {
+      "old_label": "Launch other COGS % of external revenue",
+      "new_label": "Launch other COGS % of external rev",
+      "status": "faithful",
+      "old_unit_hints": [
+        "pct"
+      ],
+      "new_unit_hints": [
+        "pct"
+      ],
+      "reason": "Cosmetic rename or same-dimension relabel"
+    },
+    {
+      "old_label": "Launches per Starship vehicle per year (cadence × variant blend, used for sizing)",
+      "new_label": "Starship booster cadence for pre-build sizing (flights/yr)",
+      "status": "faithful",
+      "old_unit_hints": [
+        "unknown"
+      ],
+      "new_unit_hints": [
+        "unknown"
+      ],
+      "reason": "Cosmetic rename or same-dimension relabel"
+    },
+    {
+      "old_label": "Legacy V1/V1.5 Bandwidth — end-2025 (Gbps)",
+      "new_label": "Legacy V1 Gbps per sat",
+      "status": "flagged",
+      "old_unit_hints": [
+        "Gbps"
+      ],
+      "new_unit_hints": [
+        "unknown"
+      ],
+      "reason": "Many-to-one collapse or semantic shift — owner sign-off required"
+    },
+    {
+      "old_label": "Lifetime reuses per ship (cap)",
+      "new_label": "Lifetime reuses per booster (year cap)",
+      "status": "flagged",
+      "old_unit_hints": [
+        "unknown"
+      ],
+      "new_unit_hints": [
+        "unknown"
+      ],
+      "reason": "Many-to-one collapse or semantic shift — owner sign-off required"
+    },
+    {
+      "old_label": "Memo: AI segment total revenue 2025 ($M)",
+      "new_label": "S-1 AI (≙ xAI, consolidated): Revenue ($mm)",
+      "status": "flagged",
+      "old_unit_hints": [
+        "dollar"
+      ],
+      "new_unit_hints": [
+        "$mm"
+      ],
+      "reason": "Many-to-one collapse or semantic shift — owner sign-off required"
+    },
+    {
+      "old_label": "ODC R&D — CAGR (taper)",
+      "new_label": "ODC R&D CAGR",
+      "status": "faithful",
+      "old_unit_hints": [
+        "CAGR"
+      ],
+      "new_unit_hints": [
+        "CAGR"
+      ],
+      "reason": "Cosmetic rename or same-dimension relabel"
+    },
+    {
+      "old_label": "ODC R&D — end-state % (floor)",
+      "new_label": "ODC R&D floor pct",
+      "status": "faithful",
+      "old_unit_hints": [
+        "pct"
+      ],
+      "new_unit_hints": [
+        "unknown"
+      ],
+      "reason": "Cosmetic rename or same-dimension relabel"
+    },
+    {
+      "old_label": "ODC R&D — start % of ODC rev",
+      "new_label": "ODC R&D start pct",
+      "status": "faithful",
+      "old_unit_hints": [
+        "pct"
+      ],
+      "new_unit_hints": [
+        "unknown"
+      ],
+      "reason": "Cosmetic rename or same-dimension relabel"
+    },
+    {
+      "old_label": "ODC ground ops % of revenue",
+      "new_label": "Ground-network ops COGS (% of revenue)",
+      "status": "faithful",
+      "old_unit_hints": [
+        "pct_rev"
+      ],
+      "new_unit_hints": [
+        "pct_rev",
+        "pct_rev"
+      ],
+      "reason": "Cosmetic rename or same-dimension relabel"
+    },
+    {
+      "old_label": "ODC insurance % of revenue",
+      "new_label": "ODC insurance pct rev",
+      "status": "faithful",
+      "old_unit_hints": [
+        "pct_rev"
+      ],
+      "new_unit_hints": [
+        "pct_rev"
+      ],
+      "reason": "Cosmetic rename or same-dimension relabel"
+    },
+    {
+      "old_label": "ODC other COGS % of revenue",
+      "new_label": "ODC other COGS pct rev",
+      "status": "faithful",
+      "old_unit_hints": [
+        "pct_rev"
+      ],
+      "new_unit_hints": [
+        "pct_rev"
+      ],
+      "reason": "Cosmetic rename or same-dimension relabel"
+    },
+    {
+      "old_label": "ODC utilization factor",
+      "new_label": "Utilization ceiling (%)",
+      "status": "faithful",
+      "old_unit_hints": [
+        "unknown"
+      ],
+      "new_unit_hints": [
+        "pct"
+      ],
+      "reason": "Cosmetic rename or same-dimension relabel"
+    },
+    {
+      "old_label": "Orbital PUE uplift vs terrestrial",
+      "new_label": "Orbital PUE",
+      "status": "faithful",
+      "old_unit_hints": [
+        "unknown"
+      ],
+      "new_unit_hints": [
+        "unknown"
+      ],
+      "reason": "Cosmetic rename or same-dimension relabel"
+    },
+    {
+      "old_label": "Pre-IPO debt facility ($mm)",
+      "new_label": "Minimum cash buffer ($mm)",
+      "status": "flagged",
+      "old_unit_hints": [
+        "$mm"
+      ],
+      "new_unit_hints": [
+        "$mm"
+      ],
+      "reason": "Many-to-one collapse or semantic shift — owner sign-off required"
+    },
+    {
+      "old_label": "Restructuring charges ($mm/yr) — year-row",
+      "new_label": "S-1 AI: Restructuring ($mm)",
+      "status": "faithful",
+      "old_unit_hints": [
+        "$mm",
+        "year_row"
+      ],
+      "new_unit_hints": [
+        "$mm"
+      ],
+      "reason": "Cosmetic rename or same-dimension relabel"
+    },
+    {
+      "old_label": "S-1 AI segment revenue ($mm) — year-row",
+      "new_label": "S-1 AI (≙ xAI, consolidated): Revenue ($mm)",
+      "status": "flagged",
+      "old_unit_hints": [
+        "$mm",
+        "year_row"
+      ],
+      "new_unit_hints": [
+        "$mm"
+      ],
+      "reason": "Many-to-one collapse or semantic shift — owner sign-off required"
+    },
+    {
+      "old_label": "Sales & Marketing — start % of (Starlink+Starshield+Customer Launch ext) rev",
+      "new_label": "Sales & Marketing: start % of (Starlink+Starshield+CL ext) rev",
+      "status": "faithful",
+      "old_unit_hints": [
+        "pct"
+      ],
+      "new_unit_hints": [
+        "pct"
+      ],
+      "reason": "Cosmetic rename or same-dimension relabel"
+    },
+    {
+      "old_label": "Satellite Dep per kg — annual decay rate",
+      "new_label": "Satellite cost per kg: learning rate",
+      "status": "flagged",
+      "old_unit_hints": [
+        "unknown"
+      ],
+      "new_unit_hints": [
+        "unknown"
+      ],
+      "reason": "Many-to-one collapse or semantic shift — owner sign-off required"
+    },
+    {
+      "old_label": "Satellite useful life — V2 Mini (years)",
+      "new_label": "Sat operational life L (years)",
+      "status": "flagged",
+      "old_unit_hints": [
+        "years"
+      ],
+      "new_unit_hints": [
+        "years"
+      ],
+      "reason": "Many-to-one collapse or semantic shift — owner sign-off required"
+    },
+    {
+      "old_label": "Satellite useful life — V2 Mini DTC (years)",
+      "new_label": "Sat operational life L (years)",
+      "status": "flagged",
+      "old_unit_hints": [
+        "years"
+      ],
+      "new_unit_hints": [
+        "years"
+      ],
+      "reason": "Many-to-one collapse or semantic shift — owner sign-off required"
+    },
+    {
+      "old_label": "Satellite useful life — V3 (years)",
+      "new_label": "Sat operational life L (years)",
+      "status": "flagged",
+      "old_unit_hints": [
+        "years"
+      ],
+      "new_unit_hints": [
+        "years"
+      ],
+      "reason": "Many-to-one collapse or semantic shift — owner sign-off required"
+    },
+    {
+      "old_label": "Satellite useful life — V3 DTC (years)",
+      "new_label": "Sat operational life L (years)",
+      "status": "flagged",
+      "old_unit_hints": [
+        "years"
+      ],
+      "new_unit_hints": [
+        "years"
+      ],
+      "reason": "Many-to-one collapse or semantic shift — owner sign-off required"
+    },
+    {
+      "old_label": "Sats per F9 launch — V2 BB",
+      "new_label": "F9 sats per launch (V2 packing)",
+      "status": "flagged",
+      "old_unit_hints": [
+        "unknown"
+      ],
+      "new_unit_hints": [
+        "unknown"
+      ],
+      "reason": "Many-to-one collapse or semantic shift — owner sign-off required"
+    },
+    {
+      "old_label": "Sats per F9 launch — V2 DTC",
+      "new_label": "F9 sats per launch (V2 packing)",
+      "status": "flagged",
+      "old_unit_hints": [
+        "unknown"
+      ],
+      "new_unit_hints": [
+        "unknown"
+      ],
+      "reason": "Many-to-one collapse or semantic shift — owner sign-off required"
+    },
+    {
+      "old_label": "Share-based compensation ($mm/yr) — year-row",
+      "new_label": "S-1 AI: SBC supplemental ($mm)",
+      "status": "faithful",
+      "old_unit_hints": [
+        "$mm",
+        "year_row"
+      ],
+      "new_unit_hints": [
+        "$mm"
+      ],
+      "reason": "Cosmetic rename or same-dimension relabel"
+    },
+    {
+      "old_label": "Starlink ground ops % of revenue",
+      "new_label": "Ground/network opex pct rev",
+      "status": "faithful",
+      "old_unit_hints": [
+        "pct_rev"
+      ],
+      "new_unit_hints": [
+        "pct_rev"
+      ],
+      "reason": "Cosmetic rename or same-dimension relabel"
+    },
+    {
+      "old_label": "Starlink insurance % of revenue",
+      "new_label": "Asset insurance COGS (% of revenue)",
+      "status": "flagged",
+      "old_unit_hints": [
+        "pct_rev"
+      ],
+      "new_unit_hints": [
+        "pct_rev",
+        "pct_rev"
+      ],
+      "reason": "Many-to-one collapse or semantic shift — owner sign-off required"
+    },
+    {
+      "old_label": "Starlink other COGS % of revenue",
+      "new_label": "Asset insurance COGS (% of revenue)",
+      "status": "flagged",
+      "old_unit_hints": [
+        "pct_rev"
+      ],
+      "new_unit_hints": [
+        "pct_rev",
+        "pct_rev"
+      ],
+      "reason": "Many-to-one collapse or semantic shift — owner sign-off required"
+    },
+    {
+      "old_label": "Starshield Reserved % — decay rate",
+      "new_label": "Starshield Gbps growth (frac)",
+      "status": "flagged",
+      "old_unit_hints": [
+        "pct"
+      ],
+      "new_unit_hints": [
+        "frac"
+      ],
+      "reason": "Many-to-one collapse or semantic shift — owner sign-off required"
+    },
+    {
+      "old_label": "Starshield Reserved % — floor",
+      "new_label": "Starshield utilization (frac)",
+      "status": "flagged",
+      "old_unit_hints": [
+        "pct"
+      ],
+      "new_unit_hints": [
+        "frac"
+      ],
+      "reason": "Many-to-one collapse or semantic shift — owner sign-off required"
+    },
+    {
+      "old_label": "Starshield Reserved % — start",
+      "new_label": "Starshield utilization (frac)",
+      "status": "flagged",
+      "old_unit_hints": [
+        "pct"
+      ],
+      "new_unit_hints": [
+        "frac"
+      ],
+      "reason": "Many-to-one collapse or semantic shift — owner sign-off required"
+    },
+    {
+      "old_label": "Starshield Rev per Gbps — base year ($/Gbps)",
+      "new_label": "Starshield $/Gbps ($/Gbps-yr)",
+      "status": "faithful",
+      "old_unit_hints": [
+        "$/Gbps"
+      ],
+      "new_unit_hints": [
+        "$/Gbps"
+      ],
+      "reason": "Cosmetic rename or same-dimension relabel"
+    },
+    {
+      "old_label": "Starshield Rev per Gbps — decay rate",
+      "new_label": "Starshield Gbps growth (frac)",
+      "status": "flagged",
+      "old_unit_hints": [
+        "unknown"
+      ],
+      "new_unit_hints": [
+        "frac"
+      ],
+      "reason": "Many-to-one collapse or semantic shift — owner sign-off required"
+    },
+    {
+      "old_label": "Starshield S-1 Government Connectivity scope factor",
+      "new_label": "SpaceX government market share %",
+      "status": "flagged",
+      "old_unit_hints": [
+        "unknown"
+      ],
+      "new_unit_hints": [
+        "pct"
+      ],
+      "reason": "Many-to-one collapse or semantic shift — owner sign-off required"
+    },
+    {
+      "old_label": "Starship payload — 2025 baseline (kg-to-LEO, fully reusable mode)",
+      "new_label": "Starship payload for pre-build sizing (kg)",
+      "status": "faithful",
+      "old_unit_hints": [
+        "unknown"
+      ],
+      "new_unit_hints": [
+        "kg"
+      ],
+      "reason": "Cosmetic rename or same-dimension relabel"
+    },
+    {
+      "old_label": "Subsidy mix (% of net adds subsidized)",
+      "new_label": "Terminal kits per net subscriber add",
+      "status": "flagged",
+      "old_unit_hints": [
+        "pct"
+      ],
+      "new_unit_hints": [
+        "unknown"
+      ],
+      "reason": "Many-to-one collapse or semantic shift — owner sign-off required"
+    },
+    {
+      "old_label": "TAM inflation rate (annual)",
+      "new_label": "Terminal growth rate g (group + most modules)",
+      "status": "flagged",
+      "old_unit_hints": [
+        "unknown"
+      ],
+      "new_unit_hints": [
+        "unknown"
+      ],
+      "reason": "Many-to-one collapse or semantic shift — owner sign-off required"
+    },
+    {
+      "old_label": "Terminal retail price ($, non-subsidized)",
+      "new_label": "Terminal kit cost ($/kit)",
+      "status": "flagged",
+      "old_unit_hints": [
+        "dollar"
+      ],
+      "new_unit_hints": [
+        "$/kit"
+      ],
+      "reason": "Many-to-one collapse or semantic shift — owner sign-off required"
+    },
+    {
+      "old_label": "Terminal retail price ($, subsidized)",
+      "new_label": "Terminal kit cost ($/kit)",
+      "status": "flagged",
+      "old_unit_hints": [
+        "dollar"
+      ],
+      "new_unit_hints": [
+        "$/kit"
+      ],
+      "reason": "Many-to-one collapse or semantic shift — owner sign-off required"
+    },
+    {
+      "old_label": "Total customer launch market CAGR (% growth/yr)",
+      "new_label": "Commercial launch market CAGR",
+      "status": "faithful",
+      "old_unit_hints": [
+        "CAGR"
+      ],
+      "new_unit_hints": [
+        "CAGR"
+      ],
+      "reason": "Cosmetic rename or same-dimension relabel"
+    },
+    {
+      "old_label": "V2 Mini BB Active Sats — end-2025",
+      "new_label": "V2 Mini BB sats end-2025",
+      "status": "flagged",
+      "old_unit_hints": [
+        "unknown"
+      ],
+      "new_unit_hints": [
+        "unknown"
+      ],
+      "reason": "Many-to-one collapse or semantic shift — owner sign-off required"
+    },
+    {
+      "old_label": "V2 Mini BB historical baseline (SoY 2025)",
+      "new_label": "V2 Mini BB sats end-2025",
+      "status": "flagged",
+      "old_unit_hints": [
+        "unknown"
+      ],
+      "new_unit_hints": [
+        "unknown"
+      ],
+      "reason": "Many-to-one collapse or semantic shift — owner sign-off required"
+    },
+    {
+      "old_label": "V2 Mini Bandwidth per Sat — BB (Gbps)",
+      "new_label": "V2 BB Gbps per sat",
+      "status": "flagged",
+      "old_unit_hints": [
+        "Gbps"
+      ],
+      "new_unit_hints": [
+        "unknown"
+      ],
+      "reason": "Many-to-one collapse or semantic shift — owner sign-off required"
+    },
+    {
+      "old_label": "V2 Mini Bandwidth per Sat — DTC (Gbps)",
+      "new_label": "V2 BB Gbps per sat",
+      "status": "flagged",
+      "old_unit_hints": [
+        "Gbps"
+      ],
+      "new_unit_hints": [
+        "unknown"
+      ],
+      "reason": "Many-to-one collapse or semantic shift — owner sign-off required"
+    },
+    {
+      "old_label": "V2 Mini DTC Active Sats — end-2025",
+      "new_label": "V2 DTC active sats end-2025",
+      "status": "flagged",
+      "old_unit_hints": [
+        "unknown"
+      ],
+      "new_unit_hints": [
+        "unknown"
+      ],
+      "reason": "Many-to-one collapse or semantic shift — owner sign-off required"
+    },
+    {
+      "old_label": "V2 Mini DTC historical baseline (SoY 2025)",
+      "new_label": "V2 DTC active sats end-2025",
+      "status": "flagged",
+      "old_unit_hints": [
+        "unknown"
+      ],
+      "new_unit_hints": [
+        "unknown"
+      ],
+      "reason": "Many-to-one collapse or semantic shift — owner sign-off required"
+    },
+    {
+      "old_label": "V2 Mini Mass (kg)",
+      "new_label": "V2 BB sat mass (kg)",
+      "status": "flagged",
+      "old_unit_hints": [
+        "kg"
+      ],
+      "new_unit_hints": [
+        "kg"
+      ],
+      "reason": "Many-to-one collapse or semantic shift — owner sign-off required"
+    },
+    {
+      "old_label": "V2 Mini cost per kg — base year ($/kg)",
+      "new_label": "Satellite cost per kg: base year ($/kg)",
+      "status": "faithful",
+      "old_unit_hints": [
+        "$/kg"
+      ],
+      "new_unit_hints": [
+        "$/kg"
+      ],
+      "reason": "Cosmetic rename or same-dimension relabel"
+    },
+    {
+      "old_label": "V2 phase-out year (no V2 BB / V2 DTC launches from this year)",
+      "new_label": "V3 Starlink launch trigger year",
+      "status": "flagged",
+      "old_unit_hints": [
+        "unknown"
+      ],
+      "new_unit_hints": [
+        "unknown"
+      ],
+      "reason": "Many-to-one collapse or semantic shift — owner sign-off required"
+    },
+    {
+      "old_label": "V3 BB Bandwidth per Sat — base year (Gbps)",
+      "new_label": "V3 BB Gbps per sat",
+      "status": "faithful",
+      "old_unit_hints": [
+        "Gbps"
+      ],
+      "new_unit_hints": [
+        "unknown"
+      ],
+      "reason": "Cosmetic rename or same-dimension relabel"
+    },
+    {
+      "old_label": "V3 BB first launch year",
+      "new_label": "V3 Starlink launch trigger year",
+      "status": "flagged",
+      "old_unit_hints": [
+        "unknown"
+      ],
+      "new_unit_hints": [
+        "unknown"
+      ],
+      "reason": "Many-to-one collapse or semantic shift — owner sign-off required"
+    },
+    {
+      "old_label": "V3 DTC Bandwidth per Sat (Gbps)",
+      "new_label": "V3 DTC effective Gbps",
+      "status": "faithful",
+      "old_unit_hints": [
+        "Gbps"
+      ],
+      "new_unit_hints": [
+        "unknown"
+      ],
+      "reason": "Cosmetic rename or same-dimension relabel"
+    },
+    {
+      "old_label": "V3 DTC first launch year",
+      "new_label": "V3 Starlink launch trigger year",
+      "status": "flagged",
+      "old_unit_hints": [
+        "unknown"
+      ],
+      "new_unit_hints": [
+        "unknown"
+      ],
+      "reason": "Many-to-one collapse or semantic shift — owner sign-off required"
+    },
+    {
+      "old_label": "V3 Mass (kg)",
+      "new_label": "V3 BB sat mass (kg)",
+      "status": "faithful",
+      "old_unit_hints": [
+        "kg"
+      ],
+      "new_unit_hints": [
+        "kg"
+      ],
+      "reason": "Cosmetic rename or same-dimension relabel"
+    },
+    {
+      "old_label": "Vehicle build lead time (years)",
+      "new_label": "Launch vehicle calendar life (years)",
+      "status": "flagged",
+      "old_unit_hints": [
+        "years"
+      ],
+      "new_unit_hints": [
+        "years"
+      ],
+      "reason": "Many-to-one collapse or semantic shift — owner sign-off required"
+    }
+  ],
+  "supplement_overrides": [
+    {
+      "constant": "ANTHROPIC_COMPUTE_REVENUE_YEAR_ROW",
+      "new_label": "External compute 2025 seed (M H100-eq GPU)",
+      "status": "fixed",
+      "reason": "Dimensional mismatch — revenue/CapEx mapped to GPU count or OpEx pct"
+    },
+    {
+      "constant": "BB_SHARE_OF_ODC_BANDWIDTH_CLAIM",
+      "new_label": "BB-share of bandwidth (ratio)",
+      "status": "faithful",
+      "reason": "Supplement constant relabel to V4.131 workbook string"
+    },
+    {
+      "constant": "CHIP_FP8_PERFORMANCE_TFLOPS_YEAR_ROW",
+      "new_label": "Chip FP8 per chip CAGR (/yr): smooth curve",
+      "status": "faithful",
+      "reason": "Supplement constant relabel to V4.131 workbook string"
+    },
+    {
+      "constant": "CHIP_TDP_PER_CHIP_W_YEAR_ROW",
+      "new_label": "Chip TDP CAGR (post-2027, W/chip)",
+      "status": "faithful",
+      "reason": "Supplement constant relabel to V4.131 workbook string"
+    },
+    {
+      "constant": "COREWEAVE_BASELINE_ANCHOR_YEAR_ROW",
+      "new_label": "Comp anchor: AI/Compute standalone (CoreWeave-anchored)",
+      "status": "faithful",
+      "reason": "Supplement constant relabel to V4.131 workbook string"
+    },
+    {
+      "constant": "DTC_ARPU_SUB_MO_YEAR_ROW",
+      "new_label": "Broadband ARPU floor ($/mo)",
+      "status": "flagged",
+      "reason": "Mirrors flagged LABEL_REMAP target"
+    },
+    {
+      "constant": "ECHOSTAR_MID_BAND_CAPEX_MM_YEAR_ROW",
+      "new_label": "Spectrum licence OpEx (% of revenue)",
+      "status": "fixed",
+      "reason": "Dimensional mismatch — revenue/CapEx mapped to GPU count or OpEx pct"
+    },
+    {
+      "constant": "GBPS_PER_GWH_ODC_COMPUTE_ENERGY",
+      "new_label": "Gbps per GWh/yr",
+      "status": "faithful",
+      "reason": "Supplement constant relabel to V4.131 workbook string"
+    },
+    {
+      "constant": "MEMO_AI_SEGMENT_TOTAL_REVENUE_2025_M",
+      "new_label": "S-1 AI (≙ xAI, consolidated): Revenue ($mm)",
+      "status": "flagged",
+      "reason": "Mirrors flagged LABEL_REMAP target"
+    },
+    {
+      "constant": "ODC_UTILIZATION_FACTOR",
+      "new_label": "Utilization ceiling (%)",
+      "status": "faithful",
+      "reason": "Supplement constant relabel to V4.131 workbook string"
+    },
+    {
+      "constant": "ORBITAL_PUE_UPLIFT_VS_TERRESTRIAL",
+      "new_label": "Orbital PUE",
+      "status": "faithful",
+      "reason": "Supplement constant relabel to V4.131 workbook string"
+    },
+    {
+      "constant": "PRE_IPO_BRIDGE_DRAWDOWN_YEAR",
+      "new_label": "Launch-pacing year (apply caps in this year only)",
+      "status": "faithful",
+      "reason": "Supplement constant relabel to V4.131 workbook string"
+    },
+    {
+      "constant": "PRE_IPO_DEBT_FACILITY_MM",
+      "new_label": "Minimum cash buffer ($mm)",
+      "status": "flagged",
+      "reason": "Remap unused — cash_pool uses hardcoded S-1 defaults via assumption_scalar(default=)"
+    },
+    {
+      "constant": "S1_AI_SEGMENT_REVENUE_YEAR_ROW",
+      "new_label": "S-1 AI (≙ xAI, consolidated): Revenue ($mm)",
+      "status": "flagged",
+      "reason": "Mirrors flagged LABEL_REMAP target"
+    },
+    {
+      "constant": "STARLINK_GROUND_OPS_PCT_REV",
+      "new_label": "Ground/network opex pct rev",
+      "status": "faithful",
+      "reason": "Supplement constant relabel to V4.131 workbook string"
+    },
+    {
+      "constant": "STARLINK_INSURANCE_PCT_REV",
+      "new_label": "Asset insurance COGS (% of revenue)",
+      "status": "flagged",
+      "reason": "Mirrors flagged LABEL_REMAP target"
+    },
+    {
+      "constant": "STARLINK_OTHER_COGS_PCT_REV",
+      "new_label": "Asset insurance COGS (% of revenue)",
+      "status": "flagged",
+      "reason": "Mirrors flagged LABEL_REMAP target"
+    },
+    {
+      "constant": "STARSHIELD_RESERVED_PCT_DECAY_RATE",
+      "new_label": "Starshield Gbps growth (frac)",
+      "status": "flagged",
+      "reason": "Mirrors flagged LABEL_REMAP target"
+    },
+    {
+      "constant": "STARSHIELD_RESERVED_PCT_FLOOR",
+      "new_label": "Starshield utilization (frac)",
+      "status": "flagged",
+      "reason": "Mirrors flagged LABEL_REMAP target"
+    },
+    {
+      "constant": "STARSHIELD_RESERVED_PCT_START",
+      "new_label": "Starshield utilization (frac)",
+      "status": "flagged",
+      "reason": "Mirrors flagged LABEL_REMAP target"
+    },
+    {
+      "constant": "STARSHIELD_REV_PER_GBPS_BASE_YEAR",
+      "new_label": "Starshield $/Gbps ($/Gbps-yr)",
+      "status": "faithful",
+      "reason": "Supplement constant relabel to V4.131 workbook string"
+    },
+    {
+      "constant": "STARSHIELD_REV_PER_GBPS_DECAY_RATE",
+      "new_label": "Starshield Gbps growth (frac)",
+      "status": "flagged",
+      "reason": "Mirrors flagged LABEL_REMAP target"
+    },
+    {
+      "constant": "STARTING_CASH_POSITION_EOY_2024_MM",
+      "new_label": "Minimum cash buffer ($mm)",
+      "status": "flagged",
+      "reason": "Remap unused — cash_pool uses hardcoded S-1 defaults via assumption_scalar(default=)"
+    },
+    {
+      "constant": "TERRESTRIAL_AI_CAPEX_YEAR_ROW",
+      "new_label": "Memo: Terrestrial AI compute draw (GW): year-row",
+      "status": "faithful",
+      "reason": "Supplement constant relabel to V4.131 workbook string"
+    },
+    {
+      "constant": "TOTAL_CUSTOMER_LAUNCH_MARKET_CAGR",
+      "new_label": "Commercial launch market CAGR",
+      "status": "faithful",
+      "reason": "Supplement constant relabel to V4.131 workbook string"
+    },
+    {
+      "constant": "WORKLOAD_MIX_INFERENCE_SHARE",
+      "new_label": "Effective Compute Ratio (ratio)",
+      "status": "faithful",
+      "reason": "Supplement constant relabel to V4.131 workbook string"
+    }
+  ],
+  "summary": {
+    "label_remaps": {
+      "total": 69,
+      "faithful": 32,
+      "flagged": 36,
+      "fixed": 1
+    },
+    "supplement_overrides": {
+      "total": 26,
+      "faithful": 13,
+      "flagged": 11,
+      "fixed": 2
+    }
+  }
+}

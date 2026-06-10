@@ -47,6 +47,7 @@ def _beta(assumptions: Assumptions) -> float:
     return assumption_scalar(
         assumptions,
         cl.ALLOCATION_SHARPNESS_TOP_LEVEL_3_MODULE_BLEND,
+        default=3.0,
     )
 
 
@@ -54,6 +55,7 @@ def _soft_floor(assumptions: Assumptions) -> float:
     return assumption_scalar(
         assumptions,
         cl.ALLOCATOR_MIN_SOFTMAX_SHARE_FLOOR_PER_MODULE_FRAC,
+        default=0.05,
     )
 
 
@@ -64,11 +66,10 @@ def compute_two_year_avg_prior_irr(spot_irr: FourProgramIrrs) -> FourProgramIrrs
     Excel label:       "▸ IRR-weighted allocation parameters"
     Architecture ref:  PRD §5.2 priority + D3
     Principle:         2 (prior-yr IRR only; no this-year returns)
-
+    
     Formula: 2-yr rolling average of prior-year marginal IRR (D3).
 
     """
-
     def _avg(vec: np.ndarray) -> np.ndarray:
         out = np.zeros(HORIZON_YEARS, dtype=np.float64)
         for t in range(HORIZON_YEARS):
@@ -87,7 +88,10 @@ def compute_two_year_avg_prior_irr(spot_irr: FourProgramIrrs) -> FourProgramIrrs
 
 
 def compute_soft_floor_shares(
-    prior_irr_avg: FourProgramIrrs, assumptions: Assumptions, *, n_programs: int = 4
+    prior_irr_avg: FourProgramIrrs,
+    assumptions: Assumptions,
+    *,
+    n_programs: int = 4,
 ) -> FourProgramIrrs:
     """Soft-floor shares from 2-yr-avg prior IRR weights (D1).
 
@@ -95,7 +99,7 @@ def compute_soft_floor_shares(
     Excel label:       "Allocation share: Starlink" … "Allocation share: terrestrial"
     Architecture ref:  PRD §5.2 share = floor + (1−N·floor)·w/Σw
     Principle:         2 (priority order only; floor kept per D1)
-
+    
     Formula: Soft-floor shares from 2-yr-avg prior IRR weights (D1).
 
     """
@@ -114,10 +118,7 @@ def compute_soft_floor_shares(
         prior_irr_avg.customer_launch.values,
     )
     for t in range(HORIZON_YEARS):
-        weights = [
-            max(0.0, w)
-            for w in (arrays[0][t], arrays[1][t], arrays[2][t], arrays[3][t])
-        ]
+        weights = [max(0.0, w) for w in (arrays[0][t], arrays[1][t], arrays[2][t], arrays[3][t])]
         total = sum(weights)
         if total <= 0.0:
             share_sl[t] = share_odc[t] = share_ter[t] = share_cl[t] = 1.0 / n_programs
@@ -136,7 +137,10 @@ def compute_soft_floor_shares(
 
 
 def compute_softmax_shares(
-    spot_irr: ModuleSpotIrrs, assumptions: Assumptions, *, n_modules: int = 3
+    spot_irr: ModuleSpotIrrs,
+    assumptions: Assumptions,
+    *,
+    n_modules: int = 3,
 ) -> tuple[ModuleSpotIrrs, YearVector, ModuleSpotIrrs]:
     """exp(β·IRR) weights → soft-floor shares (D1).
 
@@ -144,7 +148,7 @@ def compute_softmax_shares(
     Excel label:       "Allocation share: Starlink" … "Allocation share: AI-Compute"
     Architecture ref:  §5.2 priority (order only)
     Principle:         2 (prior-yr IRR drives softmax weights)
-
+    
     Formula: exp(β·IRR) weights → soft-floor shares (D1).
 
     """

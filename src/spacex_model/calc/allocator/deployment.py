@@ -17,7 +17,8 @@ def _override_year(values: YearVector, year: int, amount: float) -> YearVector:
 
 
 def cap_cash_allocations_to_available(
-    cash: CashAllocations, available_cash: YearVector
+    cash: CashAllocations,
+    available_cash: YearVector,
 ) -> CashAllocations:
     """Scale each year so Σ cash allocations ≤ available (Block A invariant).
 
@@ -25,7 +26,7 @@ def cap_cash_allocations_to_available(
     Excel label:       "Available cash for IRR queue ($mm)"
     Architecture ref:  §6.2 queue gate
     Principle:         4 (non-module claims reserved before IRR queue)
-
+    
     Formula: Scale each year so Σ cash allocations ≤ available (Block A invariant).
 
     """
@@ -44,7 +45,9 @@ def cap_cash_allocations_to_available(
 
 
 def apply_first_year_override(
-    cash: CashAllocations, kg: KgAllocations, historical_2025: dict[str, float]
+    cash: CashAllocations,
+    kg: KgAllocations,
+    historical_2025: dict[str, float],
 ) -> tuple[CashAllocations, KgAllocations]:
     """Replace 2025 allocator outputs with Mach33-anchored historical actuals.
 
@@ -52,7 +55,7 @@ def apply_first_year_override(
     Excel label:       "Starlink V2 BB cash allocation ($mm)"
     Architecture ref:  §2.16 (first-year override convention)
     Principle:         12 (2025 locked; allocator drives 2026+ only)
-
+    
     Formula: Replace 2025 allocator outputs with Mach33-anchored historical actuals.
 
     Keys match CashAllocations / KgAllocations field names (e.g. ``starlink_v2_bb``).
@@ -82,4 +85,7 @@ def apply_first_year_override(
         if key in historical_2025:
             kg_fields[key] = _override_year(vec, FIRST_YEAR, historical_2025[key])
 
-    return (CashAllocations(**cash_fields), KgAllocations(**kg_fields))
+    return (
+        CashAllocations(**cash_fields),
+        KgAllocations(**kg_fields),
+    )

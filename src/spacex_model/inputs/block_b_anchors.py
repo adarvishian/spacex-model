@@ -35,7 +35,7 @@ def _anchor(
 
 
 # Shrink-only CI budget — increase only with explicit approval (M1.2).
-BLOCK_B_CALIBRATION_PENDING_BUDGET: int = 11
+BLOCK_B_CALIBRATION_PENDING_BUDGET: int = 10
 
 # Full model may not yet reconcile every S-1 line after P0 inputs-only pass.
 BLOCK_B_CALIBRATION_PENDING: frozenset[str] = frozenset(
@@ -44,7 +44,6 @@ BLOCK_B_CALIBRATION_PENDING: frozenset[str] = frozenset(
         "Group Gross Profit 2025",
         "Group EBITDA 2025",
         "Group D&A 2025",
-        "Group FCF 2025",
         "Total OpEx 2025",
         "Total Group CapEx 2025",
         "Connectivity segment revenue 2025",

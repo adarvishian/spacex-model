@@ -7,17 +7,8 @@ from dataclasses import dataclass
 import numpy as np
 
 from spacex_model.calc._allocator_out import AllocatorOut
-from spacex_model.calc.ai_compute.module import (
-    AiComputeInputs,
-    compute_ai_apps_revenue_line,
-    compute_orbital_dc_revenue,
-    compute_terrestrial_dc_revenue_line,
-)
-from spacex_model.calc.customer_launch.module import (
-    CustomerLaunchInputs,
-    compute_launch_development_revenue_memo,
-    compute_launch_services_revenue_memo,
-)
+from spacex_model.calc.ai_compute.module import AiComputeInputs, compute_ai_apps_revenue_line, compute_orbital_dc_revenue, compute_terrestrial_dc_revenue_line
+from spacex_model.calc.customer_launch.module import CustomerLaunchInputs, compute_launch_development_revenue_memo, compute_launch_services_revenue_memo
 from spacex_model.calc.group_pnl import GroupPnlResult
 from spacex_model.calc.starlink.module import (
     StarlinkInputs,
@@ -25,10 +16,7 @@ from spacex_model.calc.starlink.module import (
     compute_starlink_capacity_result,
     compute_starshield_revenue,
 )
-from spacex_model.calc.starlink.revenue_curve import (
-    compute_bb_revenue,
-    compute_dtc_revenue,
-)
+from spacex_model.calc.starlink.revenue_curve import compute_bb_revenue, compute_dtc_revenue
 from spacex_model.domain.year_vector import YearVector
 from spacex_model.engine.conservation import InternalEliminations
 
@@ -83,7 +71,7 @@ def compute_segment_pnl(inputs: SegmentPnlInputs) -> SegmentPnlResult:
     Excel label:       "Segment P&L — full Group waterfall ..."
     Architecture ref:  §15 presentation roll-up
     Principle:         3 (read-only; ties to Group P&L)
-
+    
     Formula: Build Segment P&L presentation from module sub-lines and Group P&L.
 
     """
@@ -94,16 +82,8 @@ def compute_segment_pnl(inputs: SegmentPnlInputs) -> SegmentPnlResult:
 
     if sl is not None:
         cap = compute_starlink_capacity_result(sl)
-        bb = compute_bb_revenue(
-            cap.available_bb_gbps,
-            assumptions=sl.assumptions,
-            demand_curves=sl.demand_curves,
-        )
-        dtc = compute_dtc_revenue(
-            cap.available_dtc_gbps,
-            assumptions=sl.assumptions,
-            demand_curves=sl.demand_curves,
-        )
+        bb = compute_bb_revenue(cap.available_bb_gbps, assumptions=sl.assumptions, demand_curves=sl.demand_curves)
+        dtc = compute_dtc_revenue(cap.available_dtc_gbps, assumptions=sl.assumptions, demand_curves=sl.demand_curves)
         starshield = compute_starshield_revenue(sl)
         hardware = compute_hardware_revenue(sl)
     else:
@@ -162,9 +142,9 @@ def segment_tieouts_ok(result: SegmentPnlResult, *, tolerance_mm: float = 1.0) -
     Excel label:       (see module docstring)
     Architecture ref:  PRD V4.113 §2 / context.md §6
     Principle:         6 (one-tab-one-module)
-
+    
     Formula: True when all Segment P&L tie-out memos are within tolerance.
-    """
+"""
     checks = (
         result.memo_starlink_sub_lines,
         result.memo_customer_launch_sub_lines,

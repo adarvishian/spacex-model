@@ -12,10 +12,7 @@ from spacex_model.calc.allocator.types import QueueSubBlockIrrs
 from spacex_model.calc.facilities_build import FacilitiesBuildResult
 from spacex_model.config import canonical_labels as cl
 from spacex_model.config.constants import HORIZON_YEARS
-from spacex_model.domain.assumption_helpers import (
-    assumption_scalar,
-    assumption_year_vector,
-)
+from spacex_model.domain.assumption_helpers import assumption_scalar, assumption_year_vector
 from spacex_model.domain.year_vector import YearVector
 from spacex_model.inputs.assumptions import Assumptions
 
@@ -34,7 +31,7 @@ def compute_module_spot_irrs(module_outputs: dict[str, AllocatorOut]) -> ModuleS
     Excel label:       "Spot IRR: Starlink" … "Spot IRR: AI-Compute"
     Architecture ref:  §5.3 acyclicity (prior-yr IRR only)
     Principle:         2 (per-unit marginal IRR drives allocation weights)
-
+    
     Formula: Prior-year spot IRR for CAE softmax (acyclicity firewall).
 
     """
@@ -64,10 +61,8 @@ def _terrestrial_spot_irr(assumptions: Assumptions) -> YearVector:
     Principle:         2 (predetermined prior-yr signal; no this-year deployment)
 
     """
-    margin = assumption_year_vector(
-        assumptions, cl.MARGIN_PER_MW_PER_YR_MM, default=0.0
-    ).values
-    slug = assumption_scalar(assumptions, cl.TERRESTRIAL_MW_BUILD) / 1e6
+    margin = assumption_year_vector(assumptions, cl.MARGIN_PER_MW_PER_YR_MM, default=0.0).values
+    slug = assumption_scalar(assumptions, cl.CAPEX_SLUG_PER_MW_MM, default=20.0)
     if slug <= 0.0:
         return YearVector.zeros()
     return YearVector(np.clip(margin / slug, -1.0, 2.0))
@@ -86,7 +81,7 @@ def compute_four_program_prior_irrs(
     Excel label:       "Spot IRR: Starlink" … "Spot IRR: Terrestrial (prior yr)"
     Architecture ref:  PRD U2 four first-class programs
     Principle:         2 (acyclicity firewall — prior-yr IRR only)
-
+    
     Formula: Prior-year spot IRR for {Starlink, ODC, Terr, CL} — retires AI roll-up + Level-2.
 
     """
@@ -97,9 +92,7 @@ def compute_four_program_prior_irrs(
     if ai is not None and np.any(ai.spot_irr.values != 0.0):
         odc_irr = ai.spot_irr.values
     else:
-        chip = chip_at_cost_per_sat or compute_chip_at_cost_per_sat(
-            assumptions, facilities_build
-        )
+        chip = chip_at_cost_per_sat or compute_chip_at_cost_per_sat(assumptions, facilities_build)
         odc_scalar = per_sat_blended_irr(
             OrbitalDcInputs(assumptions=assumptions, chip_at_cost_per_sat=chip)
         )
@@ -126,7 +119,7 @@ def roll_up_module_irrs(
     Excel label:       "Customer Launch Blended IRR"
     Architecture ref:  §6 central IRR display
     Principle:         2 (per-unit marginal IRR drives sigmoid weights)
-
+    
     Formula: Roll up blended IRR year-vectors for cash sigmoid queue sub-blocks.
 
     Uses per-vehicle Starlink IRRs when provided; otherwise falls back to module-level.

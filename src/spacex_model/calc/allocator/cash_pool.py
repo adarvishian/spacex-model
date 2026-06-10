@@ -20,22 +20,30 @@ _IPO_YEAR = 2027
 def starting_cash_mm(assumptions: Assumptions) -> float:
     """Starting cash position EoY 2024 ($mm) for R109 identity.
 
-    Excel cell:        Cash Allocation Engine!D8 (Cash BoY 2025 embeds $11,385M)
-    Excel label:       "Cash BoY ($mm)"
+    Excel cell:        Assumptions!B (Starting cash position EoY 2024)
+    Excel label:       "Starting cash position EoY 2024 ($mm)"
     Architecture ref:  §6.1 + §15.2 R109
     Principle:         4 (cash pool feeds queue gate)
-
-    Formula: S-1 audited Dec 31, 2024 cash — removed from Assumptions in V4.131.
+    
+    Formula: Starting cash position EoY 2024 ($mm) for R109 identity.
 
     """
-    _ = assumptions
-    return _STARTING_CASH_MM
+    return assumption_scalar(
+        assumptions,
+        cl.STARTING_CASH_POSITION_EOY_2024_MM,
+        default=_STARTING_CASH_MM,
+    )
 
 
 def _bridge_drawdown_year(assumptions: Assumptions) -> int:
     """Year of $20B pre-IPO bridge receipt — S-1 MDA §6.5 (P1-1: March 2026)."""
-    _ = assumptions
-    return BRIDGE_DRAWDOWN_YEAR
+    return int(
+        assumption_scalar(
+            assumptions,
+            cl.PRE_IPO_BRIDGE_DRAWDOWN_YEAR,
+            default=float(BRIDGE_DRAWDOWN_YEAR),
+        )
+    )
 
 
 def compute_bridge_drawdown(assumptions: Assumptions) -> YearVector:
@@ -45,11 +53,15 @@ def compute_bridge_drawdown(assumptions: Assumptions) -> YearVector:
     Excel label:       "Pre-IPO debt facility ($mm)"
     Architecture ref:  §2.13 + §15.2 R109
     Principle:         4 (bridge inflow in cash pool tracker)
-
+    
     Formula: Pre-IPO bridge loan drawdown by year ($mm); $20B in bridge year per §2.13.
 
     """
-    bridge = _BRIDGE_LOAN_2025_MM
+    bridge = assumption_scalar(
+        assumptions,
+        cl.PRE_IPO_DEBT_FACILITY_MM,
+        default=_BRIDGE_LOAN_2025_MM,
+    )
     bridge_year = _bridge_drawdown_year(assumptions)
     values = np.zeros(HORIZON_YEARS, dtype=np.float64)
     idx = bridge_year - FIRST_YEAR
@@ -65,7 +77,7 @@ def compute_ipo_drawdown(assumptions: Assumptions) -> YearVector:
     Excel label:       "IPO injection amount ($mm)"
     Architecture ref:  §6.1 + §15.2 R109
     Principle:         4 (IPO inflow in cash pool tracker)
-
+    
     Formula: IPO injection by year ($mm).
 
     """
@@ -86,7 +98,8 @@ def compute_ipo_drawdown(assumptions: Assumptions) -> YearVector:
 
 
 def compute_cash_boy(
-    assumptions: Assumptions, prior_year_group_fcf: YearVector | None = None
+    assumptions: Assumptions,
+    prior_year_group_fcf: YearVector | None = None,
 ) -> YearVector:
     """Year-chained Cash BoY with IPO and pre-IPO bridge inflows.
 
@@ -108,7 +121,11 @@ def compute_cash_boy(
         cl.IPO_INJECTION_AMOUNT_MM,
         default=_IPO_AMOUNT_MM,
     )
-    bridge = _BRIDGE_LOAN_2025_MM
+    bridge = assumption_scalar(
+        assumptions,
+        cl.PRE_IPO_DEBT_FACILITY_MM,
+        default=_BRIDGE_LOAN_2025_MM,
+    )
     bridge_year = _bridge_drawdown_year(assumptions)
 
     values = np.zeros(HORIZON_YEARS, dtype=np.float64)

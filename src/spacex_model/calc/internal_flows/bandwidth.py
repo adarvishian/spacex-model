@@ -7,7 +7,9 @@ from spacex_model.domain.year_vector import YearVector
 
 
 def rate_per_unit(
-    starlink_capacity: StarlinkCapacityResult, *, pool: str = "bb"
+    starlink_capacity: StarlinkCapacityResult,
+    *,
+    pool: str = "bb",
 ) -> YearVector:
     """Fully-allocated at-cost bandwidth rate ($/Gbps/yr).
 
@@ -15,7 +17,7 @@ def rate_per_unit(
     Excel label:       "BB pool at-cost rate ($/Gbps/yr)"
     Architecture ref:  §7.2 (fully-allocated bandwidth transfer)
     Principle:         9 (internal transfers at fully-allocated cost)
-
+    
     Formula: Fully-allocated at-cost bandwidth rate ($/Gbps/yr).
 
     """
@@ -35,15 +37,13 @@ def internal_transfer_revenue(
     Excel label:       "Starlink internal bandwidth revenue ($mm)"
     Architecture ref:  §7.2
     Principle:         9 (source books internal transfer revenue)
-
+    
     Formula: Starlink internal bandwidth revenue = Σ ODC Gbps claim × pool at-cost rate.
 
     """
     values = (
         bb_gbps_claim.values * starlink_capacity.bb_at_cost_rate_per_gbps.values / 1e6
-        + dtc_gbps_claim.values
-        * starlink_capacity.dtc_at_cost_rate_per_gbps.values
-        / 1e6
+        + dtc_gbps_claim.values * starlink_capacity.dtc_at_cost_rate_per_gbps.values / 1e6
     )
     return YearVector(values)
 
@@ -58,7 +58,7 @@ def conservation_residual(
     Excel label:       "Bandwidth elimination check"
     Architecture ref:  §15 conservation block
     Principle:         9 (internal flow conservation)
-
+    
     Formula: R106 conservation: source rev − ODC bandwidth services COGS.
 
     """

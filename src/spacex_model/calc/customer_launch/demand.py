@@ -30,10 +30,11 @@ def compute_demand(inputs: DemandInputs) -> DemandResult:
     Excel label:       "Customer Launch cash demand ($mm)"
     Architecture ref:  §6.5 / §20.3 (Sprint 11f Option A)
     Principle:         12 (demand purely exogenous; output never feeds back)
-
+    
     Formula: Exogenous demand: anchor × learning × year-mask + facility CapEx (Phase B: pass-through).
 
     """
     return DemandResult(
-        cash_demand_mm=inputs.cash_demand_mm, kg_demand_kg=inputs.kg_demand_kg
+        cash_demand_mm=inputs.cash_demand_mm,
+        kg_demand_kg=inputs.kg_demand_kg,
     )

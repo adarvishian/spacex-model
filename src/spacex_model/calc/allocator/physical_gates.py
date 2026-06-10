@@ -8,14 +8,18 @@ from spacex_model.config.constants import FIRST_YEAR, HORIZON_YEARS
 from spacex_model.domain.year_vector import YearVector
 
 
-def apply_v2_phase_out_gate(values: YearVector, *, phase_out_year: int) -> YearVector:
+def apply_v2_phase_out_gate(
+    values: YearVector,
+    *,
+    phase_out_year: int,
+) -> YearVector:
     """Zero demand/allocation for years at or after V2 phase-out.
 
     Excel cell:        Allocator!— (Phase D)
     Excel label:       "V2 phase-out gate"
     Architecture ref:  §20.2 (V2 phase-out gate)
     Principle:         12 (exogenous demand masked by year gates)
-
+    
     Formula: Zero demand/allocation for years at or after V2 phase-out.
 
     """
@@ -26,14 +30,18 @@ def apply_v2_phase_out_gate(values: YearVector, *, phase_out_year: int) -> YearV
     return YearVector(masked)
 
 
-def apply_v3_startup_gate(values: YearVector, *, startup_year: int) -> YearVector:
+def apply_v3_startup_gate(
+    values: YearVector,
+    *,
+    startup_year: int,
+) -> YearVector:
     """Zero demand/allocation for years before V3 Starlink launch trigger.
 
     Excel cell:        Allocator!— (Phase D)
     Excel label:       "V3 startup gate"
     Architecture ref:  §20.2 (V3 startup gate)
     Principle:         12 (exogenous demand masked by year gates)
-
+    
     Formula: Zero demand/allocation for years before V3 Starlink launch trigger.
 
     """
@@ -56,7 +64,7 @@ def apply_f9_supply_gate(
     Excel label:       "F9 supply gate (V2 launches)"
     Architecture ref:  §20.2 (F9 supply gate)
     Principle:         12 (physical supply binds V2 deployment)
-
+    
     Formula: Cap V2 launch demand by F9 internal capacity (sats per year).
 
     """

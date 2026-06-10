@@ -12,7 +12,8 @@ from spacex_model.inputs.assumptions import Assumptions
 
 
 def compute_mars_carveout(
-    assumptions: Assumptions, prior_year_group_fcf: YearVector | None = None
+    assumptions: Assumptions,
+    prior_year_group_fcf: YearVector | None = None,
 ) -> YearVector:
     """Mars carve-out = MAX(floor, prior-year Group FCF × Mars pct).
 
@@ -20,14 +21,12 @@ def compute_mars_carveout(
     Excel label:       "Mars carve-out ($mm)"
     Architecture ref:  §11.1 / §6.2
     Principle:         22 (Mars carve-out off-the-top)
-
+    
     Formula: Mars carve-out = MAX(floor, prior-year Group FCF × Mars pct).
 
     """
-    pct = assumption_scalar(
-        assumptions, cl.LUNAR_MARS_CARVE_OUT_OF_PRIOR_YEAR_GROUP_FCF
-    )
-    floor = assumption_scalar(assumptions, cl.LUNAR_MARS_CARVE_OUT_FLOOR_MM_YR)
+    pct = assumption_scalar(assumptions, cl.LUNAR_MARS_CARVE_OUT_OF_PRIOR_YEAR_GROUP_FCF, default=0.15)
+    floor = assumption_scalar(assumptions, cl.LUNAR_MARS_CARVE_OUT_FLOOR_MM_YR, default=1000.0)
     values = np.zeros(HORIZON_YEARS, dtype=np.float64)
     for t in range(HORIZON_YEARS):
         year = FIRST_YEAR + t

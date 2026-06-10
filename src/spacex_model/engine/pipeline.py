@@ -26,17 +26,11 @@ from spacex_model.calc.ai_compute import (
     odc_bandwidth_claim,
 )
 from spacex_model.calc.allocator.brain import AllocatorInputs, compute_allocator
-from spacex_model.calc.facilities_build import (
-    FacilitiesBuildInputs,
-    FacilitiesBuildResult,
-    compute_facilities_build,
-)
+from spacex_model.calc.facilities_build import FacilitiesBuildInputs, compute_facilities_build
 from spacex_model.calc.allocator.demand_builders import compute_exogenous_demands
 from spacex_model.calc.allocator.types import CashAllocations, KgAllocations
-from spacex_model.calc.capex import CapExInputs, CapExResult, compute_capex
-from spacex_model.calc.customer_launch import (
-    compute_allocator_out as customer_launch_out,
-)
+from spacex_model.calc.capex import CapExInputs, compute_capex
+from spacex_model.calc.customer_launch import compute_allocator_out as customer_launch_out
 from spacex_model.calc.customer_launch.module import (
     CustomerLaunchInputs,
     _f9_customer_launches,
@@ -56,29 +50,15 @@ from spacex_model.calc.group_pnl import (
 from spacex_model.calc.internal_flows import bandwidth as bandwidth_flow
 from spacex_model.calc.internal_flows import compute as compute_flow
 from spacex_model.calc.internal_flows.launch_services import internal_transfer_revenue
-from spacex_model.calc.allocator.cash_pool import (
-    compute_bridge_drawdown,
-    compute_cash_boy,
-    compute_ipo_drawdown,
-    starting_cash_mm,
-)
-from spacex_model.calc.launch_capacity import (
-    LaunchCapacityInputs,
-    LaunchCapacityResult,
-    compute_launch_capacity,
-)
+from spacex_model.calc.allocator.cash_pool import compute_bridge_drawdown, compute_cash_boy, compute_ipo_drawdown, starting_cash_mm
+from spacex_model.calc.launch_capacity import LaunchCapacityInputs, LaunchCapacityResult, compute_launch_capacity
 from spacex_model.calc.lunar_mars import compute_allocator_out as lunar_mars_out
 from spacex_model.calc.lunar_mars.bv_engine import compute_bv_engine
 from spacex_model.calc.lunar_mars.carveout import compute_mars_carveout
 from spacex_model.calc.lunar_mars.deployment import compute_deployment
 from spacex_model.calc.lunar_mars.module import LunarMarsInputs
 from spacex_model.calc.segment_pnl import SegmentPnlInputs, compute_segment_pnl
-from spacex_model.calc.opex import (
-    OpExInputs,
-    OpExResult,
-    build_revenue_bases,
-    compute_opex,
-)
+from spacex_model.calc.opex import OpExInputs, build_revenue_bases, compute_opex
 from spacex_model.calc.starlink import compute_allocator_out as starlink_out
 from spacex_model.calc.starlink.module import (
     StarlinkInputs,
@@ -86,23 +66,13 @@ from spacex_model.calc.starlink.module import (
     compute_launch_services_cost,
     compute_starlink_capacity_result,
 )
-from spacex_model.calc.starlink.vehicle_pools import (
-    VehiclePoolsResult,
-    compute_vehicle_pools,
-)
+from spacex_model.calc.starlink.vehicle_pools import VehiclePoolsResult, compute_vehicle_pools
 from spacex_model.calc.starlink_capacity import OdcBandwidthClaim
-from spacex_model.calc.valuation import (
-    ValuationInputs,
-    ValuationResult,
-    compute_valuation,
-)
+from spacex_model.calc.valuation import ValuationInputs, ValuationResult, compute_valuation
 from spacex_model.config import canonical_labels as cl
 from spacex_model.config.constants import FIRST_YEAR, HORIZON_YEARS, LAST_YEAR
 from spacex_model.config.settings import get_settings
-from spacex_model.domain.assumption_helpers import (
-    assumption_scalar,
-    assumption_year_vector,
-)
+from spacex_model.domain.assumption_helpers import assumption_scalar, assumption_year_vector
 from spacex_model.domain.year_vector import YearVector
 from spacex_model.calc.allocator.conservation import (
     AllocatorConservationInputs,
@@ -114,11 +84,7 @@ from spacex_model.engine.conservation import (
     merge_allocator_conservation,
     raise_on_break,
 )
-from spacex_model.engine.iterative_solver import (
-    SolverTrace,
-    damped_blend,
-    solve_fixed_point,
-)
+from spacex_model.engine.iterative_solver import SolverTrace, damped_blend, solve_fixed_point
 from spacex_model.inputs.assumptions import Assumptions, assumptions_from_ingest
 from spacex_model.inputs.demand_curves import DemandCurves, demand_curves_from_ingest
 from spacex_model.io.excel_ingest import IngestResult, ingest_workbook
@@ -222,10 +188,7 @@ class ModelResult:
         return self.vehicle_pools.v3_dtc.launches.at(year)
 
     def starlink_dtc_subs_eoy(self, year: int) -> float:
-        from spacex_model.calc.starlink.module import (
-            StarlinkInputs,
-            compute_starlink_capacity_result,
-        )
+        from spacex_model.calc.starlink.module import StarlinkInputs, compute_starlink_capacity_result
         from spacex_model.calc.starlink.revenue_curve import compute_dtc_revenue
 
         pools = self.vehicle_pools
@@ -254,7 +217,9 @@ class ModelResult:
 
     def starlink_sat_cost_per_kg(self) -> np.ndarray:
         return assumption_year_vector(
-            self.assumptions, cl.V2_MINI_COST_PER_KG_BASE_YEAR, default=650.0
+            self.assumptions,
+            cl.V2_MINI_COST_PER_KG_BASE_YEAR,
+            default=650.0,
         ).values
 
     def all_year_vectors(self) -> list[tuple[str, np.ndarray]]:
@@ -281,15 +246,9 @@ def _inputs_hash(assumptions: Assumptions) -> str:
 def _outputs_hash(result: ModelResult) -> str:
     """SHA256 of Group + per-module FCFs + EV per PRD §11.4."""
     payload: dict[str, Any] = {
-        "group_fcf": {
-            str(y): result.group_pnl.group_fcf.at(y)
-            for y in range(FIRST_YEAR, LAST_YEAR + 1)
-        },
+        "group_fcf": {str(y): result.group_pnl.group_fcf.at(y) for y in range(FIRST_YEAR, LAST_YEAR + 1)},
         "module_fcf": {
-            mod: {
-                str(y): result.module_outputs[mod].module_fcf.at(y)
-                for y in range(FIRST_YEAR, LAST_YEAR + 1)
-            }
+            mod: {str(y): result.module_outputs[mod].module_fcf.at(y) for y in range(FIRST_YEAR, LAST_YEAR + 1)}
             for mod in _MODULE_KEYS
         },
         "implied_ev_2025_b": result.valuation.implied_ev_2025_billions,
@@ -301,9 +260,7 @@ def _outputs_hash(result: ModelResult) -> str:
 def _customer_launch_external_revenue(cl_inputs: CustomerLaunchInputs) -> YearVector:
     f9 = _f9_customer_launches(cl_inputs)
     f9_price = _f9_customer_price(cl_inputs)
-    ship = cl_inputs.starship_customer_launches or _starship_customer_launches(
-        cl_inputs
-    )
+    ship = cl_inputs.starship_customer_launches or _starship_customer_launches(cl_inputs)
     ship_price = _starship_customer_price(cl_inputs)
     return YearVector(f9.values * f9_price.values + ship.values * ship_price.values)
 
@@ -318,16 +275,15 @@ def _build_internal_eliminations(
     cap = compute_starlink_capacity_result(starlink_inputs)
     bb_claim, dtc_claim = odc_bandwidth_claim(ai_inputs)
     return InternalEliminations(
-        launch_services=internal_transfer_revenue(
-            f9_int, ship_int, cl_inputs.launch_capacity
-        ),
+        launch_services=internal_transfer_revenue(f9_int, ship_int, cl_inputs.launch_capacity),
         bandwidth=bandwidth_flow.internal_transfer_revenue(bb_claim, dtc_claim, cap),
         compute=compute_flow.internal_transfer_revenue(ai_inputs),
     )
 
 
 def _build_internal_flows(
-    starlink_inputs: StarlinkInputs, ai_inputs: AiComputeInputs
+    starlink_inputs: StarlinkInputs,
+    ai_inputs: AiComputeInputs,
 ) -> InternalFlowConservationInputs:
     cap = compute_starlink_capacity_result(starlink_inputs)
     bb_claim, dtc_claim = odc_bandwidth_claim(ai_inputs)
@@ -344,9 +300,7 @@ def _build_internal_flows(
     )
 
 
-def _cash_identity_inputs(
-    assumptions: Assumptions, cash_boy: YearVector
-) -> CashIdentityInputs:
+def _cash_identity_inputs(assumptions: Assumptions, cash_boy: YearVector) -> CashIdentityInputs:
     return CashIdentityInputs(
         cash_boy=cash_boy,
         starting_cash_mm=starting_cash_mm(assumptions),
@@ -360,9 +314,7 @@ def _module_da_in_cogs(
     cl_inputs: CustomerLaunchInputs,
     lm_inputs: LunarMarsInputs,
 ) -> dict[str, YearVector]:
-    carveout = compute_mars_carveout(
-        lm_inputs.assumptions, lm_inputs.prior_year_group_fcf
-    )
+    carveout = compute_mars_carveout(lm_inputs.assumptions, lm_inputs.prior_year_group_fcf)
     dep = compute_deployment(lm_inputs.assumptions, carveout)
     bv = compute_bv_engine(
         lm_inputs.assumptions,
@@ -377,9 +329,7 @@ def _module_da_in_cogs(
         cl_inputs.assumptions, "F9 booster (1st stage) mfg cost ($mm/unit)"
     )
     f9_lifetime = f9_effective_dep_lifetime(cl_inputs.assumptions)
-    cl_da = YearVector(
-        (f9_cust.values + f9_int.values) * (f9_booster_cost / f9_lifetime)
-    )
+    cl_da = YearVector((f9_cust.values + f9_int.values) * (f9_booster_cost / f9_lifetime))
     return {
         "starlink": compute_constellation_da(starlink_inputs),
         "customer_launch": cl_da,
@@ -389,11 +339,11 @@ def _module_da_in_cogs(
 
 
 def _historical_2025_overrides(assumptions: Assumptions) -> dict[str, float]:
-    v2_mass = assumption_scalar(assumptions, cl.V2_BB_SAT_MASS_KG)
-    v2_cost_kg = assumption_scalar(assumptions, cl.V2_MINI_COST_PER_KG_BASE_YEAR)
+    v2_mass = assumption_scalar(assumptions, cl.V2_BB_SAT_MASS_KG, default=575.0)
+    v2_cost_kg = assumption_scalar(assumptions, cl.V2_MINI_COST_PER_KG_BASE_YEAR, default=650.0)
     v2_unit = v2_cost_kg * v2_mass / 1e6
-    bb_anchor = assumption_scalar(assumptions, cl.V2_MINI_BB_SATS_LAUNCHED_2025)
-    dtc_anchor = assumption_scalar(assumptions, cl.V2_MINI_DTC_SATS_LAUNCHED_2025)
+    bb_anchor = assumption_scalar(assumptions, cl.V2_MINI_BB_SATS_LAUNCHED_2025, default=2987.0)
+    dtc_anchor = assumption_scalar(assumptions, cl.V2_MINI_DTC_SATS_LAUNCHED_2025, default=182.0)
     return {
         "starlink_v2_bb": bb_anchor * v2_unit,
         "starlink_v2_dtc": dtc_anchor * v2_unit,
@@ -419,7 +369,8 @@ def _blended_cash_boy(
 
 
 def _blended_prior_fcf(
-    prior: PipelineState, blend: dict[str, np.ndarray] | None
+    prior: PipelineState,
+    blend: dict[str, np.ndarray] | None,
 ) -> YearVector | None:
     """Damp prior-year Group FCF for Cash BoY / Mars carve-out (Cash BoY ↔ FCF loop)."""
     prior_fcf = prior.group_pnl.group_fcf if prior.group_pnl else None
@@ -431,88 +382,41 @@ def _blended_prior_fcf(
 
 
 def _blend_allocations(
-    prior: PipelineState, blend: dict[str, np.ndarray] | None
+    prior: PipelineState,
+    blend: dict[str, np.ndarray] | None,
 ) -> tuple[CashAllocations, KgAllocations]:
     if blend is None:
         return prior.cash_alloc, prior.kg_alloc
     cash = CashAllocations(
-        **{
-            f: YearVector(blend[f"cash.{f}"])
-            for f in CashAllocations.zeros().__dataclass_fields__
-            if f != "as_tuple"
-        }
+        **{f: YearVector(blend[f"cash.{f}"]) for f in CashAllocations.zeros().__dataclass_fields__ if f != "as_tuple"}
     )
     kg = KgAllocations(
-        **{
-            f: YearVector(blend[f"kg.{f}"])
-            for f in KgAllocations.zeros().__dataclass_fields__
-            if f != "as_tuple"
-        }
+        **{f: YearVector(blend[f"kg.{f}"]) for f in KgAllocations.zeros().__dataclass_fields__ if f != "as_tuple"}
     )
     return cash, kg
 
 
-@dataclass
-class _PassBlend:
-    cash: CashAllocations
-    kg: KgAllocations
-    prior_fcf: YearVector | None
-    solver_cash_boy: YearVector | None
-
-
-@dataclass
-class _PassCapacity:
-    pools: VehiclePoolsResult
-    f9_customer: YearVector
-    lc: LaunchCapacityResult
-    cl_inputs: CustomerLaunchInputs
-
-
-@dataclass
-class _PassModuleBundle:
-    starlink_inputs: StarlinkInputs
-    ai_inputs: AiComputeInputs
-    lm_inputs: LunarMarsInputs
-    sl_capacity: Any  # StarlinkCapacityResult — avoid circular import
-    module_outputs: dict[str, AllocatorOut]
-    eliminations: InternalEliminations
-    cl_external: YearVector
-    opex: OpExResult
-    module_da: dict[str, YearVector]
-    capex_pre: CapExResult
-    flows: InternalFlowConservationInputs
-    fb: FacilitiesBuildResult
-    odc_sats: YearVector
-
-
-def _pass_blend_context(
-    prior: PipelineState,
-    assumptions: Assumptions,
-    blend: dict[str, np.ndarray] | None,
-) -> _PassBlend:
-    cash, kg = _blend_allocations(prior, blend)
-    prior_fcf = _blended_prior_fcf(prior, blend)
-    solver_cash_boy = _blended_cash_boy(prior, blend, assumptions, prior_fcf)
-    return _PassBlend(
-        cash=cash, kg=kg, prior_fcf=prior_fcf, solver_cash_boy=solver_cash_boy
+def _single_pass(state_dict: dict[str, Any]) -> dict[str, Any]:
+    """One topological model pass: modules → Group P&L → Allocator."""
+    assumptions: Assumptions = state_dict["assumptions"]
+    demand: DemandCurves = state_dict["demand_curves"]
+    prior: PipelineState = state_dict["pipeline"]
+    cash, kg = _blend_allocations(prior, state_dict.get("monitored_blend"))
+    prior_fcf = _blended_prior_fcf(prior, state_dict.get("monitored_blend"))
+    solver_cash_boy = _blended_cash_boy(
+        prior, state_dict.get("monitored_blend"), assumptions, prior_fcf
     )
 
-
-def _pass_capacity_layer(
-    assumptions: Assumptions,
-    prior: PipelineState,
-    blend: _PassBlend,
-) -> _PassCapacity:
-    vehicle_allocs = VehicleAllocations.from_allocator(blend.cash, blend.kg)
+    vehicle_allocs = VehicleAllocations.from_allocator(cash, kg)
     pools = compute_vehicle_pools(assumptions, allocations=vehicle_allocs)
+
     f9_customer = _f9_customer_launches(
         CustomerLaunchInputs(
             assumptions=assumptions,
-            launch_capacity=compute_launch_capacity(
-                LaunchCapacityInputs(assumptions=assumptions)
-            ),
+            launch_capacity=compute_launch_capacity(LaunchCapacityInputs(assumptions=assumptions)),
         )
     )
+
     lc = compute_launch_capacity(
         LaunchCapacityInputs(
             assumptions=assumptions,
@@ -522,6 +426,7 @@ def _pass_capacity_layer(
             f9_starlink_v2_dtc_launches=pools.f9_v2_dtc_launches,
         )
     )
+
     cl_inputs = CustomerLaunchInputs(
         assumptions=assumptions,
         launch_capacity=lc,
@@ -531,68 +436,54 @@ def _pass_capacity_layer(
         starship_internal_launches=YearVector(
             pools.starship_v3_bb_launches.values + pools.starship_v3_dtc_launches.values
         ),
-        starship_customer_launches=YearVector(
-            _starship_customer_launches(
-                CustomerLaunchInputs(assumptions=assumptions, launch_capacity=lc)
-            ).values
-        ),
-    )
-    return _PassCapacity(
-        pools=pools, f9_customer=f9_customer, lc=lc, cl_inputs=cl_inputs
+        starship_customer_launches=YearVector(_starship_customer_launches(
+            CustomerLaunchInputs(assumptions=assumptions, launch_capacity=lc)
+        ).values),
     )
 
-
-def _pass_module_bundle(
-    assumptions: Assumptions,
-    demand: DemandCurves,
-    prior: PipelineState,
-    blend: _PassBlend,
-    capacity: _PassCapacity,
-) -> _PassModuleBundle:
     exogenous = compute_exogenous_demands(assumptions)
-    odc_alloc = AllocatorAllocation(cash_mm=blend.cash.odc, kg_to_leo=blend.kg.odc)
+    odc_alloc = AllocatorAllocation(cash_mm=cash.odc, kg_to_leo=kg.odc)
     odc_demand = ai_compute_demand(
-        AiComputeDemandInputs(
-            cash_demand_mm=exogenous.odc_cash, kg_demand_kg=exogenous.odc_kg
-        )
+        AiComputeDemandInputs(cash_demand_mm=exogenous.odc_cash, kg_demand_kg=exogenous.odc_kg)
     )
     odc_sats = ai_compute_output(odc_demand, odc_alloc, assumptions).sats_deployed
+
     starlink_inputs = StarlinkInputs(
         assumptions=assumptions,
         demand_curves=demand,
-        launch_capacity=capacity.lc,
-        vehicle_pools=capacity.pools,
+        launch_capacity=lc,
+        vehicle_pools=pools,
         odc_bandwidth_claim=OdcBandwidthClaim(
-            *odc_bandwidth_claim(
-                AiComputeInputs(assumptions=assumptions, sats_deployed=odc_sats)
-            )
+            *odc_bandwidth_claim(AiComputeInputs(assumptions=assumptions, sats_deployed=odc_sats))
         ),
     )
-    lm_inputs = LunarMarsInputs(
-        assumptions=assumptions, prior_year_group_fcf=blend.prior_fcf
-    )
+
+    lm_inputs = LunarMarsInputs(assumptions=assumptions, prior_year_group_fcf=prior_fcf)
+
     sl_capacity = compute_starlink_capacity_result(starlink_inputs)
     ai_inputs = AiComputeInputs(
-        assumptions=assumptions, starlink_capacity=sl_capacity, sats_deployed=odc_sats
+        assumptions=assumptions,
+        starlink_capacity=sl_capacity,
+        sats_deployed=odc_sats,
     )
     bb_claim, dtc_claim = odc_bandwidth_claim(ai_inputs)
     starlink_inputs = StarlinkInputs(
         assumptions=assumptions,
         demand_curves=demand,
-        launch_capacity=capacity.lc,
-        vehicle_pools=capacity.pools,
+        launch_capacity=lc,
+        vehicle_pools=pools,
         odc_bandwidth_claim=OdcBandwidthClaim(bb_gbps=bb_claim, dtc_gbps=dtc_claim),
     )
-    module_outputs: dict[str, AllocatorOut] = {
-        "customer_launch": customer_launch_out(capacity.cl_inputs),
+
+    module_outputs = {
+        "customer_launch": customer_launch_out(cl_inputs),
         "starlink": starlink_out(starlink_inputs),
         "ai_compute": ai_compute_out(ai_inputs),
         "lunar_mars": lunar_mars_out(lm_inputs),
     }
-    eliminations = _build_internal_eliminations(
-        capacity.cl_inputs, starlink_inputs, ai_inputs
-    )
-    cl_external = _customer_launch_external_revenue(capacity.cl_inputs)
+
+    eliminations = _build_internal_eliminations(cl_inputs, starlink_inputs, ai_inputs)
+    cl_external = _customer_launch_external_revenue(cl_inputs)
     opex = compute_opex(
         OpExInputs(
             assumptions=assumptions,
@@ -605,7 +496,8 @@ def _pass_module_bundle(
             customer_launch_external_revenue=cl_external,
         )
     )
-    module_da = _module_da_in_cogs(starlink_inputs, capacity.cl_inputs, lm_inputs)
+
+    module_da = _module_da_in_cogs(starlink_inputs, cl_inputs, lm_inputs)
     capex_pre = compute_capex(
         CapExInputs(
             assumptions=assumptions,
@@ -614,13 +506,14 @@ def _pass_module_bundle(
             module_da_in_cogs=module_da,
         )
     )
+
     flows = _build_internal_flows(starlink_inputs, ai_inputs)
     fb = compute_facilities_build(
         FacilitiesBuildInputs(
             assumptions=assumptions,
             sats_built_starlink=module_outputs["starlink"].capital_deployed,
-            ships_built=capacity.lc.total_starship_launches,
-            starship_launches=capacity.lc.total_starship_launches,
+            ships_built=lc.total_starship_launches,
+            starship_launches=lc.total_starship_launches,
             group_revenue_base=module_outputs["starlink"].total_revenue,
         )
     )
@@ -631,138 +524,98 @@ def _pass_module_bundle(
         facilities_build=fb,
     )
     module_outputs["ai_compute"] = ai_compute_out(ai_inputs)
-    return _PassModuleBundle(
-        starlink_inputs=starlink_inputs,
-        ai_inputs=ai_inputs,
-        lm_inputs=lm_inputs,
-        sl_capacity=sl_capacity,
-        module_outputs=module_outputs,
-        eliminations=eliminations,
-        cl_external=cl_external,
-        opex=opex,
-        module_da=module_da,
-        capex_pre=capex_pre,
-        flows=flows,
-        fb=fb,
-        odc_sats=odc_sats,
-    )
-
-
-def _pass_close_allocator(
-    assumptions: Assumptions,
-    prior: PipelineState,
-    blend: _PassBlend,
-    capacity: _PassCapacity,
-    modules: _PassModuleBundle,
-    monitored_blend: dict[str, np.ndarray] | None,
-) -> PipelineState:
     allocator_pre = compute_allocator(
         AllocatorInputs(
             assumptions=assumptions,
-            module_outputs=modules.module_outputs,
-            opex=modules.opex.total_opex,
-            corp_capex=modules.capex_pre.total_corporate_capex,
-            spectrum_capex=modules.capex_pre.spectrum_capex,
+            module_outputs=module_outputs,
+            opex=opex.total_opex,
+            corp_capex=capex_pre.total_corporate_capex,
+            spectrum_capex=capex_pre.spectrum_capex,
             taxes=YearVector.zeros(),
-            launch_capacity=capacity.lc,
-            prior_year_group_fcf=blend.prior_fcf,
-            lunar_mars_kg_reserved=modules.module_outputs[
-                "lunar_mars"
-            ].capacity_demand_kg,
-            f9_launches=capacity.lc.f9_launches,
-            f9_customer_launches=capacity.f9_customer,
+            launch_capacity=lc,
+            prior_year_group_fcf=prior_fcf,
+            lunar_mars_kg_reserved=module_outputs["lunar_mars"].capacity_demand_kg,
+            f9_launches=lc.f9_launches,
+            f9_customer_launches=f9_customer,
             historical_2025=_historical_2025_overrides(assumptions),
-            solver_cash_boy=blend.solver_cash_boy,
-            facilities_build=modules.fb,
-            corp_sga=modules.opex.total_sga,
-            shared_rd=modules.opex.total_rd,
+            solver_cash_boy=solver_cash_boy,
+            facilities_build=fb,
+            corp_sga=opex.total_sga,
+            shared_rd=opex.total_rd,
         )
     )
+
     group = compute_group_pnl(
         GroupPnlInputs(
             assumptions=assumptions,
-            module_outputs=modules.module_outputs,
-            opex=modules.opex,
-            capex=modules.capex_pre,
-            eliminations=modules.eliminations,
-            module_da_in_cogs=modules.module_da,
-            internal_flows=modules.flows,
+            module_outputs=module_outputs,
+            opex=opex,
+            capex=capex_pre,
+            eliminations=eliminations,
+            module_da_in_cogs=module_da,
+            internal_flows=flows,
             mars_carveout=allocator_pre.mars_carveout,
         )
     )
+
     allocator = compute_allocator(
         AllocatorInputs(
             assumptions=assumptions,
-            module_outputs=modules.module_outputs,
-            opex=modules.opex.total_opex,
-            corp_capex=modules.capex_pre.total_corporate_capex,
-            spectrum_capex=modules.capex_pre.spectrum_capex,
+            module_outputs=module_outputs,
+            opex=opex.total_opex,
+            corp_capex=capex_pre.total_corporate_capex,
+            spectrum_capex=capex_pre.spectrum_capex,
             taxes=group.taxes,
-            launch_capacity=capacity.lc,
+            launch_capacity=lc,
             prior_year_group_fcf=group.group_fcf,
-            lunar_mars_kg_reserved=modules.module_outputs[
-                "lunar_mars"
-            ].capacity_demand_kg,
-            f9_launches=capacity.lc.f9_launches,
-            f9_customer_launches=capacity.f9_customer,
+            lunar_mars_kg_reserved=module_outputs["lunar_mars"].capacity_demand_kg,
+            f9_launches=lc.f9_launches,
+            f9_customer_launches=f9_customer,
             historical_2025=_historical_2025_overrides(assumptions),
             solver_cash_boy=_blended_cash_boy(
-                prior, monitored_blend, assumptions, group.group_fcf
+                prior, state_dict.get("monitored_blend"), assumptions, group.group_fcf
             ),
-            facilities_build=modules.fb,
+            facilities_build=fb,
             group_fcf=group.group_fcf,
-            corp_sga=modules.opex.total_sga,
-            shared_rd=modules.opex.total_rd,
+            corp_sga=opex.total_sga,
+            shared_rd=opex.total_rd,
         )
     )
+
     capex = compute_capex(
         CapExInputs(
             assumptions=assumptions,
-            module_outputs=modules.module_outputs,
+            module_outputs=module_outputs,
             vehicle_build_claim=allocator.vehicle_build_claim,
-            module_da_in_cogs=modules.module_da,
+            module_da_in_cogs=module_da,
         )
     )
+
     group = compute_group_pnl(
         GroupPnlInputs(
             assumptions=assumptions,
-            module_outputs=modules.module_outputs,
-            opex=modules.opex,
+            module_outputs=module_outputs,
+            opex=opex,
             capex=capex,
-            eliminations=modules.eliminations,
-            module_da_in_cogs=modules.module_da,
-            internal_flows=modules.flows,
+            eliminations=eliminations,
+            module_da_in_cogs=module_da,
+            internal_flows=flows,
             mars_carveout=allocator.mars_carveout,
             cash_identity=_cash_identity_inputs(assumptions, allocator.cash_boy),
         )
     )
-    valuation = compute_valuation(
-        ValuationInputs(assumptions=assumptions, group_pnl=group)
-    )
-    return PipelineState(
+
+    valuation = compute_valuation(ValuationInputs(assumptions=assumptions, group_pnl=group))
+
+    new_pipeline = PipelineState(
         cash_alloc=allocator.cash,
         kg_alloc=allocator.kg,
         vehicle_build_claim=allocator.vehicle_build_claim,
-        module_outputs=modules.module_outputs,
-        launch_capacity=capacity.lc,
+        module_outputs=module_outputs,
+        launch_capacity=lc,
         group_pnl=group,
         allocator=allocator,
         valuation=valuation,
-    )
-
-
-def _single_pass(state_dict: dict[str, Any]) -> dict[str, Any]:
-    """One topological model pass: modules → Group P&L → Allocator."""
-    assumptions: Assumptions = state_dict["assumptions"]
-    demand: DemandCurves = state_dict["demand_curves"]
-    prior: PipelineState = state_dict["pipeline"]
-    monitored_blend = state_dict.get("monitored_blend")
-
-    blend = _pass_blend_context(prior, assumptions, monitored_blend)
-    capacity = _pass_capacity_layer(assumptions, prior, blend)
-    modules = _pass_module_bundle(assumptions, demand, prior, blend, capacity)
-    new_pipeline = _pass_close_allocator(
-        assumptions, prior, blend, capacity, modules, monitored_blend
     )
     return {**state_dict, "pipeline": new_pipeline}
 
@@ -805,14 +658,10 @@ def _extract_monitored(state_dict: dict[str, Any]) -> dict[str, np.ndarray]:
     group = pipeline.group_pnl
     alloc = pipeline.allocator
     out: dict[str, np.ndarray] = {
-        "group_revenue": (
-            group.group_revenue_net.values if group else np.zeros(HORIZON_YEARS)
-        ),
+        "group_revenue": group.group_revenue_net.values if group else np.zeros(HORIZON_YEARS),
         "group_fcf": group.group_fcf.values if group else np.zeros(HORIZON_YEARS),
         "cash_boy": alloc.cash_boy.values if alloc else np.zeros(HORIZON_YEARS),
-        "mars_carveout": (
-            alloc.mars_carveout.values if alloc else np.zeros(HORIZON_YEARS)
-        ),
+        "mars_carveout": alloc.mars_carveout.values if alloc else np.zeros(HORIZON_YEARS),
     }
     for key in CashAllocations.zeros().__dataclass_fields__:
         if key == "as_tuple":
@@ -834,9 +683,7 @@ def run_base_case(
     write_outputs: bool = True,
 ) -> ModelResult:
     """Execute Base Case pipeline (convenience wrapper)."""
-    return run_pipeline(
-        workbook_path=workbook_path, run_id=run_id, write_outputs=write_outputs
-    )
+    return run_pipeline(workbook_path=workbook_path, run_id=run_id, write_outputs=write_outputs)
 
 
 def run_pipeline(
@@ -854,11 +701,7 @@ def run_pipeline(
 ) -> ModelResult:
     """Execute pipeline: ingest → optional scenario overrides → iterative solve."""
     from spacex_model.inputs.scenarios import apply_assumption_overrides, load_scenario
-    from spacex_model.io.divergence import (
-        build_divergence_report,
-        finalize_triage,
-        write_divergence_report_json,
-    )
+    from spacex_model.io.divergence import build_divergence_report, finalize_triage, write_divergence_report_json
 
     settings = get_settings()
     repo_root = Path(__file__).resolve().parents[3]
@@ -899,18 +742,17 @@ def run_pipeline(
 
     anchor_warnings = check_s1_anchors(assumptions)
     ingest.value_pass.warnings.extend(anchor_warnings)
-    demand = (
-        demand_curves
-        if demand_curves is not None
-        else demand_curves_from_ingest(ingest)
-    )
+    demand = demand_curves if demand_curves is not None else demand_curves_from_ingest(ingest)
 
     pipeline, solver_trace = _solve_pipeline(
-        assumptions, demand, initial_pipeline=initial_state
+        assumptions,
+        demand,
+        initial_pipeline=initial_state,
     )
 
     allocation_check = check_allocation_bounds(
-        pipeline.allocator.cash, pipeline.allocator.available_cash
+        pipeline.allocator.cash,
+        pipeline.allocator.available_cash,
     )
     gigabay_tp = None
     if (
@@ -931,9 +773,7 @@ def run_pipeline(
             ipo_drawdown=compute_ipo_drawdown(assumptions),
         )
     )
-    conservation = merge_allocator_conservation(
-        pipeline.group_pnl.conservation, alloc_cons
-    )
+    conservation = merge_allocator_conservation(pipeline.group_pnl.conservation, alloc_cons)
 
     if not skip_conservation_halt:
         raise_on_break(conservation)
@@ -945,14 +785,13 @@ def run_pipeline(
 
     f9_customer = _f9_customer_launches(
         CustomerLaunchInputs(
-            assumptions=assumptions, launch_capacity=pipeline.launch_capacity
+            assumptions=assumptions,
+            launch_capacity=pipeline.launch_capacity,
         )
     )
     vehicle_pools = compute_vehicle_pools(
         assumptions,
-        allocations=VehicleAllocations.from_allocator(
-            pipeline.allocator.cash, pipeline.allocator.kg
-        ),
+        allocations=VehicleAllocations.from_allocator(pipeline.allocator.cash, pipeline.allocator.kg),
     )
 
     audit: dict[str, Any] = {
@@ -997,11 +836,10 @@ def run_pipeline(
         out_dir = settings.outputs_dir / rid
         out_dir.mkdir(parents=True, exist_ok=True)
         write_diagnostic_snapshot(ingest, out_dir / "xlsx_snapshot.json")
-        (out_dir / "audit.json").write_text(
-            json.dumps(result.audit, indent=2), encoding="utf-8"
-        )
+        (out_dir / "audit.json").write_text(json.dumps(result.audit, indent=2), encoding="utf-8")
         (out_dir / "solver_trace.json").write_text(
-            json.dumps(solver_trace.per_iteration, indent=2), encoding="utf-8"
+            json.dumps(solver_trace.per_iteration, indent=2),
+            encoding="utf-8",
         )
         if scenario_name == "base_case":
             div_report = finalize_triage(build_divergence_report(result), result)
@@ -1024,7 +862,9 @@ def _solve_pipeline(
         "pipeline": initial_pipeline or _zero_initial_pipeline(),
     }
     final_state, solver_trace = solve_fixed_point(
-        state_in, _single_pass, extract_monitored=_extract_monitored
+        state_in,
+        _single_pass,
+        extract_monitored=_extract_monitored,
     )
     pipeline: PipelineState = final_state["pipeline"]
     assert pipeline.group_pnl is not None
@@ -1080,14 +920,12 @@ def run_pipeline_mc(
     if overrides:
         assumptions = apply_assumption_overrides(assumptions, overrides)
 
-    demand = (
-        demand_curves
-        if demand_curves is not None
-        else demand_curves_from_ingest(ingest)
-    )
+    demand = demand_curves if demand_curves is not None else demand_curves_from_ingest(ingest)
 
     pipeline, solver_trace = _solve_pipeline(
-        assumptions, demand, initial_pipeline=initial_state
+        assumptions,
+        demand,
+        initial_pipeline=initial_state,
     )
 
     return ModelResult(

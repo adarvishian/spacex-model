@@ -9,10 +9,7 @@ import numpy as np
 from spacex_model.calc._allocator_out import AllocatorOut
 from spacex_model.config import canonical_labels as cl
 from spacex_model.config import canonical_labels_supplement as cls
-from spacex_model.config.constants import (
-    CONSERVATION_RESIDUAL_TOLERANCE_MM,
-    HORIZON_YEARS,
-)
+from spacex_model.config.constants import CONSERVATION_RESIDUAL_TOLERANCE_MM, HORIZON_YEARS
 from spacex_model.domain.assumption_helpers import (
     assumption_scalar,
     assumption_year_vector,
@@ -27,7 +24,7 @@ _CORPORATE_LINES: tuple[tuple[str, str, str, float, float, float], ...] = (
     (
         cl.HQ_BUILDINGS_CAPEX_MM_YR_FLAT,
         cl.HQ_BUILDINGS_USEFUL_LIFE_YEARS,
-        "",
+        cls.CORPORATE_HISTORICAL_CAPITAL_BASE_MM,
         0.45,
         50.0,
         30.0,
@@ -35,7 +32,7 @@ _CORPORATE_LINES: tuple[tuple[str, str, str, float, float, float], ...] = (
     (
         cl.CORPORATE_IT_CAPEX_MM_YR_FLAT,
         cl.CORPORATE_IT_USEFUL_LIFE_YEARS,
-        "",
+        cls.CORPORATE_HISTORICAL_CAPITAL_BASE_MM,
         0.15,
         30.0,
         7.0,
@@ -43,7 +40,7 @@ _CORPORATE_LINES: tuple[tuple[str, str, str, float, float, float], ...] = (
     (
         cl.GENERAL_ENGINEERING_FACILITIES_CAPEX_MM_YR_FLAT,
         cl.GENERAL_ENGINEERING_FACILITIES_LIFE_YEARS,
-        "",
+        cls.CORPORATE_HISTORICAL_CAPITAL_BASE_MM,
         0.20,
         20.0,
         20.0,
@@ -51,7 +48,7 @@ _CORPORATE_LINES: tuple[tuple[str, str, str, float, float, float], ...] = (
     (
         cl.OTHER_CORPORATE_CAPEX_MM_YR_FLAT,
         cl.OTHER_CORPORATE_USEFUL_LIFE_YEARS,
-        "",
+        cls.CORPORATE_HISTORICAL_CAPITAL_BASE_MM,
         0.20,
         10.0,
         20.0,
@@ -98,10 +95,8 @@ def _module_capex(outputs: dict[str, AllocatorOut], key: str) -> YearVector:
     return YearVector.zeros()
 
 
-def _flat_annual_capex(
-    assumptions: Assumptions, label: str, *, default: float = 0.0
-) -> YearVector:
-    annual = assumptions.lookup_scalar(label, default=default)
+def _flat_annual_capex(assumptions: Assumptions, label: str, default: float) -> YearVector:
+    annual = assumption_scalar(assumptions, label, default=default)
     return YearVector.constant(annual)
 
 
@@ -112,7 +107,7 @@ def compute_module_capex(inputs: CapExInputs) -> dict[str, YearVector]:
     Excel label:       "Module CapEx ($mm)"
     Architecture ref:  §13.1 module CapEx aggregation
     Principle:         3 (canonical label INDEX/MATCH)
-
+    
     Formula: Read Module CapEx ($mm) from each module Allocator OUT row.
 
     """
@@ -132,7 +127,7 @@ def compute_total_module_capex(module_capex: dict[str, YearVector]) -> YearVecto
     Excel label:       "Total Module CapEx ($mm)"
     Architecture ref:  §13.1
     Principle:         3 (canonical cross-tab labels)
-
+    
     Formula: Sum of five module Module CapEx rows.
 
     """
@@ -142,25 +137,22 @@ def compute_total_module_capex(module_capex: dict[str, YearVector]) -> YearVecto
     return YearVector(total)
 
 
-def compute_corporate_capex(
-    inputs: CapExInputs,
-) -> tuple[YearVector, YearVector, YearVector, YearVector, YearVector]:
+def compute_corporate_capex(inputs: CapExInputs) -> tuple[YearVector, YearVector, YearVector, YearVector, YearVector]:
     """Corporate CapEx flat year-rows from Assumptions §10.
 
     Excel cell:        CapEx!D20:D23
     Excel label:       "Total Corporate CapEx ($mm)"
     Architecture ref:  §13.2 corporate CapEx
     Principle:         12 (flat year-row reads)
-
+    
     Formula: Corporate CapEx flat year-rows from Assumptions §10.
 
     """
     a = inputs.assumptions
-    lines = _CORPORATE_LINES
-    hq = _flat_annual_capex(a, lines[0][0], default=lines[0][4])
-    it = _flat_annual_capex(a, lines[1][0], default=lines[1][4])
-    gen = _flat_annual_capex(a, lines[2][0], default=lines[2][4])
-    other = _flat_annual_capex(a, lines[3][0], default=lines[3][4])
+    hq = _flat_annual_capex(a, cl.HQ_BUILDINGS_CAPEX_MM_YR_FLAT, 50.0)
+    it = _flat_annual_capex(a, cl.CORPORATE_IT_CAPEX_MM_YR_FLAT, 30.0)
+    gen = _flat_annual_capex(a, cl.GENERAL_ENGINEERING_FACILITIES_CAPEX_MM_YR_FLAT, 20.0)
+    other = _flat_annual_capex(a, cl.OTHER_CORPORATE_CAPEX_MM_YR_FLAT, 10.0)
     total = YearVector(hq.values + it.values + gen.values + other.values)
     return hq, it, gen, other, total
 
@@ -172,30 +164,21 @@ def compute_corporate_da(inputs: CapExInputs) -> YearVector:
     Excel label:       "Total Corporate D&A ($mm)"
     Architecture ref:  §13.2 corporate D&A schedule
     Principle:         12 (Rule 23 exception: cumulative CapEx running sum)
-
+    
     Formula: Corporate D&A = Σ cumulative category CapEx ÷ useful life (straight-line).
 
     """
     a = inputs.assumptions
-    hist_base = 0.0
+    hist_base = assumption_scalar(a, cls.CORPORATE_HISTORICAL_CAPITAL_BASE_MM, default=2000.0)
     da_total = np.zeros(HORIZON_YEARS, dtype=np.float64)
 
-    for (
-        capex_label,
-        life_label,
-        _,
-        share,
-        default_annual,
-        default_life,
-    ) in _CORPORATE_LINES:
-        annual = a.lookup_scalar(capex_label, default=default_annual)
-        life = a.lookup_scalar(life_label, default=default_life)
+    for capex_label, life_label, _, share, default_annual, default_life in _CORPORATE_LINES:
+        annual = assumption_scalar(a, capex_label, default=default_annual)
+        life = assumption_scalar(a, life_label, default=default_life)
         if life <= 0:
             continue
         initial = hist_base * share + annual
-        cumulative = year_chained_cumulative(
-            np.full(HORIZON_YEARS, annual), initial=initial - annual
-        )
+        cumulative = year_chained_cumulative(np.full(HORIZON_YEARS, annual), initial=initial - annual)
         da_total += cumulative / life
 
     return YearVector(da_total)
@@ -208,12 +191,14 @@ def compute_spectrum_capex(inputs: CapExInputs) -> YearVector:
     Excel label:       "EchoStar mid-band CapEx ($mm) — year-row"
     Architecture ref:  §13.3 spectrum CapEx
     Principle:         12 (anchor year-row from Assumptions)
-
+    
     Formula: EchoStar mid-band spectrum CapEx year-row from Assumptions.
 
     """
     row = assumption_year_vector(
-        inputs.assumptions, cl.ECHOSTAR_MID_BAND_CAPEX_MM_YEAR_ROW, default=0.0
+        inputs.assumptions,
+        cl.ECHOSTAR_MID_BAND_CAPEX_MM_YEAR_ROW,
+        default=0.0,
     )
     if row.at(2025) == 0.0 and row.values.sum() == 0.0:
         from spacex_model.inputs.s1_profiles import echostar_spectrum_capex_mm
@@ -223,7 +208,8 @@ def compute_spectrum_capex(inputs: CapExInputs) -> YearVector:
 
 
 def compute_spectrum_amortization(
-    spectrum_capex: YearVector, assumptions: Assumptions
+    spectrum_capex: YearVector,
+    assumptions: Assumptions,
 ) -> tuple[YearVector, YearVector]:
     """Cumulative spectrum intangible and annual amortization ÷ useful life.
 
@@ -231,11 +217,11 @@ def compute_spectrum_amortization(
     Excel label:       "Annual spectrum amortization ($mm)"
     Architecture ref:  §13.3 spectrum amortization
     Principle:         12 (Rule 23 exception: cumulative running sum)
-
+    
     Formula: Cumulative spectrum intangible and annual amortization ÷ useful life.
 
     """
-    life = assumptions.lookup_scalar(cl.SPECTRUM_USEFUL_LIFE_YEARS, default=15.0)
+    life = assumption_scalar(assumptions, cl.SPECTRUM_USEFUL_LIFE_YEARS, default=15.0)
     cumulative = year_chained_cumulative(spectrum_capex.values)
     if life <= 0:
         z = YearVector.zeros()
@@ -251,7 +237,7 @@ def compute_capex(inputs: CapExInputs) -> CapExResult:
     Excel label:       "Total Group CapEx ($mm)"
     Architecture ref:  §13 CapEx tab
     Principle:         4 (queue gate reserves non-module claims first)
-
+    
     Formula: Assemble CapEx tab: module + corporate + spectrum + vehicle build claim.
 
     """
@@ -260,9 +246,7 @@ def compute_capex(inputs: CapExInputs) -> CapExResult:
     hq, it, gen, other, total_corp = compute_corporate_capex(inputs)
     corporate_da = compute_corporate_da(inputs)
     spectrum = compute_spectrum_capex(inputs)
-    cumulative_spectrum, spectrum_amort = compute_spectrum_amortization(
-        spectrum, inputs.assumptions
-    )
+    cumulative_spectrum, spectrum_amort = compute_spectrum_amortization(spectrum, inputs.assumptions)
     vehicle = inputs.vehicle_build_claim or YearVector.zeros()
 
     total_group_capex = YearVector(
@@ -300,7 +284,8 @@ def compute_capex(inputs: CapExInputs) -> CapExResult:
 
 
 def capex_conservation_ok(
-    result: CapExResult, module_outputs: dict[str, AllocatorOut]
+    result: CapExResult,
+    module_outputs: dict[str, AllocatorOut],
 ) -> bool:
     """Verify Total Module CapEx equals sum of module rows within tolerance.
 
@@ -308,7 +293,7 @@ def capex_conservation_ok(
     Excel label:       "CapEx check"
     Architecture ref:  §15.2 conservation block
     Principle:         19 (R101 module CapEx aggregation)
-
+    
     Formula: Verify Total Module CapEx equals sum of module rows within tolerance.
 
     """
