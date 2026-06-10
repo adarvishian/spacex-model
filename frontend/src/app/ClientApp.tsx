@@ -12,7 +12,6 @@ import {
   runDeterministic,
 } from "../api";
 import { ModelProvenanceChip } from "../shared/ModelProvenanceChip";
-import type { DeterministicRun } from "../api";
 import { CustomBuilder } from "../client/CustomBuilder";
 import { DownloadsPanel } from "../client/DownloadsPanel";
 import { HeadlinePanel } from "../client/HeadlinePanel";
@@ -25,26 +24,15 @@ import {
   validateCustomValues,
   warningsFromApi,
 } from "../shared/client-validation";
+import { clientSummaryFromArtifact, clientSummaryFromDeterministic } from "../shared/client-precache";
+import {
+  getScenarioRunArtifact,
+  isInstantPrecacheView,
+  loadScenarioRunArtifact,
+  preloadScenarioRunArtifacts,
+} from "../shared/scenario-artifacts";
 import { decodeShareState } from "../shared/share-link";
 import type { ClientRunSummary } from "../shared/types";
-
-function toClientSummary(run: DeterministicRun): ClientRunSummary {
-  const groupFcf = run.group?.group_fcf;
-  return {
-    run_id: run.run_id,
-    scenario: run.scenario,
-    valuation: run.valuation,
-    module_ev: run.module_ev,
-    group: {
-      group_fcf: {
-        years: groupFcf?.years ?? [],
-        values: groupFcf?.values ?? [],
-      },
-    },
-    modules: run.modules as ClientRunSummary["modules"],
-    override_warnings: run.override_warnings,
-  };
-}
 
 function triggerDownload(blob: Blob, filename: string) {
   const url = URL.createObjectURL(blob);
@@ -65,6 +53,7 @@ export default function ClientApp() {
   const [downloading, setDownloading] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [fieldWarnings, setFieldWarnings] = useState<Record<string, string>>({});
+  const [artifactReady, setArtifactReady] = useState(false);
 
   const scenariosQ = useQuery({ queryKey: ["client-scenarios"], queryFn: fetchClientScenarios });
   const healthQ = useQuery({ queryKey: ["health"], queryFn: fetchHealth });
@@ -78,6 +67,21 @@ export default function ClientApp() {
   });
 
   const inputs = inputsQ.data ?? [];
+  const isServerless = Boolean(healthQ.data?.serverless);
+
+  useEffect(() => {
+    let cancelled = false;
+    void preloadScenarioRunArtifacts()
+      .then(() => {
+        if (!cancelled) setArtifactReady(true);
+      })
+      .catch(() => {
+        if (!cancelled) setArtifactReady(true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     if (inputs.length && Object.keys(customValues).length === 0) {
@@ -101,6 +105,37 @@ export default function ClientApp() {
       } else {
         setFieldWarnings({});
       }
+
+      if (Object.keys(overrides).length === 0 && isInstantPrecacheView(scenario, overrides)) {
+        if (!artifactReady) {
+          setRunning(true);
+          setError(null);
+          try {
+            await loadScenarioRunArtifact(scenario);
+          } finally {
+            setRunning(false);
+          }
+        }
+        const artifact = getScenarioRunArtifact(scenario);
+        const summary = artifact ? clientSummaryFromArtifact(artifact) : null;
+        if (summary) {
+          setRun(summary);
+          setError(null);
+          return true;
+        }
+        if (isServerless) {
+          setError(
+            "Scenario data is not available offline. Regenerate precache artifacts or use Audit Mode.",
+          );
+          return false;
+        }
+      }
+
+      if (isServerless && Object.keys(overrides).length > 0) {
+        setError("Custom scenario runs require a live API key and are not available on this deployment yet.");
+        return false;
+      }
+
       setRunning(true);
       setError(null);
       try {
@@ -109,7 +144,7 @@ export default function ClientApp() {
           client_overrides: Object.keys(overrides).length ? overrides : undefined,
           use_cache: true,
         });
-        setRun(toClientSummary(result));
+        setRun(clientSummaryFromDeterministic(result));
         setFieldWarnings(warningsFromApi(result.override_warnings));
         return true;
       } catch (e) {
@@ -119,7 +154,7 @@ export default function ClientApp() {
         setRunning(false);
       }
     },
-    [choice, inputs],
+    [choice, inputs, artifactReady, isServerless],
   );
 
   useEffect(() => {
@@ -146,10 +181,10 @@ export default function ClientApp() {
 
   useEffect(() => {
     if (searchParams.get("s")) return;
-    if (choice !== "custom") {
-      void executeRun(choice, {});
-    }
-  }, [choice]);
+    if (choice === "custom") return;
+    if (isInstantPrecacheView(choice, {}) && !artifactReady) return;
+    void executeRun(choice, {});
+  }, [choice, artifactReady, searchParams.get("s")]);
 
   const onCustomChange = (id: string, value: number) => {
     const next = { ...customValues, [id]: value };

@@ -9,6 +9,7 @@ import {
 import type { RunProvenance } from "../../shared/scenario-artifacts";
 import {
   canHydrateRunFromArtifact,
+  canUsePrecacheRunArtifact,
   getScenarioRunArtifact,
   isInstantPrecacheView,
   preloadScenarioRunArtifacts,
@@ -138,8 +139,9 @@ export function useAuditRun() {
     }
 
     const gitSha = healthQ.data?.git_sha;
+    const serverless = Boolean(healthQ.data?.serverless);
     const artifact = getScenarioRunArtifact(selectedScenario);
-    if (artifact && canHydrateRunFromArtifact(selectedScenario, overrides, gitSha)) {
+    if (artifact && canUsePrecacheRunArtifact(selectedScenario, overrides)) {
       setRunId(artifact.run_id);
       setEmbeddedGrids(artifact.audit_grids);
       setRunAuditPayload(artifact.run_audit);
@@ -151,7 +153,13 @@ export function useAuditRun() {
         cached: true,
         source: "precomputed",
       });
-      void handleRun({ background: true });
+      if (!serverless && canHydrateRunFromArtifact(selectedScenario, overrides, gitSha)) {
+        void handleRun({ background: true });
+      }
+      return;
+    }
+
+    if (serverless && isInstantPrecacheView(selectedScenario, overrides)) {
       return;
     }
 
@@ -165,7 +173,7 @@ export function useAuditRun() {
 
   useEffect(() => {
     const gitSha = healthQ.data?.git_sha;
-    if (!gitSha || provenance !== "precomputed") return;
+    if (healthQ.data?.serverless || !gitSha || provenance !== "precomputed") return;
     if (!canHydrateRunFromArtifact(selectedScenario, overrides, gitSha)) {
       setRunId(null);
       setEmbeddedGrids({});
@@ -173,7 +181,7 @@ export function useAuditRun() {
       setProvenance("fresh");
       void handleRun();
     }
-  }, [healthQ.data?.git_sha, provenance, selectedScenario, overrides, handleRun]);
+  }, [healthQ.data?.git_sha, healthQ.data?.serverless, provenance, selectedScenario, overrides, handleRun]);
 
   return {
     healthQ,

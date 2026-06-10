@@ -86,13 +86,7 @@ def main() -> int:
         "run_id": result.run_id,
         "audit_grids": audit_grids,
         "run_audit": run_audit,
-        "deterministic": {
-            "run_id": deterministic["run_id"],
-            "scenario": deterministic["scenario"],
-            "cached": False,
-            "solver": deterministic["solver"],
-            "conservation": deterministic.get("conservation"),
-        },
+        "deterministic": deterministic,
     }
 
     out_path.parent.mkdir(parents=True, exist_ok=True)
